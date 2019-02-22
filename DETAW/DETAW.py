@@ -2608,12 +2608,13 @@ if __name__ == "__main__":
                     ts_LODI_tn[icon-1] = float(line.split(",")[6])
                 icon += 1
         ff.close()
-    print "before"
+    
     (pcp,ET0) = weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn,ilands,idates,isites,ETo_corrector,filepath,start1)
-    print "after"
+    
     ##if iproject == 0:
     historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,ts_LODI_tx,ts_LODI_tn, \
             ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,  \
             NumDay,iyears,idayoutput,imonthoutput,iyearoutput,iproject,itotaloutput,dailyunit,forDSM2_daily)
+    
     
     print "done"

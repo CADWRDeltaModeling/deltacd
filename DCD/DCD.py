@@ -64,7 +64,7 @@ def main():
         filename = "DETAW_day_"+str(ifile)+".dsk"
         os.remove(filename)
     status=os.system('python isl168to142.py')
-    status=os.system('python forNODCU3.py')
+    status=os.system('python forNODCU3.py '+str(endyear))
     
     dir_dst =".\\DCD_inputs\\"
     shutil.copy("DICU5.12",dir_dst)

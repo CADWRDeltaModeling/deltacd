@@ -30,7 +30,7 @@ if __name__ == "__main__":
     Cpart[4] = "DSW"
     
     beginyear = 1922
-    endyear = 2016    #update here!!!!!!!!
+    endyear = int(sys.argv[1])
     tyr = endyear-beginyear+1
     #tempts = zeros((tyr,366),float)
     
