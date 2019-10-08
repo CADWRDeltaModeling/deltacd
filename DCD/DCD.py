@@ -22,13 +22,15 @@
 #    Python DCD.py 
 # 
 
+import pandas as pd
+import pyhecdss
 import os,sys
 import shutil
 
 
 def main():
     owd = os.getcwd()
-    dir_dst = "../DETAWv2.0/"
+    dir_dst = "../DETAW/"
     os.chdir(dir_dst)
     
     inputfile = "LODI_PT.csv"
@@ -44,8 +46,8 @@ def main():
     endyear = templ.split(",")[1]  
     endmonth = int(templ.split(",")[2])
     outputfile = outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"
-    print "output file =", outputfile
-    
+    print("output file =", outputfile)
+        
     status=os.system('python DETAW.py')
     for ifile in range(0,17):
         filename = "DETAW_day_"+str(ifile)+".dss"
@@ -67,6 +69,7 @@ def main():
     status=os.system('python forNODCU3.py '+str(endyear))
     
     dir_dst =".\\DCD_inputs\\"
+    #--FIXME-- check existence and create if not existing -- os.mkdir(dir_dst)
     shutil.copy("DICU5.12",dir_dst)
     shutil.copy("DICU5.14",dir_dst)
     shutil.copy("DICU5.17",dir_dst)
@@ -122,7 +125,7 @@ def main():
     status=os.system('dssts < junk3_2.txt')
     
     shutil.copy(outputfile,owd)
-    print "finish"
+    print("finish")
 
 if __name__ == "__main__":
     main()

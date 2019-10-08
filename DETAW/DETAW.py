@@ -23,7 +23,8 @@
 #    Python detaw.py 
 # 
 
-import _hecdss as hecdss
+import pyhecdss
+import pandas as pd
 from numpy import arange,pi,array,zeros
 
 import os, sys, string, math, numpy
@@ -31,6 +32,21 @@ from os import listdir
 from math import cos,sin,tan,atan,sqrt,pi,pow
 
 #+from vtools.functions.api import *
+def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
+    '''
+    write to the pyhecdss.DSSFile for an array with starttime and assuming
+    daily data with the pathname path, cunits and ctype
+    '''
+    fstr='1D'
+    epart=path.split('/')[5]
+    if epart == '1DAY':
+        fstr='1D'
+    elif epart == '1MONTH':
+        fstr='1M'
+    else:
+        raise RuntimeError('Not recognized frequency in path: %s'%path)
+    df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
+    dssfh.write_rts(path,df,cunits,'INST-VAL')
 
 
 def list_add_list(list1,list2):
@@ -53,13 +69,13 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
     ##filepath = "C:\Detaw\detaw_python\\"
     monthname = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] 
     
-    
     istat = int(1)
     ifltab = zeros(600,"i")
     outputfile = filepath+"weather.dss"
-    hecdss.zset('MLEVEL',' ',0)
-    [ifltab,istat] = hecdss.zopen(ifltab,outputfile)
-    ctype = "PER-AVER"
+    pyhecdss.set_message_level(0)
+    pyhecdss.set_program_name('DETAW')
+    dssfh=pyhecdss.DSSFile(outputfile)
+    ctype = "INST-VAL" #"PER-AVER"
     iplan = int(0)
     
     ts_ptotal = zeros((ilands,idates),float)
@@ -106,7 +122,7 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
             ET0Daily[j][k] = ET0*ETo_corrector[j]
         
         path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
-        [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(ts_ptotal[j]),ts_ptotal[j],"mm",ctype,iplan)
+        write_to_dss(dssfh, ts_ptotal[j], path, startdate+" "+starttime, 'mm', ctype)
         #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"mm"}    
         #tss_P = rts(ts_ptotal[j],start,dt,props)
         #path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
@@ -114,19 +130,19 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
         
         #tss_ET0 = rts(ET0Daily[j],start,days(1),props)
         path = "/detaw/island_"+str(j+1)+"/ET0//1DAY/detaw/"
-        [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(ET0Daily[j]),ET0Daily[j],"mm",ctype,iplan)
+        write_to_dss(dssfh, ET0Daily[j], path, startdate+" "+starttime, 'mm', ctype)
         #dss_store_ts(tss_ET0,outputfile,path)
         
         if j == 0:
             #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"oC"}
             #tss_tx = rts(Tmax,start,days(1),props)
             path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
-            [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(Tmax),Tmax,"oC",ctype,iplan)
+            write_to_dss(dssfh, Tmax, path, startdate+" "+starttime, 'oC', ctype)
             #dss_store_ts(tss_tx,outputfile,path)
                        
             #tss_tn = rts(Tmin,start,days(1),props)
             path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
-            [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(Tmin),Tmin,"oC",ctype,iplan)
+            write_to_dss(dssfh, Tmin, path, startdate+" "+starttime, "oC", ctype)
             #dss_store_ts(tss_tn,outputfile,path)
 
 
@@ -179,27 +195,28 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
         #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"mm"}    
         #tss_mon_P = rts(mon_pcp,start1,dt_mon,props)
         path = "/detaw/island_"+str(j+1)+"/precipitation//1MONTH/detaw/"
-        [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(mon_pcp),mon_pcp,"MM",ctype,iplan)
+        write_to_dss(dssfh, mon_pcp, path, startdate+" "+starttime, 'MM', ctype)
+        #--delete--[ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(mon_pcp),mon_pcp,"MM",ctype,iplan)
         #dss_store_ts(tss_mon_P,outputfile,path)
         
         #tss_mon_ET0 = rts(mon_ET0,start1,dt_mon,props)
         path = "/detaw/island_"+str(j+1)+"/ET0//1MONTH/detaw/"
-        [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(mon_ET0),mon_ET0,"MM",ctype,iplan)
+        write_to_dss(dssfh, mon_ET0, path, startdate+" "+starttime, "MM", ctype)
         #dss_store_ts(tss_mon_ET0,outputfile,path)
         
         if j == 0:
             #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"oC"}
             #tss_mon_tx = rts(mon_tx,start1,dt_mon,props)
             path = "/detaw/LODI_Tmax/Temp//1MONTH/detaw/"
-            [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(mon_tx),mon_tx,"oC",ctype,iplan)
+            write_to_dss(dssfh, mon_tx, path, startdate+" "+starttime, "oC", ctype)
             #dss_store_ts(tss_mon_tx,outputfile,path)
             
             #tss_mon_tn = rts(mon_tn,start1,dt_mon,props)
             path = "/detaw/LODI_Tmin/Temp//1MONTH/detaw/"
-            [ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(mon_tn),mon_tn,"oC",ctype,iplan)
+            write_to_dss(dssfh, mon_tn, path, startdate+" "+starttime, "oC", ctype)
             #dss_store_ts(tss_mon_tn,outputfile,path)
-            
-    hecdss.zclose(ifltab)
+
+    dssfh.close()        
     return(ts_ptotal, ET0Daily)
         
                           
@@ -234,8 +251,9 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     ifltabd = zeros(600,"i")
     ifltabm = zeros(600,"i")
     ifltaby = zeros(600,"i")
-    hecdss.zset('MLEVEL',' ',0)
-    ctype = "PER-AVER"
+    pyhecdss.set_message_level(0)
+    pyhecdss.set_program_name('DETAW')
+    ctype = "INST-VAL" # "PER-AVER"
     iplan = int(0)
     start2 = [1921,10,1,23,0]
     #startdate = str(start1[2])+monthname[start1[1]-1]+str(start1[0])
@@ -768,7 +786,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
         for j in range (1,icroptype+1):
             ##for HSA*** (not for OLDHSA***)   +++++++++++++++++++++  
             ##initalize Monthly ETaw
-            print "island =",k+1, " croptype =",j
+            print("island =",k+1, " croptype =",j)
             
             for y in range(0,iyears+2):
                 for Mon in range(0, 13):
@@ -2141,7 +2159,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                                                 MonETAWPos=0
                                             if imonthoutput == 1:
                                                 if j == 15 and k==0 and MonETAW[y][Mon+1]>0.0:
-                                                    print y,Mon+1, " MonETAW=",MonETAW[y][Mon+1]
+                                                    print(y,Mon+1, " MonETAW=",MonETAW[y][Mon+1])
                                                 data10mon.append(MonETAW[y][Mon+1])
                                                 data19mon.append(MonETAW[y][Mon+1]*temp)
                                                 data11mon.append(MonETAWPos)                                  
@@ -2339,115 +2357,115 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             
             if idayoutput == 1:
                 destination = filepath+"DETAW_day_"+str(ktemp)+".dss"
-                print destination
-                [ifltabd,istatd] = hecdss.zopen(ifltabd,destination)
+                print(destination)
+                dssfh=pyhecdss.DSSFile(destination)
                 
                 for ilist in range(0,len(ddatalist)):
                     path = "/"+Apart+"/"+Bpart+"/"+dcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
                     listlen = len(ddatalist[ilist])
-                    [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,ddatalist[ilist],dunitlist[ilist],ctype,iplan)
+                    write_to_dss(dssfh, ddatalist[ilist], path,startdate +" "+starttime, dunitlist[ilist], ctype)
                     #temptext += write_1ts_to_txt(start,ddatalist[ilist],Apart,Bpart,dcpartlist[ilist], \
                     #           Epart,Fpart,dunitlist[ilist],dt)
                     
                 if itotaloutput == 1:
                     if j==15 and k == (ilands-1):
-                        print "daily output"
+                        print("daily output")
                         path = "/"+Apart+"/"+Bpart+"/ETc//"+Epart+"/"+Fpart+"/"
                         listlen = len(data1day_14crops)
                         if dailyunit == 1:
                             dunits = "A-FT"
                         else:
                             dunits = "mm"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data1day_14crops,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data1day_14crops, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data1day_14crops,Apart,Bpart,"ETc", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/ESpg//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data10day_14crops,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data10day_14crops, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data10day_14crops,Apart,Bpart,"ESpg", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/Dsw//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data11day_14crops,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data11day_14crops, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data11day_14crops,Apart,Bpart,"Dsw", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/ETaw//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data12day_14crops,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data12day_14crops, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data12day_14crops,Apart,Bpart,"ETaw", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/Er//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data13day_14crops,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data13day_14crops, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data13day_14crops,Apart,Bpart,"Er", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/ETc//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data1day_water,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data1day_water, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data1day_water,Apart,Bpart,"ETc", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/ESpg//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data10day_water,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data1day_water, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data10day_water,Apart,Bpart,"ESpg", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/Dsw//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data11day_water,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data11day_water, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data11day_water,Apart,Bpart,"Dsw", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/ETaw//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data12day_water,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data13day_14crops, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data12day_water,Apart,Bpart,"ETaw", \
                         #       Epart,Fpart,"mm",dt)
                         path = "/"+Apart+"/"+Bpart+"/Er//"+Epart+"/"+Fpart+"/"
-                        [ifltabd,istatd] = hecdss.zsrts(ifltabd,path,startdate,starttime,listlen,data13day_water,dunits,ctype,iplan)
+                        write_to_dss(dssfh, data13day_water, path,startdate +" "+starttime, dunits, ctype)
                         #temptext += write_1ts_to_txt(start,data13day_water,Apart,Bpart,"Er", \
                         #       Epart,Fpart,"mm",dt)       
-                hecdss.zclose(ifltabd)
+                dssfh.close()
                 
             Epart = "1MONTH"
             if imonthoutput == 1:
                 destination = filepath+"DETAW_month.dss"
-                [ifltabm,istatm] = hecdss.zopen(ifltabm,destination)
+                dssfh=pyhecdss.DSSFile(destination)
                 
                 for ilist in range(0,21):
                     path = "/"+Apart+"/"+Bpart+"/"+mcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
                     listlen = len(mdatalist[ilist])
                     templist = list(mdatalist[ilist])
                     tempunit = munitlist[ilist]
-                    [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,templist,tempunit,ctype,iplan)
+                    write_to_dss(dssfh, templist, path,startdate +" "+starttime, tempunit, ctype)
                     #temptext += write_1ts_to_txt(start,mdatalist[ilist],Apart,Bpart,mcpartlist[ilist], \
                     #           Epart,Fpart,munitlist[ilist],dt2)
                                             
                 if itotaloutput == 1:
                     if j==15 and k == (ilands-1):
-                        print "monthly output"
+                        print("monthly output")
                         listlen = len(data14mon_total)
                         path = "/"+Apart+"/total_no_w/Er//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data14mon_total,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data14mon_total, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data14mon_total,Apart,"total_no_w","Er", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/total_no_w/Espg//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data15mon_total,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data15mon_total, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data15mon_total,Apart,"total_no_w","Espg", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/total_no_w/ETc//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data16mon_total,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data16mon_total, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data16mon_total,Apart,"total_no_w","ETc", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/total_no_w/ETaw+ve//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data20mon_total,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data20mon_total, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data20mon_total,Apart,"total_no_w","ETaw+ve", \
                         #       Epart,Fpart,"A-ft",dt2)
-                
+
                         path = "/"+Apart+"/water/Er//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data14mon_water,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data14mon_water, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data14mon_water,Apart,"water","Er", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/water/Espg//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data15mon_water,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data15mon_water, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data15mon_water,Apart,"water","Espg", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/water/ETc//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data16mon_water,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data16mon_water, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data16mon_water,Apart,"water","ETc", \
                         #      Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/water/ETaw+ve//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data20mon_water,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data20mon_water, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data20mon_water,Apart,"water","ETaw+ve", \
                         #       Epart,Fpart,"A-ft",dt2)
                 
@@ -2455,59 +2473,59 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                     if j == 11:
                         listlen = len(data12mon_veg)
                         path = "/"+Apart+"/veg/NA//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data12mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data12mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data12mon_veg,Apart,"veg","NA", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/Pcp//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data13mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data13mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data13mon_veg,Apart,"veg","Pcp", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/Er//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data14mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data14mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data14mon_veg,Apart,"veg","Er", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/Espg//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data15mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data15mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data15mon_veg,Apart,"veg","Espg", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/ETc//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data16mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data16mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data16mon_veg,Apart,"veg","ETc", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/Dsw//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data17mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data17mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data17mon_veg,Apart,"veg","Dsw", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/Dsw+ve//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data18mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data18mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data18mon_veg,Apart,"veg","Dsw+ve", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/ETaw//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data19mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data19mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data19mon_veg,Apart,"veg","ETaw", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/ETaw+ve//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data20mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data20mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data20mon_veg,Apart,"veg","ETaw+ve", \
                         #       Epart,Fpart,"A-ft",dt2)
                         path = "/"+Apart+"/veg/ETo//"+Epart+"/"+Fpart+"/"
-                        [ifltabm,istatm] = hecdss.zsrts(ifltabm,path,startdate,starttime,listlen,data21mon_veg,"A-ft",ctype,iplan)
+                        write_to_dss(dssfh, data21mon_veg, path,startdate +" "+starttime, "A-ft", ctype)
                         #temptext += write_1ts_to_txt(start,data21mon_veg,Apart,"veg","ETo", \
                         #       Epart,Fpart,"A-ft",dt2)
-                hecdss.zclose(ifltabm)
+                dssfh.close()
                 
                 
             Epart = "1YEAR"
             if iyearoutput == 1:
                 destination = filepath+"DETAW_year.dss"
-                [ifltaby,istaty] = hecdss.zopen(ifltaby,destination) 
+                dssfh=pyhecdss.DSSFile(destination)
                 for ilist in range(0,len(ydatalist)):
                     path = "/"+Apart+"/"+Bpart+"/"+ycpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
                     listlen = len(ydatalist[ilist])
-                    [ifltaby,istaty] = hecdss.zsrts(ifltaby,path,startdate,starttime,listlen,ydatalist[ilist],yunitlist[ilist],ctype,iplan)
+                    write_to_dss(dssfh, ydatalist[ilist], path,startdate +" "+starttime, yunitlist[ilist], ctype)
                     #temptext += write_1ts_to_txt(start,ydatalist[ilist],Apart,Bpart,ycpartlist[ilist], \
                     #           Epart,Fpart,yunitlist[ilist],dt3)
-                hecdss.zclose(ifltaby)
+                dssfh.close()
     
 ##_______________________________________________________________________________
 
@@ -2576,7 +2594,7 @@ if __name__ == "__main__":
     ts_LODI_tx = zeros((idates),float)
     ts_LODI_tn = zeros((idates),float)
     for ifile in range(0,3):
-        print file[ifile]
+        print(file[ifile])
         source = filepath+file[ifile]
         ff = open(source,"r")
         if ifile == 0:
@@ -2617,4 +2635,4 @@ if __name__ == "__main__":
             NumDay,iyears,idayoutput,imonthoutput,iyearoutput,iproject,itotaloutput,dailyunit,forDSM2_daily)
     
     
-    print "done"
+    print("done")

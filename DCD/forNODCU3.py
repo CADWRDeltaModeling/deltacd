@@ -2,20 +2,13 @@
 # Espg has been double counted. It has to be reduced. 8/7/2012
 # extra rainfall is spreaded as an assumed hydrograph, 1 day 0.32, 2 day 0.38, 3 day, 0.2, 4 day 0.1
 
-
-# Import VTools time and numpy array creation function
-from vtools.data.vtime import *
-from vtools.data.constants import *
-from vtools.data.timeseries import *   
+import pandas as pd
+import pyhecdss
 from datetime import datetime         
 from numpy import arange,sin,pi,array, zeros
-
-# Import VTools dss utility function
-from vtools.datastore.dss.api import *
-# Import VTools Excel utility function
-from vtools.datastore.excel.api import *
 import os, sys, string
 from os import listdir
+from dss2dss_combine import get_pathname
 
 ## giving a existing datasource.
 ##source = open("SA0011.xls", "r")
@@ -33,8 +26,10 @@ if __name__ == "__main__":
     endyear = int(sys.argv[1])
     tyr = endyear-beginyear+1
     #tempts = zeros((tyr,366),float)
-    
+    pyhecdss.set_message_level(0)
+    pyhecdss.set_program_name('DCD')
     inputfile = "detaw_168to142.dss"
+    dssfh=pyhecdss.DSSFile(inputfile)
     f1 = open("DICU5.17","w")
     f2 = open("DICU5.14","w")
     f3 = open("DICU5.27","w")
@@ -64,9 +59,9 @@ if __name__ == "__main__":
     
     
     for ifile in range(0,5): #:(3,4)
-        print ifile
+        print(ifile)
         for iland in range(1,143):
-            print iland, "i"
+            print(iland, "i")
             if ifile == 0:
                 strt = str("%3i" % iland)+"AT1 4 HISTORIC DEPLETION OF APPLIED WATER BY IRR. AND URBAN, AREA   "
                 strt = strt + str(iland)+ "\n"
@@ -105,25 +100,25 @@ if __name__ == "__main__":
             else:
                 Bpart = "HSA0" + str(iland)
             path = "/DETAW/"+Bpart+"/"+Cpart[ifile]+"//1DAY/DWR/"
-            tss = dss_retrieve_ts(inputfile,path)
+            tss,cunits,ctype = dssfh.read_rts(get_pathname(dssfh,path))
             ndays = 0
             tempts = zeros((tyr,366),float)
             for iyr in range(0,tyr):
                 for iday in range(0,366):
-                    if (iday == 365 and daysofyear[iday,0,iyr] <> 0) or (iday<365):
+                    if (iday == 365 and daysofyear[iday,0,iyr] != 0) or (iday<365):
                         if ifile == 3:
                             if iyr == 0 and iday < 5:
                                 for kday in range(0, iday+1):
                                     temp_c = 0.2
-                                    tempts[iyr][iday] += tss.data[iday-kday]*temp_c
+                                    tempts[iyr][iday] += tss.values[iday-kday]*temp_c
                             else:
                                 for kday in range(0,5):
                                     temp_c = 0.2
-                                    tempts[iyr][iday] += tss.data[ndays-kday]*temp_c                            
+                                    tempts[iyr][iday] += tss.values[ndays-kday]*temp_c                            
                         else:
                             #print iyr, iday, ndays, ifile
                             #print tss.data[ndays]
-                            tempts[iyr][iday] = tss.data[ndays]
+                            tempts[iyr][iday] = tss.values[ndays]
                         # Water doesn't has daily ESPG. Monthly data double counts ESPG because of water body.
                         #if ifile == 1:   
                         #    tempts[iyr][iday] = tempts[iyr][iday]/2.0
@@ -132,7 +127,7 @@ if __name__ == "__main__":
             for iyr in range(0,tyr):
                 strt = str("%3i" % iland)+"A   "+ str(beginyear+iyr)
                 for iday in range(0,366):
-                    if (iday == 365 and daysofyear[iday,0,iyr] <> 0) or (iday<365):
+                    if (iday == 365 and daysofyear[iday,0,iyr] != 0) or (iday<365):
                         strt = strt + str("%8.1f" % tempts[iyr][iday])
                 strt = strt + "\n"
                 if ifile == 0:
