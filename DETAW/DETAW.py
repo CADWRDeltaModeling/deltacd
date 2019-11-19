@@ -224,9 +224,9 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
 ##_______________________________________________________________________________
 ##_______________________________________________________________________________
 
-def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,isites,   \
-                    ts_year,ts_mon,ts_days,start1,filepath,NI,NII,NumDaysPerMon,iyears,   \
-                    idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily):
+def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,isites,ts_year,ts_mon,\
+                   ts_days,start1,filepath,NI,NII,NumDaysPerMon,iyears,idayoutput,imonthoutput,\
+                   iyearoutput,itotaloutput,dailyunit,forDSM2_daily,streamlinemodel):
     InpHSACrop = "  "
     SACropDaily = "  "
     HSACropDailyMean = "  "
@@ -549,7 +549,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     ## The weather data come from the main program
 
     ##step3: read crop information for critical years
-    if sys.argv[1].strip() == "CALSIM3":
+    if streamlinemodel == "CALSIM3":
         source = filepath+"\\Input\\planning_study\\critical.csv"
     else:
         source = filepath+"\\Input\\historical_study\\critical.csv"
@@ -617,7 +617,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     fint.close()
     
     ##step4: read crop information for non-critical years
-    if sys.argv[1].strip() == "CALSIM3":
+    if streamlinemodel == "CALSIM3":
         source = filepath+"\\Input\\planning_study\\noncritical.csv"
     else:
         source = filepath+"\\Input\\historical_study\\noncritical.csv"
@@ -679,7 +679,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     ##step5: read land use from .\Landuse folder !!!!!!!Not checked 3/13/2009
              ##get year type of each year
     
-    if sys.argv[1].strip() == "CALSIM3":
+    if streamlinemodel == "CALSIM3":
         source = filepath +"\\Input\\planning_study\\Landuse\\SA0001.csv"    
     else:
         source = filepath +"\\Input\\historical_study\\Landuse\\SA0001.csv" 
@@ -695,7 +695,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             
     ## get Hectares of each crop type, year and island        
     
-    if sys.argv[1].strip() == "CALSIM3":
+    if streamlinemodel == "CALSIM3":
         hist_path = filepath + "\\Input\\planning_study\\Landuse\\"      ##---08/02/2010
     else:
         hist_path = filepath + "\\Input\\historical_study\\Landuse\\"
@@ -2541,33 +2541,38 @@ if __name__ == "__main__":
     files = listdir(".")
     filepath = os.getcwd()
     
-    inputfile = ""
-    if sys.argv[1].strip() == "CALSIM3":
-        inputfile = "./Input/planning_study/DETAW_para.inp"
-    else:
-        inputfile = "./Input/historical_study/DETAW_para.inp"
+    inputfile = "./Input/DETAW_para.inp"
     f0 = open(inputfile, 'r')
     itemp = 0
     endyear = 0
     for line in f0:
         if line:
-            itemp = itemp + 1
-            if itemp == 1:
-                idayoutput = int(line.split("=")[1])
-            if itemp == 2:
-                imonthoutput = int(line.split("=")[1])
-            if itemp == 3:
-                iyearoutput = int(line.split("=")[1])
-            if itemp == 4:
-                itotaloutput = int(line.split("=")[1])
-            if itemp == 5:
-                dailyunit = int(line.split("=")[1])
-            if itemp == 6:
-                forDSM2_daily = int(line.split("=")[1])
-            if itemp == 7:
-                endyear = int(line.split("=")[1])
-            if itemp == 8:
-                idates = int(line.split("=")[1])
+            if not("#" in line):
+                itemp = itemp + 1
+                if "Model to streamline" in line:
+                    modelno = int(line.split("=")[1])
+                    if modelno == 1:
+                        streamlinemodel = "DSM2"
+                    elif modelno == 2:
+                        streamlinemodel = "SCHISM"
+                    elif modelno == 3:
+                        streamlinemodel = "CALSIM3"
+                if "Daily output" in line:
+                    idayoutput = int(line.split("=")[1])
+                if "Monthly output" in line:
+                    imonthoutput = int(line.split("=")[1])
+                if "Yearly output" in line:
+                    iyearoutput = int(line.split("=")[1])
+                if  "Delta output" in line:
+                    itotaloutput = int(line.split("=")[1])
+                if  "Daily output unit" in line:
+                    dailyunit = int(line.split("=")[1])
+                if "forDSM2_daily" in line:
+                    forDSM2_daily = int(line.split("=")[1])
+                if "End year" in line:
+                    endyear = int(line.split("=")[1])
+                if "Days" in line:
+                    idates = int(line.split("=")[1])
     
     file = ["  "]*3
     
@@ -2603,7 +2608,7 @@ if __name__ == "__main__":
     ts_LODI_tn = zeros((idates),float)
     for ifile in range(0,3):
         print(file[ifile])
-        if sys.argv[1].strip() == "CALSIM3":
+        if streamlinemodel == "CALSIM3":
             source = filepath+"\\Input\\planning_study\\"+file[ifile]
         else:
             source = filepath+"\\Input\\historical_study\\"+file[ifile]
@@ -2641,10 +2646,10 @@ if __name__ == "__main__":
     (pcp,ET0) = weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn,ilands,idates,isites,ETo_corrector,filepath,start1)
     
     (DETAWOUTPUT) = historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,ts_LODI_tx,ts_LODI_tn, \
-            ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,  \
-            NumDay,iyears,idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily)
+            ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,NumDay,iyears,  \
+            idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily,streamlinemodel)
     
-    (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands, 142,15,idates-1,sys.argv[1])
-    forNODCU(DETAWISL142,sys.argv[1],endyear)
+    (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands,142,15,idates-1,streamlinemodel)
+    forNODCU(DETAWISL142,streamlinemodel,endyear)
     
     print("done")

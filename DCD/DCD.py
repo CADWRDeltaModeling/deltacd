@@ -29,27 +29,14 @@ import shutil
 
 
 def main():
-    tempstring = "DETAW-DCD estimates the Sacramento-San Joaquin Delta hydrology, including consumptive use, ground surface water balance, and channel depletion, given the climate and land use data.\
-    It could support the historical, planning or forecasting studies related to the Delta surface water quantity and quality.\
-    This version provides three options to estimate the Delta channel depletions in the customized output formats applied to three models: 1-DSM2, 2-SCHISM, and 3-CALSIM.\
-    The model inputs and outputs of these options could be taken as the basis for developing various Delta water environmental studies."
-    print("------------------------------------------------------------------------------")
-    print("                           DETAWv2.0-DCDv1.0")
-    print("------------------------------------------------------------------------------")
-    print("")
-    print(tempstring)
-    print("")
-    print("    OPTION 1 - DCD estimates the daily historical channel depletions, including diversions, drainages and seepage of DSM2 nodes.")
-    print("    OPTION 2 - DCD estimates the daily historical channel depletions without water surface evaporation. SCHISM itself can estimate the water surface evapotration of SCHISM simulation region.")
-    print("    OPTION 3 - DCD estimates the monthly planning channel depletions for seven Delta nodes of CALSIM3, monthly island deep percolations, and monthly island groundwater supplies to crop ET.")
-    print("")
-    print("------------------------------------------------------------------------------")
-    print("------------------------------------------------------------------------------")
-    var = input("Please enter the number you select: ")
-    supmodel = int(var)
-    print("------------------------------------------------------------------------------")
-    
     owd = os.getcwd()
+    modelparafile = "./NODCU/DCD_parameters.inp"
+    fmp = open(modelparafile,"r")
+    for line in fmp:
+        if line:
+            if not("#" in line):
+                supmodel = int(line.split("=")[1]) 
+                
     dir_dst = "../DETAW/"
     os.chdir(dir_dst)
     months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
@@ -66,8 +53,7 @@ def main():
                     break
         endyear = templ.split(",")[1]  
         endmonth = int(templ.split(",")[2])
-        outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"
-        status=os.system('python DETAW.py DSM2')
+        outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"        
     elif supmodel == 3:
         inputfile = "./Input/planning_study/LODI_PT.csv"
         f0 = open(inputfile, 'r')
@@ -80,8 +66,7 @@ def main():
                     break
         endyear = templ.split(",")[1]  
         endmonth = int(templ.split(",")[2])
-        outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"
-        status=os.system('python DETAW.py CALSIM3')
+        outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"        
     elif supmodel == 2:
         inputfile = "./Input/historical_study/LODI_PT.csv"
         f0 = open(inputfile, 'r')
@@ -95,13 +80,17 @@ def main():
         endyear = templ.split(",")[1]  
         endmonth = int(templ.split(",")[2])
         outputfile = "DCD_noWS_"+months[endmonth-1]+endyear+".dss"
-        status=os.system('python DETAW.py SCHISM')
+    status=os.system('python DETAW.py')
     print("output file =", outputfile)
         
     os.chdir(owd)
     
-    dir_dst = ".\\NODCU\\DCD_Cal\\DCD_outputs\\"
+    dir_dst = ".\\NODCU\\DCD_Cal\\"
     os.chdir(dir_dst)
+    os.mkdir(".\DCD_outputs")
+    shutil.copy('DETAW_CD.exe',".\DCD_outputs")
+    shutil.copy('WYTYPES',".\DCD_outputs")
+    os.chdir(".\DCD_outputs")
     
     os.environ['DICU5.14']='../../../../DETAW/Output/DICU5.14' 
     os.environ['DICU5.17']='../../../../DETAW/Output/DICU5.17' 
@@ -136,24 +125,23 @@ def main():
     os.environ['ascii']='Y'
     # The dss file to save output
     os.environ['dssfile']=outputfile        
-    
-    #date
+        
     status=os.system('DETAW_CD.exe')
     
-    status=os.system('python converttoDSS.py junk1_1.txt')
-    status=os.system('python converttoDSS.py junk1_2.txt')
-    status=os.system('python converttoDSS.py junk2_1.txt')
-    status=os.system('python converttoDSS.py junk2_2.txt')
-    status=os.system('python converttoDSS.py junk3_1.txt')
-    status=os.system('python converttoDSS.py junk3_2.txt')
+    status=os.system('python ../converttoDSS.py junk1_1.txt')
+    status=os.system('python ../converttoDSS.py junk1_2.txt')
+    status=os.system('python ../converttoDSS.py junk2_1.txt')
+    status=os.system('python ../converttoDSS.py junk2_2.txt')
+    status=os.system('python ../converttoDSS.py junk3_1.txt')
+    status=os.system('python ../converttoDSS.py junk3_2.txt')
     if supmodel == 1:
         shutil.copy(outputfile,owd+"\\Output\\DSM2\\")
     elif supmodel == 2:
         shutil.copy(outputfile,owd+"\\Output\\SCHISM\\")
     elif supmodel == 3:
-        status=os.system('python converttoDSS.py roisl.txt')
-        status=os.system('python converttoDSS.py gwbyisl.txt')
-        tempstr = "python DCD_post-process_C3.py "+outputfile+" DP_island.dss GW_per_island.dss"
+        status=os.system('python ../converttoDSS.py roisl.txt')
+        status=os.system('python ../converttoDSS.py gwbyisl.txt')
+        tempstr = "python ../DCD_post-process_C3.py "+outputfile+" DP_island.dss GW_per_island.dss"
         status = os.system(tempstr)
         tempfile = outputfile.split(".")[0].strip()+"_mon_C3.dss"
         shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
@@ -163,7 +151,9 @@ def main():
         shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
         tempfile = "GW_per_island_mon.dss"
         shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
-    
+    os.chdir("../")
+    shutil.rmtree(".\DCD_outputs")
+
     print("finish")
 
 if __name__ == "__main__":
