@@ -80,14 +80,14 @@ def main():
         endyear = templ.split(",")[1]  
         endmonth = int(templ.split(",")[2])
         outputfile = "DCD_noWS_"+months[endmonth-1]+endyear+".dss"
-    #status=os.system('python DETAW.py')
-    #print("output file =", outputfile)
+    status=os.system('python DETAW.py')
+    print("output file =", outputfile)
         
     os.chdir(owd)
     exe_file='./DETAW_CD' if os.name=='posix' else 'DETAW_CD.exe'
     dir_dst = os.path.join("NODCU","DCD_Cal")
     os.chdir(dir_dst)
-    #os.mkdir("DCD_outputs")
+    if not os.path.exists("DCD_outputs"): os.mkdir("DCD_outputs")
     shutil.copy(exe_file,"DCD_outputs")
     shutil.copy('WYTYPES',"DCD_outputs")
     os.chdir("DCD_outputs")
