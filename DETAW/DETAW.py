@@ -72,7 +72,7 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
     
     istat = int(1)
     ifltab = zeros(600,"i")
-    outputfile = filepath+"\\Output\\weather.dss"
+    outputfile = os.path.join(filepath,'Output','weather.dss')
     pyhecdss.set_message_level(0)
     pyhecdss.set_program_name('DETAW')
     dssfh=pyhecdss.DSSFile(outputfile)
@@ -550,9 +550,9 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
 
     ##step3: read crop information for critical years
     if streamlinemodel == "CALSIM3":
-        source = filepath+"\\Input\\planning_study\\critical.csv"
+        source = os.path.join(filepath,'Input','planning_study','critical.csv')
     else:
-        source = filepath+"\\Input\\historical_study\\critical.csv"
+        source = os.path.join(filepath,'Input','historical_study','critical.csv')
     ts_type = "rts"
     ##start1 = datetime(1921,9,29,23,0)
     ##intl = time_interval(days=1)
@@ -618,9 +618,9 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     
     ##step4: read crop information for non-critical years
     if streamlinemodel == "CALSIM3":
-        source = filepath+"\\Input\\planning_study\\noncritical.csv"
+        source = os.path.join(filepath,'Input','planning_study','noncritical.csv')
     else:
-        source = filepath+"\\Input\\historical_study\\noncritical.csv"
+        source = os.path.join(filepath,'Input','historical_study','noncritical.csv')
     fint = open(source,'r')
     icon = 0
     for oneline in fint:
@@ -680,9 +680,9 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
              ##get year type of each year
     
     if streamlinemodel == "CALSIM3":
-        source = filepath +"\\Input\\planning_study\\Landuse\\SA0001.csv"    
+        source = os.path.join(filepath,'Input','planning_study','Landuse','SA0001.csv')
     else:
-        source = filepath +"\\Input\\historical_study\\Landuse\\SA0001.csv" 
+        source = os.path.join(filepath,'Input','historical_study','Landuse','SA0001.csv')
     f0 = open(source)
     iline0 = 1
     yearType.append("AN")
@@ -696,9 +696,9 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     ## get Hectares of each crop type, year and island        
     
     if streamlinemodel == "CALSIM3":
-        hist_path = filepath + "\\Input\\planning_study\\Landuse\\"      ##---08/02/2010
+        hist_path = os.path.join(filepath,'Input','planning_study','Landuse')      ##---08/02/2010
     else:
-        hist_path = filepath + "\\Input\\historical_study\\Landuse\\"
+        hist_path = os.path.join(filepath, 'Input','historical_study','Landuse')
     files = listdir(hist_path)
     ts_type = "rts"
     ##intl = time_interval(years=1)
@@ -707,7 +707,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
         if ".csv" in file:
             sheetname = file.replace(".csv","")
             ilandno = int(sheetname.split("A0")[1])  ##Landuse ---08/02/2010
-            source = hist_path + file
+            source = os.path.join(hist_path,file)
             fint = open(source,'r')
             icon = 0
             for oneline in fint:
@@ -2365,7 +2365,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             ktemp = int(k/10)
             
             if idayoutput == 1:
-                destination = filepath+"\\Output\\DETAW_day_"+str(ktemp)+".dss"
+                destination = os.path.join(filepath,'Output','DETAW_day_'+str(ktemp)+'.dss')
                 dssfh=pyhecdss.DSSFile(destination)
                 for ilist in range(0,len(ddatalist)):
                     path = "/"+Apart+"/"+Bpart+"/"+dcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
@@ -2426,7 +2426,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                 
             Epart = "1MONTH"
             if imonthoutput == 1:
-                destination = filepath+"\\Output\\DETAW_month.dss"
+                destination = os.path.join(filepath,'Output','DETAW_month.dss')
                 dssfh=pyhecdss.DSSFile(destination)
                 
                 for ilist in range(0,21):
@@ -2524,7 +2524,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                 
             Epart = "1YEAR"
             if iyearoutput == 1:
-                destination = filepath+"\\Output\\DETAW_year.dss"
+                destination = os.path.join(filepath,'Output','DETAW_year.dss')
                 dssfh=pyhecdss.DSSFile(destination)
                 for ilist in range(0,len(ydatalist)):
                     path = "/"+Apart+"/"+Bpart+"/"+ycpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
@@ -2576,7 +2576,7 @@ if __name__ == "__main__":
     
     file = ["  "]*3
     
-    file[0] = "mm_Pcp.csv"
+    file[0] = "mm_pcp.csv"
     file[1] = "Percentage.csv"
     file[2] = "LODI_PT.csv"
 
@@ -2609,9 +2609,9 @@ if __name__ == "__main__":
     for ifile in range(0,3):
         print(file[ifile])
         if streamlinemodel == "CALSIM3":
-            source = filepath+"\\Input\\planning_study\\"+file[ifile]
+            source = os.path.join(filepath,'Input','planning_study',file[ifile])
         else:
-            source = filepath+"\\Input\\historical_study\\"+file[ifile]
+            source = os.path.join(filepath,'Input','historical_study',file[ifile])
         ff = open(source,"r")
         if ifile == 0:
             icon = 0

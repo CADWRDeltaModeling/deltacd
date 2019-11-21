@@ -30,19 +30,19 @@ import shutil
 
 def main():
     owd = os.getcwd()
-    modelparafile = "./NODCU/DCD_parameters.inp"
+    modelparafile = os.path.join("NODCU","DCD_parameters.inp")
     fmp = open(modelparafile,"r")
     for line in fmp:
         if line:
             if not("#" in line):
                 supmodel = int(line.split("=")[1]) 
                 
-    dir_dst = "../DETAW/"
+    dir_dst = os.path.join("..","DETAW")
     os.chdir(dir_dst)
     months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
     
     if supmodel == 1:
-        inputfile = "./Input/historical_study/LODI_PT.csv"
+        inputfile = os.path.join("Input","historical_study","LODI_PT.csv")
         f0 = open(inputfile, 'r')
         templ = ""
         endyear = 0
@@ -55,7 +55,7 @@ def main():
         endmonth = int(templ.split(",")[2])
         outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"        
     elif supmodel == 3:
-        inputfile = "./Input/planning_study/LODI_PT.csv"
+        inputfile = os.path.join("Input","planning_study","LODI_PT.csv")
         f0 = open(inputfile, 'r')
         templ = ""
         endyear = 0
@@ -68,7 +68,7 @@ def main():
         endmonth = int(templ.split(",")[2])
         outputfile = "DCD_"+months[endmonth-1]+endyear+".dss"        
     elif supmodel == 2:
-        inputfile = "./Input/historical_study/LODI_PT.csv"
+        inputfile = os.path.join("Input","historical_study","LODI_PT.csv")
         f0 = open(inputfile, 'r')
         templ = ""
         endyear = 0
@@ -80,36 +80,37 @@ def main():
         endyear = templ.split(",")[1]  
         endmonth = int(templ.split(",")[2])
         outputfile = "DCD_noWS_"+months[endmonth-1]+endyear+".dss"
-    status=os.system('python DETAW.py')
-    print("output file =", outputfile)
+    #status=os.system('python DETAW.py')
+    #print("output file =", outputfile)
         
     os.chdir(owd)
-    
-    dir_dst = ".\\NODCU\\DCD_Cal\\"
+    exe_file='./DETAW_CD' if os.name=='posix' else 'DETAW_CD.exe'
+    dir_dst = os.path.join("NODCU","DCD_Cal")
     os.chdir(dir_dst)
-    os.mkdir(".\DCD_outputs")
-    shutil.copy('DETAW_CD.exe',".\DCD_outputs")
-    shutil.copy('WYTYPES',".\DCD_outputs")
-    os.chdir(".\DCD_outputs")
+    #os.mkdir("DCD_outputs")
+    shutil.copy(exe_file,"DCD_outputs")
+    shutil.copy('WYTYPES',"DCD_outputs")
+    os.chdir("DCD_outputs")
     
-    os.environ['DICU5.14']='../../../../DETAW/Output/DICU5.14' 
-    os.environ['DICU5.17']='../../../../DETAW/Output/DICU5.17' 
-    os.environ['DICU5.12']='../../../../DETAW/Output/DICU5.12' 
-    os.environ['DICU5.27']='../../../../DETAW/Output/DICU5.27' 
-    os.environ['DICU5.30']='../../../../DETAW/Output/DICU5.30' 
+    detaw_output_dir=os.path.join('..','..','..','..','DETAW','Output')
+    os.environ['DICU5.14']=os.path.join(detaw_output_dir,'DICU5.14')
+    os.environ['DICU5.17']=os.path.join(detaw_output_dir,'DICU5.17')
+    os.environ['DICU5.12']=os.path.join(detaw_output_dir,'DICU5.12')
+    os.environ['DICU5.27']=os.path.join(detaw_output_dir,'DICU5.27')
+    os.environ['DICU5.30']=os.path.join(detaw_output_dir,'DICU5.30')
     
-    os.environ['GW_RATES.TXT'] = '../../../NODCU/GW_RATES.TXT'   #update data in the file each year ----no adjustment-GW_RATES.TXT
-    os.environ['GW_LOWLANDS.TXT']='../../../NODCU/GW_LOWLANDS.TXT' #set for DETAW-CD
-    os.environ['DIVFCTR.RMA']='../../../NODCU/DIVFCTR.DSM.2-92'
-    os.environ['DRNFCTR.RMA']='../../../NODCU/DRNFCTR.DSM.2-92'
-    os.environ['LEACHAPL.DAT']='../../../NODCU/LEACHAPL.DAT'
-    os.environ['LEACHDRN.DAT']='../../../NODCU/LEACHDRN.DAT'
-    os.environ['IDRNTDS.DAT']='../../../NODCU/IDRNTDS.DAT'
-    os.environ['DRNCL.123']='../../../NODCU/DRNCL.123'
-    os.environ['GEOM-NODES']='../../../NODCU/GEOM-NODES-1.5'
-    
-    os.environ['IRREFF.DAT']='../../../NODCU/IRREFF-3MWQIregions'
-    os.environ['subarea-info']='../../../NODCU/subarea-info'
+    nodcu_dir=os.path.join('..','..','..','NODCU')
+    os.environ['GW_RATES.TXT'] = os.path.join(nodcu_dir,'GW_RATES.txt')   #update data in the file each year ----no adjustment-GW_RATES.TXT
+    os.environ['GW_LOWLANDS.TXT']=os.path.join(nodcu_dir,'GW_LOWLANDS.txt') #set for DETAW-CD
+    os.environ['DIVFCTR.RMA']=os.path.join(nodcu_dir,'DIVFCTR.DSM.2-92')
+    os.environ['DRNFCTR.RMA']=os.path.join(nodcu_dir,'DRNFCTR.DSM.2-92')
+    os.environ['LEACHAPL.DAT']=os.path.join(nodcu_dir,'LEACHAPL.DAT')
+    os.environ['LEACHDRN.DAT']=os.path.join(nodcu_dir,'LEACHDRN.DAT')
+    os.environ['IDRNTDS.DAT']=os.path.join(nodcu_dir,'IDRNTDS.DAT')
+    os.environ['DRNCL.123']=os.path.join(nodcu_dir,'DRNCL.123')
+    os.environ['GEOM-NODES']=os.path.join(nodcu_dir,'GEOM-NODES-1.5')
+    os.environ['IRREFF.DAT']=os.path.join(nodcu_dir,'IRREFF-3MWQIregions')
+    os.environ['subarea-info']=os.path.join(nodcu_dir,'subarea-info')
     
     
     # Runtime variables
@@ -125,8 +126,8 @@ def main():
     os.environ['ascii']='Y'
     # The dss file to save output
     os.environ['dssfile']=outputfile        
-        
-    status=os.system('DETAW_CD.exe')
+    
+    status=os.system(exe_file)
     
     status=os.system('python ../converttoDSS.py junk1_1.txt')
     status=os.system('python ../converttoDSS.py junk1_2.txt')
@@ -135,24 +136,24 @@ def main():
     status=os.system('python ../converttoDSS.py junk3_1.txt')
     status=os.system('python ../converttoDSS.py junk3_2.txt')
     if supmodel == 1:
-        shutil.copy(outputfile,owd+"\\Output\\DSM2\\")
+        shutil.copy(outputfile,os.path.join(owd,"Output","DSM2"))
     elif supmodel == 2:
-        shutil.copy(outputfile,owd+"\\Output\\SCHISM\\")
+        shutil.copy(outputfile,os.path.join(owd,"Output","SCHISM"))
     elif supmodel == 3:
         status=os.system('python ../converttoDSS.py roisl.txt')
         status=os.system('python ../converttoDSS.py gwbyisl.txt')
-        tempstr = "python ../DCD_post-process_C3.py "+outputfile+" DP_island.dss GW_per_island.dss"
+        tempstr = "python "+os.path.join("..","DCD_post-process_C3.py")+" "+outputfile+" DP_island.dss GW_per_island.dss"
         status = os.system(tempstr)
         tempfile = outputfile.split(".")[0].strip()+"_mon_C3.dss"
-        shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
+        shutil.copy(tempfile,os.path.join(owd,"Output","CALSIM3"))
         tempfile = outputfile.split(".")[0].strip()+"_mon.dss"
-        shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
+        shutil.copy(tempfile,os.path.join(owd,"Output","CALSIM3"))
         tempfile = "DP_island_mon.dss"
-        shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
+        shutil.copy(tempfile,os.path.join(owd,"Output","CALSIM3"))
         tempfile = "GW_per_island_mon.dss"
-        shutil.copy(tempfile,owd+"\\Output\\CALSIM3\\")
-    os.chdir("../")
-    shutil.rmtree(".\DCD_outputs")
+        shutil.copy(tempfile,os.path.join(owd,"Output","CALSIM3"))
+    os.chdir("..")
+    shutil.rmtree("DCD_outputs")
 
     print("finish")
 

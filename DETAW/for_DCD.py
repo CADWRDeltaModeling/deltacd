@@ -6,9 +6,9 @@ import os, sys, string
 def timeseries_combine(DETAWOUTPUT,Oldisl, Newisl,Numcrop,idates,inputversion):
     #DETAWOUTPUT [0-ETC,1-ESPG,2-PCP,3-ETAW,4-DSW,5-ER] unit: A-FT 
     if inputversion.strip() == "CALSIM3":
-        islandfile = ".\Input\planning_study\island_id.txt"
+        islandfile = os.path.join("Input","planning_study","island_id.txt")
     else:
-        islandfile = ".\Input\historical_study\island_id.txt"
+        islandfile = os.path.join("Input","historical_study","island_id.txt")
     DETAWISL168 = zeros((6,Oldisl,idates),float)
     DETAWISL142 = zeros((5,Newisl,idates),float)
     f1 = open(islandfile)
@@ -69,16 +69,16 @@ def forNODCU(DETAWISL142,inputversion,endyear):
     tyr = endyear-beginyear+1
     
     #dssfh=pyhecdss.DSSFile(inputfile)
-    f1 = open(".\Output\DICU5.27","w")
-    f2 = open(".\Output\DICU5.14","w")
-    f3 = open(".\Output\DICU5.12","w")
-    f4 = open(".\Output\DICU5.17","w")
-    f5 = open(".\Output\DICU5.30","w")
+    f1 = open(os.path.join("Output","DICU5.27"),"w")
+    f2 = open(os.path.join("Output","DICU5.14"),"w")
+    f3 = open(os.path.join("Output","DICU5.12"),"w")
+    f4 = open(os.path.join("Output","DICU5.17"),"w")
+    f5 = open(os.path.join("Output","DICU5.30"),"w")
     
     if inputversion.strip() == "CALSIM3":
-        daysfile = ".\Input\planning_study\calender.txt"    #update the txt file too!!!!
+        daysfile = os.path.join("Input","planning_study","calender.txt")    #update the txt file too!!!!
     else:
-        daysfile = ".\Input\historical_study\calender.txt"
+        daysfile = os.path.join("Input","historical_study","calender.txt")
     f0 = open(daysfile)
     daysofyear = zeros((366,4,tyr),int)
     isl = 0

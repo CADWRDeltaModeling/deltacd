@@ -71,7 +71,7 @@ def DCD_to_CALSIM(inputfile):
     dssifh=pyhecdss.DSSFile(inputfile)
     outputfile = inputfile.split(".")[0]+"_C3.dss"
     dssofh=pyhecdss.DSSFile(outputfile)
-    DCD_C3_nodes = "../DCD_CALSIM3_nodes.csv"
+    DCD_C3_nodes = os.path.join("..","DCD_CALSIM3_nodes.csv")
     C3_nodes = ["OMR","SJR_EAST","SJR_WEST","SAC_WEST","MOK","SAC_SOUTH","SAC_NORTH","50_PA2"]
     C3_paths = ["IRR","SEEP","DRN"]
     DCD_paths = ["DIV-FLOW","SEEP-FLOW","DRAIN-FLOW"]
