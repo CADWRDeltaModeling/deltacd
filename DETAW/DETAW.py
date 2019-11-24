@@ -34,9 +34,9 @@ from math import cos,sin,tan,atan,sqrt,pi,pow
 import for_DCD
 from for_DCD import timeseries_combine, forNODCU
 
-def write_dataframe(dssfh, df, path, cunits, ctype='INST-VAL'):
-    ''' write data frame to DSS file handle '''
-    dssfh.write_rts(path,df,cunits,ctype)
+import timeit
+DEBUG_TIMING=True
+DEBUG_OUTPUT=False
 
 def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
     '''
@@ -54,6 +54,41 @@ def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
     df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
     write_dataframe(dssfh, df, path, cunits, ctype)
 
+def write_dataframe(dssfh, df, path, cunits, ctype='INST-VAL'):
+    ''' write data frame to DSS file handle '''
+    dssfh.write_rts(path,df,cunits,ctype)
+
+def write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile):
+    ctype = "INST-VAL" #"PER-AVER"
+    pyhecdss.set_message_level(0)
+    pyhecdss.set_program_name('DETAW')
+    dssfh=pyhecdss.DSSFile(outputfile)
+    path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
+    write_dataframe(dssfh, dftmax, path, 'oC', ctype)
+    path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
+    write_dataframe(dssfh, dftmin, path, 'oC', ctype)
+    path = "/detaw/LODI_Tmax/Temp//1MONTH/detaw/"
+    write_dataframe(dssfh, dftmax.resample('M').mean(), path, 'oC', ctype)
+    path = "/detaw/LODI_Tmin/Temp//1MONTH/detaw/"
+    write_dataframe(dssfh, dftmin.resample('M').mean(), path, 'oC', ctype)
+    for j in range(0,ilands):
+       precip_area=dfptotal.iloc[:,j].to_frame()
+       et0_area=dfet0.iloc[:,j].to_frame()
+       path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
+       write_dataframe(dssfh, precip_area, path, 'mm', ctype)
+       path = "/detaw/island_"+str(j+1)+"/ET0//1DAY/detaw/"
+       write_dataframe(dssfh, et0_area, path, 'mm', ctype)
+       path = "/detaw/island_"+str(j+1)+"/precipitation//1MONTH/detaw/"
+       write_dataframe(dssfh, precip_area.resample('M').mean(), path, 'mm', ctype)
+       path = "/detaw/island_"+str(j+1)+"/ET0//1MONTH/detaw/"
+       write_dataframe(dssfh, et0_area.resample('M').mean(), path, "mm", ctype)
+    dssfh.close()
+
+def write_weather_feather(dftmax, dftmin, dfptotal, dfet0, outputfile):
+    import feather
+    dffull=dftmax.join(dftmin,lsuffix='Tmax',rsuffix='Tmin').join(dfptotal).join(dfet0,rsuffix='et')
+    feather.write_dataframe(dffull, outputfile)
+
 def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ETo_corrector,filepath,start1):
     """
         calculate the precipitation and reference evapotranpiration for each island
@@ -64,13 +99,6 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
             Generate daily file and monthly weather file.
     """
     monthname = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] 
-    
-    outputfile = os.path.join(filepath,'Output','weather.dss')
-    pyhecdss.set_message_level(0)
-    pyhecdss.set_program_name('DETAW')
-    dssfh=pyhecdss.DSSFile(outputfile)
-    ctype = "INST-VAL" #"PER-AVER"
-    iplan = int(0)
     # precipitation is the product of precip stations times the distribution percentages 
     ts_ptotal=numpy.dot(numpy.transpose(ts_pcp),ts_per)
     #limit to > 0 and < 9990 ? 
@@ -103,29 +131,19 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
     ##The start time for monthly interval must be the first day of each month.
     startdate = str(start1[2])+monthname[start1[1]-1]+str(start1[0])
     starttime = str(start1[3])+"00"
+    # create data frames with time index
     dtindex=pd.date_range(startdate+'T'+starttime,periods=len(Tmax),freq='D')
     dftmax=pd.DataFrame(Tmax,index=dtindex)
     dftmin=pd.DataFrame(Tmin,index=dtindex)
-    path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
-    write_dataframe(dssfh, dftmax, path, 'oC', ctype)
-    path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
-    write_dataframe(dssfh, dftmin, path, 'oC', ctype)
-    path = "/detaw/LODI_Tmax/Temp//1MONTH/detaw/"
-    write_dataframe(dssfh, dftmax.resample('M').mean(), path, 'oC', ctype)
-    path = "/detaw/LODI_Tmin/Temp//1MONTH/detaw/"
-    write_dataframe(dssfh, dftmin.resample('M').mean(), path, 'oC', ctype)
-    for j in range(0,ilands):
-        precip_area=pd.DataFrame(numpy.ascontiguousarray(ts_ptotal[:,j]),index=dtindex)
-        et0_area=pd.DataFrame(numpy.ascontiguousarray(ET0Daily[:,j]),index=dtindex)
-        path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
-        write_dataframe(dssfh, precip_area, path, 'mm', ctype)
-        path = "/detaw/island_"+str(j+1)+"/ET0//1DAY/detaw/"
-        write_dataframe(dssfh, et0_area, path, 'mm', ctype)
-        path = "/detaw/island_"+str(j+1)+"/precipitation//1MONTH/detaw/"
-        write_dataframe(dssfh, precip_area.resample('M').mean(), path, 'mm', ctype)
-        path = "/detaw/island_"+str(j+1)+"/ET0//1MONTH/detaw/"
-        write_dataframe(dssfh, et0_area.resample('M').mean(), path, "mm", ctype)
-    dssfh.close()
+    dfptotal=pd.DataFrame(ts_ptotal,index=dtindex)
+    dfet0=pd.DataFrame(ET0Daily, index=dtindex)
+    #--debug output only output to dss
+    if DEBUG_OUTPUT:
+        outputfile = os.path.join(filepath,'Output','weather.dss')
+        write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile)
+    # output to feather
+    outputfile = os.path.join(filepath,'Output','weather.feather')
+    write_weather_feather(dftmax, dftmin, dfptotal, dfet0, outputfile)
     return(ts_ptotal, ET0Daily)
                           
 ##_______________________________________________________________________________
@@ -141,34 +159,22 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     Date = "  "
     cpartt = "  "
     monthname = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] 
+    #? why not read these from input file ?#
     CropName = ["Urban","Irrig pasture","Alfalfa","All Field","Sugar beets",  \
                 "Irrig Grain","Rice", "Truck Crops", "Tomato","Orchard",  \
                 "Vineyard", "Riparian Vegetation","Native Vegetation", \
                 "Non-irrig Grain","Water Surface"]
-    icroptype = 15
-    ##iyears = ts_year[len(ts_year)-1]-start1.year
-    ##iyears = 2008-start1.year+1
+    icroptype = len(CropName)
     idays = 366
     imonths = 12
-    ##idays = int(idates/iyears)
-    
-    
-    istatd = int(1)
-    istatm = int(1)
-    istaty = int(1)
-    ifltabd = zeros(600,"i")
-    ifltabm = zeros(600,"i")
-    ifltaby = zeros(600,"i")
     pyhecdss.set_message_level(0)
     pyhecdss.set_program_name('DETAW')
     ctype = "INST-VAL" # "PER-AVER"
     iplan = int(0)
+    #? why is start2 hardwired to 10 days after start1 ?
     start2 = [1921,10,1,23,0]
-    #startdate = str(start1[2])+monthname[start1[1]-1]+str(start1[0])
     startdate = str(start2[2])+monthname[start2[1]-1]+str(start2[0])
-    #starttime = str(start1[3])+"00"
     starttime = str(start2[3])+"00"
-    
     
     dpyAll = zeros((iyears+2),int)
     IKc = zeros((iyears+2,idays+1),float)
@@ -461,9 +467,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     else:
         source = os.path.join(filepath,'Input','historical_study','critical.csv')
     ts_type = "rts"
-    ##start1 = datetime(1921,9,29,23,0)
-    ##intl = time_interval(days=1)
-    
+
     fint = open(source,'r')
     icon = 0
     for oneline in fint:
@@ -2487,12 +2491,11 @@ if __name__ == "__main__":
     
 
     ts_type = "rts"
+    #? why is start1 hardwired ?#
     start1 = [1921,9,30,23,0]
     iyears = endyear-start1[0]+1
-    #iyears = 2015-start1[0]+1 #2011-start1[0]+1  ##2008  1924
-    
+    #? why is ilands,isites, etc... hardwired ?#
     ilands = 168
-    #idates = 34219 #32873  ##31870  1096
     isites = 7
     NumDay=[0,31,28,31,30,31,30,31,31,30,31,30,31]
     NumDayL=[0,31,29,31,30,31,30,31,31,30,31,30,31]
@@ -2500,6 +2503,7 @@ if __name__ == "__main__":
     NII=[31,60,91,121,152,182,213,244,274,305,335,366]
     pcplocs = ["Brentwood","Davis","Galt","Lodi","RioVista","Stockton","Tracy"]
     perclocs = ["Davis","Stockton","Lodi","Tracy Carbona","Rio Vista","Brentwood","Galt"]
+    #? all the above are hardwired. why?#
     ts_pcp = zeros((isites,idates),float)
     ts_per = zeros((isites,ilands),float)
     ETo_corrector = zeros((ilands),float)
@@ -2509,6 +2513,7 @@ if __name__ == "__main__":
     ts_days = zeros((idates),int)
     ts_LODI_tx = zeros((idates),float)
     ts_LODI_tn = zeros((idates),float)
+    #! move reading in of precip and other input data to its own function !#
     for ifile in range(0,3):
         print(file[ifile])
         if streamlinemodel == "CALSIM3":
@@ -2545,7 +2550,9 @@ if __name__ == "__main__":
                     ts_LODI_tn[icon-1] = float(line.split(",")[6])
                 icon += 1
         ff.close()
+    if DEBUG_TIMING: st=timeit.default_timer()
     (pcp,ET0) = weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn,ilands,idates,isites,ETo_corrector,filepath,start1)
+    if DEBUG_TIMING: print('weatheroutput took',timeit.default_timer()-st)
     pcp=pcp.T
     ET0=ET0.T
     (DETAWOUTPUT) = historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,ts_LODI_tx,ts_LODI_tn, \
@@ -2554,5 +2561,4 @@ if __name__ == "__main__":
     
     (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands,142,15,idates-1,streamlinemodel)
     forNODCU(DETAWISL142,streamlinemodel,endyear)
-    
     print("done")

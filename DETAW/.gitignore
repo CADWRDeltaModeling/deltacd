@@ -2,3 +2,4 @@
 DICU5.*
 __pycache__
 *~
+*.feather
