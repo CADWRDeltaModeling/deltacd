@@ -34,6 +34,10 @@ from math import cos,sin,tan,atan,sqrt,pi,pow
 import for_DCD
 from for_DCD import timeseries_combine, forNODCU
 
+def write_dataframe(dssfh, df, path, cunits, ctype='INST-VAL'):
+    ''' write data frame to DSS file handle '''
+    dssfh.write_rts(path,df,cunits,ctype)
+
 def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
     '''
     write to the pyhecdss.DSSFile for an array with starttime and assuming
@@ -48,16 +52,7 @@ def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
     else:
         raise RuntimeError('Not recognized frequency in path: %s'%path)
     df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
-    dssfh.write_rts(path,df,cunits,'INST-VAL')
-
-
-#def list_add_list(list1,list2):
-#    #list1 and list2 have the same length
-#    listtemp = []
-#    for i in range(0, len(list1)):
-#        listtemp.append(list1[i]+list2[i])
-#    return(listtemp)
-    
+    write_dataframe(dssfh, df, path, cunits, ctype)
 
 def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ETo_corrector,filepath,start1):
     """
@@ -70,156 +65,68 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
     """
     monthname = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"] 
     
-    istat = int(1)
-    ifltab = zeros(600,"i")
     outputfile = os.path.join(filepath,'Output','weather.dss')
     pyhecdss.set_message_level(0)
     pyhecdss.set_program_name('DETAW')
     dssfh=pyhecdss.DSSFile(outputfile)
     ctype = "INST-VAL" #"PER-AVER"
     iplan = int(0)
-    
-    ts_ptotal = zeros((ilands,idates),float)
-    ET0Daily = zeros((ilands,idates),float)
-    #start1 = [1921,9,30,23,0]  #datetime(1921,9,1,0,0)
+    # precipitation is the product of precip stations times the distribution percentages 
+    ts_ptotal=numpy.dot(numpy.transpose(ts_pcp),ts_per)
+    #limit to > 0 and < 9990 ? 
+    numpy.clip(ts_ptotal,0,9990)
+    # set Tmax to Tmin where Tmax < Tmin (why should this be?)
+    # should we not just exchange the values of min and max ?
+    bad_vals=numpy.where(Tmax<Tmin)
+    Tmax[bad_vals]=Tmin[bad_vals]
+    TDiffTemp=Tmax-Tmin
+    Tm=0.5*(Tmax+Tmin)
+    # Global constants for calcs
+    Lat = 38.5 # Mean latitude
+    PHI = math.pi*Lat/180 # phi angle with equator line ?
+    GSC = 0.082  ## Global Solar constant
+    Lam = 2.45   ## Latent heat of Vaporization (units?)
+    # Calculate ETo with Hargres-Samani equation
+    df = 1 + 0.033*numpy.cos(2*math.pi/365*ts_days)  ##Earth-sun distance
+    dec1 = 0.409*numpy.sin(2*math.pi/365*ts_days-1.39)   ##Delination of sun
+    arg = -numpy.tan(PHI)*numpy.tan(dec1)  ##argument for tangant in radians
+    argsq=arg*arg
+    # WS = sunrise hour angle in radians
+    WS = pi/2.-numpy.arctan(arg/numpy.sqrt(1-argsq))
+    WS[numpy.where(argsq >= 1)] = pi/2
+    cosz = WS*numpy.sin(dec1)*math.sin(PHI)+(numpy.cos(dec1)*math.cos(PHI)*numpy.sin(WS))
+    Ra = (24*60/math.pi)*GSC*df*cosz    ##Extrater Radiation
+    ET0 = (0.0023*Ra*numpy.sqrt(TDiffTemp)*(Tm+17.8))/Lam
+    numpy.clip(ET0,0,None,out=ET0)
+    ET0Daily=ETo_corrector*ET0.reshape(idates,1)
+    # start data & time
+    ##The start time for monthly interval must be the first day of each month.
     startdate = str(start1[2])+monthname[start1[1]-1]+str(start1[0])
     starttime = str(start1[3])+"00"
-    ##The start time for monthly interval must be the first day of each month.
-    
+    dtindex=pd.date_range(startdate+'T'+starttime,periods=len(Tmax),freq='D')
+    dftmax=pd.DataFrame(Tmax,index=dtindex)
+    dftmin=pd.DataFrame(Tmin,index=dtindex)
+    path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
+    write_dataframe(dssfh, dftmax, path, 'oC', ctype)
+    path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
+    write_dataframe(dssfh, dftmin, path, 'oC', ctype)
+    path = "/detaw/LODI_Tmax/Temp//1MONTH/detaw/"
+    write_dataframe(dssfh, dftmax.resample('M').mean(), path, 'oC', ctype)
+    path = "/detaw/LODI_Tmin/Temp//1MONTH/detaw/"
+    write_dataframe(dssfh, dftmin.resample('M').mean(), path, 'oC', ctype)
     for j in range(0,ilands):
-        for k in range(0,idates):
-                           
-            for i in range(0,isites):
-                ts_ptotal[j,k] = ts_ptotal[j,k] + ts_pcp[i,k]*ts_per[i,j]
-                if i == (isites-1):
-                    ## if ts_ptotal[j,k] < 0.0:
-                    if ts_ptotal[j,k] < 0.0 or ts_ptotal[j,k] > 9990:  ##revised 3/19/2009
-                        ts_ptotal[j,k] = 0.0
-                        
-            if (Tmax[k] < Tmin[k]) and (j==0):
-                Tmax[k] = Tmin[k]
-
-            ##Calculate ETo with Hargres-Samani equation
-            ##PI = 3.1415926
-            Lat = 38.5
-            PHI = pi*Lat/180
-            GSC = 0.082  ##Global Solar constant
-            Lam = 2.45   ##Latent heat of Vaporization
-            TDiffTemp = Tmax[k] - Tmin[k]
-            Tm = (Tmax[k]+Tmin[k])/2
-
-            df = 1 + 0.033*cos(2*pi/365*ts_days[k])  ##Earth-sun distance
-            dec1 = 0.409*sin(2*pi/365*ts_days[k]-1.39)   ##Delination of sun
-            arg = -tan(PHI)*tan(dec1)  ##argument for tangant in radians
-            if arg*arg >= 1:           ## WS = sunrise hour angle in radians
-                WS = pi/2.
-            else:
-                WS = pi/2.-atan(arg/sqrt(1-arg*arg))
-            cosz = WS*sin(dec1)*sin(PHI)+(cos(dec1)*cos(PHI)*sin(WS))
-            Ra = (24*60/pi)*GSC*df*cosz    ##Extrater Radiation
-            ET0 = (0.0023*Ra*sqrt(TDiffTemp)*(Tm+17.8))/Lam
-            if ET0 < 0.0:
-                ET0 = 0.0
-            ET0Daily[j,k] = ET0*ETo_corrector[j]
-        
+        precip_area=pd.DataFrame(numpy.ascontiguousarray(ts_ptotal[:,j]),index=dtindex)
+        et0_area=pd.DataFrame(numpy.ascontiguousarray(ET0Daily[:,j]),index=dtindex)
         path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
-        write_to_dss(dssfh, ts_ptotal[j], path, startdate+" "+starttime, 'mm', ctype)
-        #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"mm"}    
-        #tss_P = rts(ts_ptotal[j],start,dt,props)
-        #path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
-        #dss_store_ts(tss_P,outputfile,path)
-        
-        #tss_ET0 = rts(ET0Daily[j],start,days(1),props)
+        write_dataframe(dssfh, precip_area, path, 'mm', ctype)
         path = "/detaw/island_"+str(j+1)+"/ET0//1DAY/detaw/"
-        write_to_dss(dssfh, ET0Daily[j], path, startdate+" "+starttime, 'mm', ctype)
-        #dss_store_ts(tss_ET0,outputfile,path)
-        
-        if j == 0:
-            #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"oC"}
-            #tss_tx = rts(Tmax,start,days(1),props)
-            path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
-            write_to_dss(dssfh, Tmax, path, startdate+" "+starttime, 'oC', ctype)
-            #dss_store_ts(tss_tx,outputfile,path)
-                       
-            #tss_tn = rts(Tmin,start,days(1),props)
-            path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
-            write_to_dss(dssfh, Tmin, path, startdate+" "+starttime, "oC", ctype)
-            #dss_store_ts(tss_tn,outputfile,path)
-
-
-        ##Generate monthly weather output: Tmax, Tmin, Pcp, ET0
-        tempmonth = start1[1]
-        mon_pcp = []
-        mon_tx = []
-        mon_tn = []
-        mon_ET0 = []
-        imon = 0
-        sum_pcp = 0.0
-        sum_tx = 0.0
-        sum_tn = 0.0
-        sum_ET0 = 0.0
-        itemp = 0
-        for k in range(0,idates):
-            
-            if ts_mon[k] == tempmonth:
-                if k<(idates-1):
-                    sum_pcp = sum_pcp+ts_ptotal[j,k]
-                    sum_tx = sum_tx+Tmax[k]
-                    sum_tn = sum_tn + Tmin[k]
-                    sum_ET0 = sum_ET0 + ET0Daily[j,k]
-                    itemp = itemp + 1
-                else:
-                    ##mon_pcp[imon].append(sum_pcp/itemp)
-                    mon_pcp.append(sum_pcp)
-                    mon_tx.append(sum_tx/itemp)
-                    mon_tn.append(sum_tn/itemp)
-                    mon_ET0.append(sum_ET0/itemp)
-            else:
-                mon_pcp.append(sum_pcp)
-                mon_tx.append(sum_tx/itemp)
-                mon_tn.append(sum_tn/itemp)
-                mon_ET0.append(sum_ET0/itemp)
-                imon = imon + 1
-                if k < (idates-1):
-                    itemp = 1
-                    sum_pcp = ts_ptotal[j,k]
-                    sum_tx = Tmax[k]
-                    sum_tn = Tmin[k]
-                    sum_ET0 = ET0Daily[j,k]
-                    tempmonth = ts_mon[k]
-                else:
-                    mon_pcp.append(ts_ptotal[j,k])
-                    mon_tx.append(Tmax[k])
-                    mon_tn.append(Tmin[k])
-                    mon_ET0.append(ET0Daily[j,k])
-                    
-        #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"mm"}    
-        #tss_mon_P = rts(mon_pcp,start1,dt_mon,props)
+        write_dataframe(dssfh, et0_area, path, 'mm', ctype)
         path = "/detaw/island_"+str(j+1)+"/precipitation//1MONTH/detaw/"
-        write_to_dss(dssfh, mon_pcp, path, startdate+" "+starttime, 'MM', ctype)
-        #--delete--[ifltab,istat] = hecdss.zsrts(ifltab,path,startdate,starttime,len(mon_pcp),mon_pcp,"MM",ctype,iplan)
-        #dss_store_ts(tss_mon_P,outputfile,path)
-        
-        #tss_mon_ET0 = rts(mon_ET0,start1,dt_mon,props)
+        write_dataframe(dssfh, precip_area.resample('M').mean(), path, 'mm', ctype)
         path = "/detaw/island_"+str(j+1)+"/ET0//1MONTH/detaw/"
-        write_to_dss(dssfh, mon_ET0, path, startdate+" "+starttime, "MM", ctype)
-        #dss_store_ts(tss_mon_ET0,outputfile,path)
-        
-        if j == 0:
-            #props={TIMESTAMP:PERIOD_START,AGGREGATION:MEAN,"UNIT":"oC"}
-            #tss_mon_tx = rts(mon_tx,start1,dt_mon,props)
-            path = "/detaw/LODI_Tmax/Temp//1MONTH/detaw/"
-            write_to_dss(dssfh, mon_tx, path, startdate+" "+starttime, "oC", ctype)
-            #dss_store_ts(tss_mon_tx,outputfile,path)
-            
-            #tss_mon_tn = rts(mon_tn,start1,dt_mon,props)
-            path = "/detaw/LODI_Tmin/Temp//1MONTH/detaw/"
-            write_to_dss(dssfh, mon_tn, path, startdate+" "+starttime, "oC", ctype)
-            #dss_store_ts(tss_mon_tn,outputfile,path)
-
-    dssfh.close()        
+        write_dataframe(dssfh, et0_area.resample('M').mean(), path, "mm", ctype)
+    dssfh.close()
     return(ts_ptotal, ET0Daily)
-        
                           
 ##_______________________________________________________________________________
 ##_______________________________________________________________________________
@@ -732,7 +639,6 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
         print("island =",k+1)
         PETo = 0.0
         DCT = 1
-        
         dpyAll[0] = 365
         for kk in range(0,idates):
             iy = ts_year[kk] - start1[0] + 1
@@ -1872,7 +1778,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                         
                         
                
-########Combine OLDHSA and HSA together#################################################
+                        ########Combine OLDHSA and HSA together#################################################
    
                         ##if y > 1 and ik==1:
                         if (y > 1 and ii == dpy) or (y == iyears and ik==1):
@@ -2100,13 +2006,11 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                             for Mon in range(0,12):
                                 if(y!=1 and y!=iyears) or (y==1 and Mon>=9) or (y==iyears and Mon<9):                                                                    
                                     
-##____________________________OldHSA [
                                     if j!=15:
                                         ##NetApp = 0 for non-irrig Grain
                                         if j==14:
                                             MonNetApp[Mon] = 0
                                         if Mon >= 9:
-##____________________________OldHSA ]
                                             temp = HAcre[k,y,j]*0.0081071
                                         else:                             
                                             temp = HAcre[k,y-1,j]*0.0081071
@@ -2168,7 +2072,6 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                                                 data20mon.append(MonETAWPos*temp)                                                
                         
                         
-########Combine OLDHSA and HSA together#################################################                        
                             
             
             
@@ -2642,9 +2545,9 @@ if __name__ == "__main__":
                     ts_LODI_tn[icon-1] = float(line.split(",")[6])
                 icon += 1
         ff.close()
-    
     (pcp,ET0) = weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn,ilands,idates,isites,ETo_corrector,filepath,start1)
-    
+    pcp=pcp.T
+    ET0=ET0.T
     (DETAWOUTPUT) = historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,ts_LODI_tx,ts_LODI_tn, \
             ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,NumDay,iyears,  \
             idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily,streamlinemodel)
