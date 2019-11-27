@@ -38,6 +38,17 @@ import timeit
 DEBUG_TIMING=True
 DEBUG_OUTPUT=False
 NO_OUTPUT=False
+def read_and_clean_crop_info(source):
+    '''
+    reads critical.csv or non-critical.csv for crop information for critical and non-critical types
+    return the cleaned up dataframe
+    '''
+    #equivalent in pandas
+    df=pd.read_csv(source,skiprows=6)
+    df=df.rename(columns={'Crop':'Data Type'})
+    df=df.drop(columns=[df.columns[1]])
+    df=df.drop(range(20,27))
+    return df
 def fill_zeros_with_last(arr):
     '''
     fill in zeros with previous value. 
@@ -419,31 +430,26 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     yearTypeCal = "  "
     ##yearType[0] = "AN"    
     NetApp = 0.0
-    
-    for i in range(0,idays+1):
-        CCKc[i] = 0.0
-
-    for i in range(0,iyears+1):
-        osIkc[i]=0
-        isIkc[i]=0
-        IGETo[i]=0
-        osFkc[i]=0
-        KcByr[i]=0
-        KcCyr[i]=0
-        KcDyr[i]=0
-        KcEyr[i]=0
-        dpyAll[i]=0
-        ## yrs[i]=0
-        NA1[i]=0
-        NA2[i]=0
-        NA3[i]=0
-        for j in range(0,idays+1):
-            EToDaily[i,j]=0
-            ##Date1Daily[i,j]=0
-            PcpDaily[i,j]=0
-            OKc[i,j]=0
-            IKc[i,j]=0
-            Kc[i,j]=0
+    CCKc[:idays+1]=0
+    osIkc[:iyears+1]=0
+    isIkc[:iyears+1]=0
+    IGETo[:iyears+1]=0
+    osFkc[:iyears+1]=0
+    KcByr[:iyears+1]=0
+    KcCyr[:iyears+1]=0
+    KcDyr[:iyears+1]=0
+    KcEyr[:iyears+1]=0
+    dpyAll[:iyears+1]=0
+    ## yrs[:iyears+1]=0
+    NA1[:iyears+1]=0
+    NA2[:iyears+1]=0
+    NA3[:iyears+1]=0
+    EToDaily[:iyears+1,:idays+1]=0
+    ##Date1Daily[:iyears+1,:idays+1]=0
+    PcpDaily[:iyears+1,:idays+1] =0
+    OKc[:iyears+1,:idays+1] =0
+    IKc[:iyears+1,:idays+1] =0
+    Kc[:iyears+1,:idays+1] =0
             
     ##++++++++++++++++++++++++++++++++++++++++++++++++++++
     ##
@@ -456,131 +462,55 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     ## The weather data come from the main program
 
     ##step3: read crop information for critical years
+
     if streamlinemodel == "CALSIM3":
         source = os.path.join(filepath,'Input','planning_study','critical.csv')
     else:
         source = os.path.join(filepath,'Input','historical_study','critical.csv')
     ts_type = "rts"
-    fint = open(source,'r')
-    icon = 0
-    for oneline in fint:
-        if icon == 9:
-            for j in range(1,icroptype+1):
-                CCropType[j] = int(oneline.split(",")[j+1])
-        #selector = "critical$C10:Q10"
-        #tss_temp = excel_retrieve_ts(source,selector,ts_type,start=start1,interval=intl)
-        #for j in range(1,icroptype+1):
-        #    CCropType[j] = int(tss_temp[j-1].data[0])
-               
-        if icon == 12:
-            for j in range(1,icroptype+1):
-                CBeginDate[j] = int(oneline.split(",")[j+1])
-        if icon == 13:
-            for j in range(1,icroptype+1):
-                CEndDate[j] = int(oneline.split(",")[j+1])
-        if icon == 14:
-            for j in range(1,icroptype+1):
-                Cf[j] = int(oneline.split(",")[j+1])
-        if icon == 15:
-            for j in range(1,icroptype+1):
-                Ckc1[j] = float(oneline.split(",")[j+1])
-        if icon == 16:
-            for j in range(1,icroptype+1):
-                Ckc2[j] = float(oneline.split(",")[j+1])
-        if icon == 17:
-            for j in range(1,icroptype+1):
-                Ckc3[j] = float(oneline.split(",")[j+1])
-        if icon == 18:
-            for j in range(1,icroptype+1):
-                CAB[j] = float(oneline.split(",")[j+1])
-        if icon == 19:
-            for j in range(1,icroptype+1):
-                CAC[j] = float(oneline.split(",")[j+1])
-        if icon == 20:
-            for j in range(1,icroptype+1):
-                CAD[j] = float(oneline.split(",")[j+1])
-        if icon == 21:
-            for j in range(1,icroptype+1):
-                CSDx[j] = float(oneline.split(",")[j+1])
-        if icon == 22:
-            for j in range(1,icroptype+1):
-                CRDxL[j] = float(oneline.split(",")[j+1])
-        if icon == 23:
-            for j in range(1,icroptype+1):
-                CRDxU[j] = float(oneline.split(",")[j+1])
-        if icon == 24:
-            for j in range(1,icroptype+1):
-                CawL[j] = float(oneline.split(",")[j+1])
-        if icon == 25:
-            for j in range(1,icroptype+1):
-                CawU[j] = float(oneline.split(",")[j+1])
-        if icon == 26:
-            for j in range(1,icroptype+1):
-                CADep[j] = float(oneline.split(",")[j+1])
-        icon += 1    
-    fint.close()
+    crdf=read_and_clean_crop_info(source)
+    CCropType[1:icroptype+1]=crdf.iloc[2,1:16].values
+    CBeginDate[1:icroptype+1]=crdf.iloc[5,1:16].values
+    CEndDate[1:icroptype+1]=crdf.iloc[6,1:16].values
+    Cf[1:icroptype+1]=crdf.iloc[7,1:16].values
+    Ckc1[1:icroptype+1]=crdf.iloc[8,1:16].values
+    Ckc2[1:icroptype+1]=crdf.iloc[9,1:16].values
+    Ckc3[1:icroptype+1]=crdf.iloc[10,1:16].values
+    CAB[1:icroptype+1]=crdf.iloc[11,1:16].values
+    CAC[1:icroptype+1]=crdf.iloc[12,1:16].values
+    CAD[1:icroptype+1]=crdf.iloc[13,1:16].values
+    CSDx[1:icroptype+1]=crdf.iloc[14,1:16].values
+    CRDxL[1:icroptype+1]=crdf.iloc[15,1:16].values
+    CRDxU[1:icroptype+1]=crdf.iloc[16,1:16].values
+    CawL[1:icroptype+1]=crdf.iloc[17,1:16].values
+    CawU[1:icroptype+1]=crdf.iloc[18,1:16].values
+    CADep[1:icroptype+1]=crdf.iloc[19,1:16].values
+    
     ##step4: read crop information for non-critical years
     if streamlinemodel == "CALSIM3":
         source = os.path.join(filepath,'Input','planning_study','noncritical.csv')
     else:
         source = os.path.join(filepath,'Input','historical_study','noncritical.csv')
-    fint = open(source,'r')
-    icon = 0
-    for oneline in fint:
-        if icon == 9:
-            for j in range(1,icroptype+1):
-                NCCropType[j] = int(oneline.split(",")[j+1])
-        
-        if icon == 12:
-            for j in range(1,icroptype+1):
-                NCBeginDate[j] = int(oneline.split(",")[j+1])
-        if icon == 13:
-            for j in range(1,icroptype+1):
-                NCEndDate[j] = int(oneline.split(",")[j+1])
-        if icon == 14:
-            for j in range(1,icroptype+1):
-                NCf[j] = int(oneline.split(",")[j+1])
-        if icon == 15:
-            for j in range(1,icroptype+1):
-                NCkc1[j] = float(oneline.split(",")[j+1])
-        if icon == 16:
-            for j in range(1,icroptype+1):
-                NCkc2[j] = float(oneline.split(",")[j+1])
-        if icon == 17:
-            for j in range(1,icroptype+1):
-                NCkc3[j] = float(oneline.split(",")[j+1])
-        if icon == 18:
-            for j in range(1,icroptype+1):
-                NCAB[j] = float(oneline.split(",")[j+1])
-        if icon == 19:
-            for j in range(1,icroptype+1):
-                NCAC[j] = float(oneline.split(",")[j+1])
-        if icon == 20:
-            for j in range(1,icroptype+1):
-                NCAD[j] = float(oneline.split(",")[j+1])
-        if icon == 21:
-            for j in range(1,icroptype+1):
-                NCSDx[j] = float(oneline.split(",")[j+1])
-        if icon == 22:
-            for j in range(1,icroptype+1):
-                NCRDxL[j] = float(oneline.split(",")[j+1])
-        if icon == 23:
-            for j in range(1,icroptype+1):
-                NCRDxU[j] = float(oneline.split(",")[j+1])
-        if icon == 24:
-            for j in range(1,icroptype+1):
-                NCawL[j] = float(oneline.split(",")[j+1])
-        if icon == 25:
-            for j in range(1,icroptype+1):
-                NCawU[j] = float(oneline.split(",")[j+1])
-        if icon == 26:
-            for j in range(1,icroptype+1):
-                NCADep[j] = float(oneline.split(",")[j+1])
-        icon += 1    
-    fint.close()
-   
+    ncrdf=read_and_clean_crop_info(source)
+    NCCropType[1:icroptype+1]=ncrdf.iloc[2,1:16].values
+    NCBeginDate[1:icroptype+1]=ncrdf.iloc[5,1:16].values
+    NCEndDate[1:icroptype+1]=ncrdf.iloc[6,1:16].values
+    NCf[1:icroptype+1]=ncrdf.iloc[7,1:16].values
+    NCkc1[1:icroptype+1]=ncrdf.iloc[8,1:16].values
+    NCkc2[1:icroptype+1]=ncrdf.iloc[9,1:16].values
+    NCkc3[1:icroptype+1]=ncrdf.iloc[10,1:16].values
+    NCAB[1:icroptype+1]=ncrdf.iloc[11,1:16].values
+    NCAC[1:icroptype+1]=ncrdf.iloc[12,1:16].values
+    NCAD[1:icroptype+1]=ncrdf.iloc[13,1:16].values
+    NCSDx[1:icroptype+1]=ncrdf.iloc[14,1:16].values
+    NCRDxL[1:icroptype+1]=ncrdf.iloc[15,1:16].values
+    NCRDxU[1:icroptype+1]=ncrdf.iloc[16,1:16].values
+    NCawL[1:icroptype+1]=ncrdf.iloc[17,1:16].values
+    NCawU[1:icroptype+1]=ncrdf.iloc[18,1:16].values
+    NCADep[1:icroptype+1]=ncrdf.iloc[19,1:16].values
+
     ##step5: read land use from .\Landuse folder !!!!!!!Not checked 3/13/2009
-             ##get year type of each year
+    ##get year type of each year
     
     if streamlinemodel == "CALSIM3":
         source = os.path.join(filepath,'Input','planning_study','Landuse','SA0001.csv')
@@ -594,38 +524,22 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             if line[0] == "1" or line[0] == "2":
                 yearType.append(line.split(",")[1].strip())                
     yearType.append("AN")  ##for last year
-                
-            
     ## get Hectares of each crop type, year and island        
-    
     if streamlinemodel == "CALSIM3":
         hist_path = os.path.join(filepath,'Input','planning_study','Landuse')      ##---08/02/2010
     else:
         hist_path = os.path.join(filepath, 'Input','historical_study','Landuse')
     files = listdir(hist_path)
     ts_type = "rts"
-    ##intl = time_interval(years=1)
-    ##start0 = datetime(1922,1,1,1,0)
     for file in files:
         if ".csv" in file:
             sheetname = file.replace(".csv","")
             ilandno = int(sheetname.split("A0")[1])  ##Landuse ---08/02/2010
             source = os.path.join(hist_path,file)
-            fint = open(source,'r')
-            icon = 0
-            for oneline in fint:
-                #print icon, oneline
-                if icon-1 > iyears: break
-                if ilandno-1> ilands: break
-                if icon > 1:
-                    for j in range(1,icroptype+1):
-                        HAcre[ilandno-1,icon-1,j] = float(oneline.split(",")[j+1])
-                        #print "HAcre =", HAcre[ilandno-1,icon-1,j]
-                icon += 1
-            fint.close()
+            df=pd.read_csv(source)
+            if ilandno > ilands: break
+            HAcre[ilandno-1,1:iyears+1,1:icroptype+1]=df.iloc[1:iyears+1,2:icroptype+2].astype('float').values
     ##End of data input
-    #--for itt in range(0,icon):
-    #--    print HAcre[167,itt,3]
     ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ##
     ##Calculating ETAW for each crop in SA
@@ -1289,8 +1203,6 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                         jj = ii-dpyAll[y-1]
                     
                     ET2 = ET2 + ETcDaily[y,jj]
-                    
-                        
                     if (ET2+ET1)>(CETc-YTD):
                         LI = ii
                         LIYear[y] = LI
@@ -1301,8 +1213,6 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                         NA3[y] = YTD
                         break
                         ##ii = EndDate1 + 1
-                      
-                        
                         ##to get out of loop i<=E
                 ##end of for i<=E
             ##end of y<YCI
@@ -2057,7 +1967,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             MOSCERN=SOSCERN/iyears 
             MOSCSpg=SOSCSpg/iyears
             
-            
+            ###-------------OUTPUT CODE BELOW HERE----------------###
             #start = start1+days(2)
             start = str(start1[2]+1)+monthname[start1[1]-1]+str(start1[0])+" "+"2300"
             dt = "1DAY"  #days(1)
@@ -2361,7 +2271,7 @@ if __name__ == "__main__":
     start1 = [1921,9,30,23,0]
     iyears = endyear-start1[0]+1
     #? why is ilands,isites, etc... hardwired ?#
-    ilands = 10
+    ilands = 1
     isites = 7
     NumDay=[0,31,28,31,30,31,30,31,31,30,31,30,31]
     NumDayL=[0,31,29,31,30,31,30,31,31,30,31,30,31]
