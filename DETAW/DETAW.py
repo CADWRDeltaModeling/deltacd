@@ -55,7 +55,7 @@ def fill_zeros_with_last(arr):
     https://stackoverflow.com/questions/30488961/fill-zero-values-of-1d-numpy-array-with-last-non-zero-values
     '''
     prev = numpy.arange(len(arr))
-    prev[arr == 0] = 0
+    prev[arr <= 0] = 0
     prev = numpy.maximum.accumulate(prev)
     return arr[prev]
 
@@ -538,7 +538,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             source = os.path.join(hist_path,file)
             df=pd.read_csv(source)
             if ilandno > ilands: break
-            HAcre[ilandno-1,1:iyears+1,1:icroptype+1]=df.iloc[1:iyears+1,2:icroptype+2].astype('float').values
+            HAcre[ilandno-1,1:iyears,1:icroptype+1]=df.iloc[1:iyears,2:icroptype+2].astype('float').values
     ##End of data input
     ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ##
@@ -551,17 +551,35 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
         DCT = 1
         dpyAll[0] = 365
         #calculate leap year days
-        years=numpy.concatenate([[0],numpy.unique(ts_year),[0]])
-        dpyAll=numpy.full(years.shape,365)
-        dpyAll[years%4==0]=366
+        #years=numpy.concatenate([[0],numpy.unique(ts_year),[0]])
+        #dpyAll=numpy.full(years.shape,365)
+        #dpyAll[years%4==0]=366
         # round to precision of 2 after decimal and fill with last non zero value
-        EToDaily[ts_year-start1[0]+1,ts_days[:]]=fill_zeros_with_last(numpy.around(ET0[k],decimals=2))
+        #EToDaily[ts_year-start1[0]+1,ts_days[:]]=fill_zeros_with_last(numpy.around(ET0[k],decimals=2))
         # round to precision of 2 after decimal
-        PcpDaily[ts_year-start1[0]+1,ts_days[:]]=numpy.around(pcp[k],decimals=2)
+        #PcpDaily[ts_year-start1[0]+1,ts_days[:]]=numpy.around(pcp[k],decimals=2)
         for kk in range(0,idates):
             iy = ts_year[kk] - start1[0] + 1
             id = ts_days[kk]
+            
+            if (ET0[k,kk]*100-int(ET0[k,kk]*100))>0.5:
+                EToDaily[iy,id] = int(ET0[k,kk]*100+1)/100.
+            else:
+                EToDaily[iy,id] = int(ET0[k,kk]*100)/100.
+            
+            if (pcp[k,kk]*100-int(pcp[k,kk]*100))>0.5:
+                PcpDaily[iy,id] = int(pcp[k,kk]*100+1)/100.
+            else:
+                PcpDaily[iy,id] = int(pcp[k,kk]*100)/100.
+            
+            dpy=365
+            if ts_year[kk]%4==0:
+                dpy=366
+            dpyAll[iy]= dpy
+                        
             DCT = DCT + 1
+            if EToDaily[iy,id] <= 0:
+                EToDaily[iy,id] = PETo
             #Cumulative ETo
             CETo = CETo+EToDaily[iy,id]
             METo = CETo/DCT
@@ -582,6 +600,8 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
 
             if EToDaily[iy,id] != 0:
                 OKc[iy,id] = CEs/CETo
+            
+            PETo = EToDaily[iy,id]
             PEs = CEs
         WSCESpg[:,:]=0
         WSEspgMonthly[:,:]=0
@@ -888,15 +908,8 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             ## end of for  y<iyears  ********************************
 
             ## Identify initial growth Kc(KcB) and final Kc(KcE)
-            LowIkc=2
-            LowFkc=2
-            for y in range(1,iyears+1):
-                if LowIkc>osIkc[y]:
-                    LowIkc=osIkc[y]
-                
-                if LowFkc>osFkc[y]:
-                    LowFkc=osFkc[y]
-                    
+            LowIkc=min(2,numpy.amin(osIkc[1:iyears+1]))
+            LowFkc=min(2,numpy.amin(osFkc[1:iyears+1]))        
             ##......... Print Kc value selection process
             ## ......   Note that Kc's are not printed in final version
             ##........  Print rows were changed to remarks. however, the
@@ -2271,7 +2284,7 @@ if __name__ == "__main__":
     start1 = [1921,9,30,23,0]
     iyears = endyear-start1[0]+1
     #? why is ilands,isites, etc... hardwired ?#
-    ilands = 1
+    ilands = 168
     isites = 7
     NumDay=[0,31,28,31,30,31,30,31,31,30,31,30,31]
     NumDayL=[0,31,29,31,30,31,30,31,31,30,31,30,31]
@@ -2339,9 +2352,7 @@ if __name__ == "__main__":
             ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,NumDay,iyears,  \
             idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily,streamlinemodel)
     if DEBUG_TIMING: print('detaw output took',timeit.default_timer()-st)
-    #dfdetaw = pd.DataFrame(DETAWOUTPUT, )
-    #DETAWOUTPUT = zeros((6,ilands+1,icroptype+1,idates-1),float)
     
     (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands,142,15,idates-1,streamlinemodel)
-    #forNODCU(DETAWISL142,streamlinemodel,endyear)
+    forNODCU(DETAWISL142,streamlinemodel,endyear)
     print("done")
