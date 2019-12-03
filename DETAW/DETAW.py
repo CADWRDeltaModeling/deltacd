@@ -41,7 +41,7 @@ import numba
 
 DEBUG_TIMING=True
 DEBUG_OUTPUT=False
-NO_OUTPUT=False
+NO_OUTPUT=True
 def read_and_clean_crop_info(source):
     '''
     reads critical.csv or non-critical.csv for crop information for critical and non-critical types
