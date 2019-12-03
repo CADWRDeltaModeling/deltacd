@@ -25,6 +25,7 @@
 
 import pyhecdss
 import pandas as pd
+import xarray as xr
 from numpy import add,pi,array,zeros
 
 import os, sys, string, math, numpy
@@ -62,6 +63,18 @@ def fill_zeros_with_last(arr):
     prev = numpy.maximum.accumulate(prev)
     return arr[prev]
 
+def write_to_netcdf(detawoutput):
+    '''
+    write the detaw output array of etvars x area x crop x times to netcdf format
+    '''
+    dims=['etvars','area','crop','time']
+    coords={'etvars':["ETc","ESpg","PCP","ETAW","Dsw","ER"],
+        'area': numpy.arange(detawoutput.shape[1]-1,dtype='i4')+1,
+        'crop':["Urban","Irrig pasture","Alfalfa","All Field","Sugar beets", "Irrig Grain","Rice", "Truck Crops", "Tomato","Orchard", "Vineyard", "Riparian Vegetation","Native Vegetation", "Non-irrig Grain","Water Surface"],
+        'time':pd.date_range('1921-10-01',periods=detawoutput.shape[-1]) } # last dimension is time
+    dx=xr.DataArray(detawoutput[:,:-1,:-1,:],dims=dims,coords=coords,attrs={'units':'Acre-feet'})
+    dx.to_netcdf('Output/detawoutput.nc')
+    return dx
 def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
     '''
     write to the pyhecdss.DSSFile for an array with starttime and assuming
@@ -2448,7 +2461,7 @@ if __name__ == "__main__":
             ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,NumDay,iyears,  \
             idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily,streamlinemodel)
     if DEBUG_TIMING: print('detaw output took',timeit.default_timer()-st)
-    
+    dx=write_to_netcdf(DETAWOUTPUT)
     (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands,142,15,idates-1,streamlinemodel)
     forNODCU(DETAWISL142,streamlinemodel,endyear)
     print("done")
