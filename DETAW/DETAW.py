@@ -89,8 +89,13 @@ def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
         fstr='1M'
     else:
         raise RuntimeError('Not recognized frequency in path: %s'%path)
-    df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
-    write_dataframe(dssfh, df, path, cunits, ctype)
+    #df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
+    #write_dataframe(dssfh, df, path, cunits, ctype)
+    sp=pd.to_datetime(startdatetime)
+    darr=numpy.array(arr,dtype='d')
+    pyhecdss.pyheclib.hec_zsrtsxd(dssfh.ifltab, path,
+                                sp.strftime("%d%b%Y").upper(), sp.round(freq='T').strftime("%H%M"),
+                                darr, cunits[:8], ctype[:8])
 
 def write_dataframe(dssfh, df, path, cunits, ctype='INST-VAL'):
     ''' write data frame to DSS file handle '''
