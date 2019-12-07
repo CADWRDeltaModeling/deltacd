@@ -81,6 +81,24 @@ def write_to_netcdf(detawoutput):
     dx=xr.DataArray(detawoutput[:,:-1,:-1,:],dims=dims,coords=coords,attrs={'units':'Acre-feet'})
     dx.to_netcdf('Output/detawoutput.nc')
     return dx
+
+def weatheroutput_to_netcdf(pcp,ET0):
+    '''
+    write the precip and ET0 for all areas to netcdf4 format
+    '''
+    dpcp=xr.DataArray(pcp,
+        dims=['time','area'],
+        coords={'time':pd.date_range('1921-10-01',periods=pcp.shape[0],freq='D'), 'area': numpy.arange(pcp.shape[-1],dtype='i4')+1,}, 
+        attrs={'units':'mm'},
+        name='precip')
+    det0=xr.DataArray(ET0,
+        dims=['time','area'],
+        coords={'time':pd.date_range('1921-10-01',periods=pcp.shape[0],freq='D'), 'area': numpy.arange(pcp.shape[-1],dtype='i4')+1,}, 
+        attrs={'units':'mm'},
+        name='ET0')
+    dpcp.to_netcdf('Output/percip.nc')
+    det0.to_netcdf('Output/ET0.nc')
+
 def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
     '''
     write to the pyhecdss.DSSFile for an array with starttime and assuming
@@ -132,11 +150,6 @@ def write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile):
        path = "/detaw/island_"+str(j+1)+"/ET0//1MONTH/detaw/"
        write_dataframe(dssfh, et0_area.resample('M').mean(), path, "mm", ctype)
     dssfh.close()
-
-def write_weather_feather(dftmax, dftmin, dfptotal, dfet0, outputfile):
-    import feather
-    dffull=dftmax.join(dftmin,lsuffix='Tmax',rsuffix='Tmin').join(dfptotal).join(dfet0,rsuffix='et')
-    feather.write_dataframe(dffull, outputfile)
 
 def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ETo_corrector,filepath,start1):
     """
@@ -190,9 +203,6 @@ def weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,Tmax,Tmin,ilands,idates,isites,ET
     if DEBUG_OUTPUT:
         outputfile = os.path.join(filepath,'Output','weather.dss')
         write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile)
-    # output to feather
-    outputfile = os.path.join(filepath,'Output','weather.feather')
-    write_weather_feather(dftmax, dftmin, dfptotal, dfet0, outputfile)
     return(ts_ptotal, ET0Daily)
 
 @numba.jit(nopython=True,cache=True)
@@ -2245,7 +2255,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             
             ktemp = int(k/10)
             
-            if idayoutput == 1:
+            if idayoutput == 1 and not NO_OUTPUT:
                 destination = os.path.join(filepath,'Output','DETAW_day_'+str(ktemp)+'.dss')
                 dssfh=pyhecdss.DSSFile(destination)
                 for ilist in range(0,len(ddatalist)):
@@ -2283,7 +2293,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
                 dssfh.close()
                 
             Epart = "1MONTH"
-            if imonthoutput == 1:
+            if imonthoutput == 1 and not NO_OUTPUT:
                 destination = os.path.join(filepath,'Output','DETAW_month.dss')
                 dssfh=pyhecdss.DSSFile(destination)
                 
@@ -2351,9 +2361,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     return(DETAWOUTPUT)
 
 ##_______________________________________________________________________________
-
 if __name__ == "__main__":
-
     files = listdir(".")
     filepath = os.getcwd()
     
@@ -2464,15 +2472,18 @@ if __name__ == "__main__":
         ff.close()
     if DEBUG_TIMING: st=timeit.default_timer()
     (pcp,ET0) = weatheroutput(ts_pcp,ts_per,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn,ilands,idates,isites,ETo_corrector,filepath,start1)
-    if DEBUG_TIMING: print('weather output took',timeit.default_timer()-st)
+    weatheroutput_to_netcdf(pcp,ET0)
+    if DEBUG_TIMING: print('weather output took',timeit.default_timer()-st, ' seconds')
     pcp=pcp.T
     ET0=ET0.T
     if DEBUG_TIMING: st=timeit.default_timer()
     (DETAWOUTPUT) = historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,ts_LODI_tx,ts_LODI_tn, \
             ilands,idates,isites,ts_year,ts_mon,ts_days,start1,filepath,NI,NII,NumDay,iyears,  \
             idayoutput,imonthoutput,iyearoutput,itotaloutput,dailyunit,forDSM2_daily,streamlinemodel)
-    if DEBUG_TIMING: print('detaw output took',timeit.default_timer()-st)
+    if DEBUG_TIMING: print('historical etaw calculations took ',timeit.default_timer()-st, ' seconds')
+    if DEBUG_TIMING: st=timeit.default_timer()
     dx=write_to_netcdf(DETAWOUTPUT)
+    if DEBUG_TIMING: print('detaw output to netcdf4 took',timeit.default_timer()-st, ' seconds')
     (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands,142,15,idates-1,streamlinemodel)
     forNODCU(DETAWISL142,streamlinemodel,endyear)
     print("done")
