@@ -23,12 +23,18 @@
 #    Python detaw.py 
 # 
 
+import sys
+
+if not sys.warnoptions:
+    import warnings
+    warnings.simplefilter("ignore")
+
 import pyhecdss
 import pandas as pd
 import xarray as xr
 from numpy import add,pi,array,zeros
 
-import os, sys, string, math, numpy
+import os, string, math, numpy
 from os import listdir
 from math import cos,sin,tan,atan,sqrt,pi,pow
 
