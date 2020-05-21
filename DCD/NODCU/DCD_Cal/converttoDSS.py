@@ -31,11 +31,11 @@ if __name__ == "__main__":
     
     f1 = open(sys.argv[1])
     
-    ileng = 0
+    #ileng = 0
     tempseries = []
     oneseries = 0
     for line in f1:
-        if ileng == 0 and ".dss" in line:
+        if ".dss" in line:
             outputfile = line.strip()
             dssfh=pyhecdss.DSSFile(outputfile)
         else:
@@ -68,5 +68,5 @@ if __name__ == "__main__":
                     tempseries.append(float(line.strip()))
                     oneseries += 1
     f1.close()
-    
+    dssfh.close()
     

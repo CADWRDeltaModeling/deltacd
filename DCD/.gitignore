@@ -2,4 +2,4 @@
 DICU5.*
 __pycache__
 **/DCD_outputs/*
-*~
+**/DCD_kernel/*

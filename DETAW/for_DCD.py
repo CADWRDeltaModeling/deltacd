@@ -1,27 +1,38 @@
 # After the ETAW for water has been calculated, it has to be removed in this file. 12/22/22015
 
+import numpy as np
 from numpy import zeros,sum,clip
 import os, sys, string
 
-def timeseries_combine(DETAWOUTPUT,Oldisl, Newisl,Numcrop,idates,inputversion):
-    #DETAWOUTPUT [0-ETC,1-ESPG,2-PCP,3-ETAW,4-DSW,5-ER] unit: A-FT 
-    if inputversion.strip() == "CALSIM3":
-        islandfile = os.path.join("Input","planning_study","island_id.txt")
-    else:
-        islandfile = os.path.join("Input","historical_study","island_id.txt")
+def timeseries_combine(DETAWOUTPUT,Oldisl, Newisl,Numcrop,idates,ratefile):
     DETAWISL168 = zeros((6,Oldisl,idates),float)
-    DETAWISL142 = zeros((5,Newisl,idates),float)
-    f1 = open(islandfile)
-    islid = zeros((26,2),int)
-    isl = 0
-    for line in f1:
-        if line:
-            ll = line.split()
-            islid[isl,0] = int(ll[0])
-            islid[isl,1] = int(ll[1])
-            isl = isl + 1
-    f1.close()
-    
+    DETAWISLnew = zeros((5,Newisl,idates),float)
+    DETAWISLold = np.copy(DETAWOUTPUT)
+    ratelines = []
+    if ratefile != "":
+        f0 = open(ratefile, 'r')
+        for line in f0:
+            if line:
+                if len(line) > 2:
+                    ratelines.append(line)
+        rates = zeros((len(ratelines),15),float)
+        ex_isl = zeros((len(ratelines)),int)
+        for i in range(len(ratelines)):
+            temp = int(ratelines[i].split(",")[0].strip())
+            if temp > 0: 
+                ex_isl[i]=temp
+                for j in range(Numcrop):
+                    rates[i,j] = float(ratelines[i].split(",")[3+j].strip())
+        for isl in range(0,Oldisl):
+            isign = 0
+            for ii in range(len(ex_isl)):
+                if (isl+1) == ex_isl[ii]:
+                    isign = 1
+                    for j in range(Numcrop):
+                        DETAWISLold[:,isl,j,:] = DETAWISLold[:,isl,j,:]*rates[ii,j]
+                    break
+            if isign == 0:
+                DETAWISLold[:,isl,:,:] = 0.0        
     #sum up the island ET of all 15 crops for each island
     for iterm in range(0,6):  #len(DETAWOUTPUT)):  
         for iland in range(0,Oldisl):     #168):
@@ -31,33 +42,23 @@ def timeseries_combine(DETAWOUTPUT,Oldisl, Newisl,Numcrop,idates,inputversion):
                 else:
                     tempcrop = Numcrop
                 for idd in range(0,idates):
-                    DETAWISL168[iterm,iland,idd] = sum(DETAWOUTPUT[iterm,iland,:,idd])
+                    DETAWISL168[iterm,iland,idd] = sum(DETAWISLold[iterm,iland,0:tempcrop,idd])
             else:
-                DETAWISL168[4,iland,:] = DETAWOUTPUT[0,iland,Numcrop-1,:]-DETAWOUTPUT[2,iland,Numcrop-1,:]
+                DETAWISL168[4,iland,:] = DETAWISLold[0,iland,Numcrop-1,:]-DETAWISLold[2,iland,Numcrop-1,:]
                 DETAWISL168[4,iland,:] = clip(DETAWISL168[4,iland,:],0.0,None)
+                
     #DETAWISL168 = clip(DETAWISL168,0.0,None)
     #convert 168 islands ET to 142 islands ET
     for iterm in range(0,5): #5):
-        for iland in range(0,Oldisl):
-            if (iland+1) < Newisl+1:
-                if iterm == 2:
-                    DETAWISL142[iterm,iland,:]=DETAWISL168[iterm,iland,:]-DETAWISL168[5,iland,:]   
-                    DETAWISL142[iterm,iland,:] = clip(DETAWISL142[iterm,iland,:],0.0,None)                   
-                else:
-                    DETAWISL142[iterm,iland,:] = DETAWISL168[iterm,iland,:]
+        for iland in range(0,Newisl):
+            if iterm == 2:
+                DETAWISLnew[iterm,iland,:] = DETAWISL168[iterm,iland,:]-DETAWISL168[5,iland,:]   
+                DETAWISLnew[iterm,iland,:] = clip(DETAWISLnew[iterm,iland,:],0.0,None)                   
             else:
-                for id in range(0, isl):
-                    if islid[id,0] == (iland+1):
-                        tempisl = islid[id,1]-1
-                        if iterm == 2:
-                            DETAWISL142[iterm,tempisl,:]+=(DETAWISL168[iterm,iland,:]-DETAWISL168[5,iland,:])
-                            DETAWISL142[iterm,tempisl,:]=clip(DETAWISL142[iterm,tempisl,:],0.0,None)
-                        else:
-                            DETAWISL142[iterm,tempisl,:]+=DETAWISL168[iterm,iland,:]
-    #DETAWISL142=clip(DETAWISL142,0.0,None)
-    return DETAWISL142
+                DETAWISLnew[iterm,iland,:] = clip(DETAWISL168[iterm,iland,:],0.0,None)
+    return DETAWISLnew
     
-def forNODCU(DETAWISL142,inputversion,endyear):     
+def forNODCU(DETAWISL168,inputversion,endyear,ilands,outfilenames):     
     #prepare the text input files for DCD-NODCU
     #Cpart[0] = "ETAW"
     #Cpart[1] = "ESPG"
@@ -69,16 +70,17 @@ def forNODCU(DETAWISL142,inputversion,endyear):
     tyr = endyear-beginyear+1
     
     #dssfh=pyhecdss.DSSFile(inputfile)
-    f1 = open(os.path.join("Output","DICU5.27"),"w")
-    f2 = open(os.path.join("Output","DICU5.14"),"w")
-    f3 = open(os.path.join("Output","DICU5.12"),"w")
-    f4 = open(os.path.join("Output","DICU5.17"),"w")
-    f5 = open(os.path.join("Output","DICU5.30"),"w")
+    tempname = ".\Output\DICU5"+outfilenames
+    f1 = open(tempname+".27","w")
+    f2 = open(tempname+".14","w")
+    f3 = open(tempname+".12","w")
+    f4 = open(tempname+".17","w")
+    f5 = open(tempname+".30","w")
     
     if inputversion.strip() == "CALSIM3":
-        daysfile = os.path.join("Input","planning_study","calender.txt")    #update the txt file too!!!!
+        daysfile = ".\Input\planning_study\calender.txt"    #update the txt file too!!!!
     else:
-        daysfile = os.path.join("Input","historical_study","calender.txt")
+        daysfile = ".\Input\historical_study\calender.txt"
     f0 = open(daysfile)
     daysofyear = zeros((366,4,tyr),int)
     isl = 0
@@ -102,7 +104,7 @@ def forNODCU(DETAWISL142,inputversion,endyear):
     
     for ifile in range(0,5): 
         print(ifile)
-        for iland in range(1,143):
+        for iland in range(1,ilands+1):
             if ifile == 3:
                 strt = str("%3i" % iland)+"AT1 4 HISTORIC DEPLETION OF APPLIED WATER BY IRR. AND URBAN, AREA   "
                 strt = strt + str(iland)+ "\n"
@@ -143,13 +145,13 @@ def forNODCU(DETAWISL142,inputversion,endyear):
                             if iyr == 0 and iday < 5:
                                 for kday in range(0, iday+1):
                                     temp_c = 0.2
-                                    tempts[iyr,iday] += DETAWISL142[ifile,iland-1,iday-kday]*temp_c
+                                    tempts[iyr,iday] += DETAWISL168[ifile,iland-1,iday-kday]*temp_c
                             else:
                                 for kday in range(0,5):
                                     temp_c = 0.2
-                                    tempts[iyr,iday] += DETAWISL142[ifile,iland-1,ndays-kday]*temp_c
+                                    tempts[iyr,iday] += DETAWISL168[ifile,iland-1,ndays-kday]*temp_c
                         else:
-                            tempts[iyr,iday] = DETAWISL142[ifile,iland-1,ndays]
+                            tempts[iyr,iday] = DETAWISL168[ifile,iland-1,ndays]
                         ndays+=1  
             for iyr in range(0,tyr):
                 strt = str("%3i" % iland)+"A   "+ str(beginyear+iyr)
