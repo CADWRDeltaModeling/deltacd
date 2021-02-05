@@ -1,0 +1,21 @@
+DICU MODEL SUBAREA INFO FOR INCORPORATING NEW SEEPAGE AND IRRIGATION EFFICIENCY ESTIMATES
+(PH DOCUMENTED IN CHAPTER 5 OF 16TH ANNUAL REPORT ESTIMATES) INTO NODCU PROGRAM. NM (8/7/95)
+
+ SUBAREA                                        Uplands/Lowlands  Acreage       MWQI DOC subregion
+NO.  NAME                                      1=LOWLANDS,2= UP USGS digitized  Low/Mid/High
+
+  1  Suisun_Marsh_sub_1                                  1         1236        High
+  2  Suisun_Marsh_sub_2                                  1         8085        High
+  3  Suisun_Marsh_sub_3                                  1         20054       High
+  4  Suisun_Marsh_sub_4                                  1         6535        High
+  5  Suisun_Marsh_sub_5                                  1         2384        High
+  6  Suisun_Marsh_sub_6                                  2         8793        High
+  7  Suisun_Marsh_sub_7                                  1         3777        High
+  8  Suisun_Marsh_sub_8                                  1         1892        High
+  9  Suisun_Marsh_sub_9                                  1         6793        High
+ 10  Suisun_Marsh_sub_10                                 1         3307        High
+ 11  Suisun_Marsh_sub_11                                 1         5427        High
+ 12  Suisun_Marsh_sub_12                                 2         4777        High
+ 13  Suisun_Marsh_sub_13                                 1         3688        High
+ 14  Suisun_Marsh_sub_14                                 1         31145       High
+ 15  Suisun_Marsh_sub_15                                 2         6349        High
