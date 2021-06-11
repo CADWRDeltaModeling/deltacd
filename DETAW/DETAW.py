@@ -129,7 +129,7 @@ def write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile):
     ctype = "INST-VAL" #"PER-AVER"
     pyhecdss.set_message_level(0)
     pyhecdss.set_program_name('DETAW')
-    dssfh=pyhecdss.DSSFile(outputfile)
+    dssfh=pyhecdss.DSSFile(outputfile, create_new=True)
     path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
     write_dataframe(dssfh, dftmax, path, 'oC', ctype)
     path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
@@ -2257,7 +2257,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             
             if idayoutput == 1 and not NO_OUTPUT:
                 destination = os.path.join(filepath,'Output','DETAW_day_'+str(ktemp)+'.dss')
-                dssfh=pyhecdss.DSSFile(destination)
+                dssfh=pyhecdss.DSSFile(destination, create_new=True)
                 for ilist in range(0,len(ddatalist)):
                     path = "/"+Apart+"/"+Bpart+"/"+dcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
                     listlen = len(ddatalist[ilist])
@@ -2295,7 +2295,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             Epart = "1MONTH"
             if imonthoutput == 1 and not NO_OUTPUT:
                 destination = os.path.join(filepath,'Output','DETAW_month.dss')
-                dssfh=pyhecdss.DSSFile(destination)
+                dssfh=pyhecdss.DSSFile(destination, create_new=True)
                 
                 for ilist in range(0,21):
                     path = "/"+Apart+"/"+Bpart+"/"+mcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
@@ -2352,7 +2352,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
             Epart = "1YEAR"
             if iyearoutput == 1:
                 destination = os.path.join(filepath,'Output','DETAW_year.dss')
-                dssfh=pyhecdss.DSSFile(destination)
+                dssfh=pyhecdss.DSSFile(destination, create_new=True)
                 for ilist in range(0,len(ydatalist)):
                     path = "/"+Apart+"/"+Bpart+"/"+ycpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
                     listlen = len(ydatalist[ilist])
@@ -2393,19 +2393,33 @@ if __name__ == "__main__":
                     dailyunit = int(line.split("=")[1])
                 if "forDSM2_daily" in line:
                     forDSM2_daily = int(line.split("=")[1])
-                if "End year" in line:
-                    endyear = int(line.split("=")[1])
-                if "Days" in line:
-                    idates = int(line.split("=")[1])
+                #if "End year" in line:
+                #    endyear = int(line.split("=")[1])
+                #if "Days" in line:
+                #    idates = int(line.split("=")[1])
     
     file = ["  "]*3
     
-    file[0] = "mm_pcp.csv"
+    file[0] = "mm_Pcp.csv"
     file[1] = "Percentage.csv"
     file[2] = "LODI_PT.csv"
 
     fileout = "weather.dss"
-    
+    if streamlinemodel == "CALSIM3":
+        source = filepath+"\\Input\\planning_study\\"+file[2]
+    else:
+        source = filepath+"\\Input\\historical_study\\"+file[2]
+    f0 = open(source, 'r')
+    templ = ""
+    tline = 0
+    for line in f0:
+        if line:
+            templ = line
+            tline += 1
+    endyear = int(templ.split(",")[1])  
+    idates = tline-1
+    print("idates =", idates)
+    f0.close()
 
     ts_type = "rts"
     #? why is start1 hardwired ?#
@@ -2484,6 +2498,31 @@ if __name__ == "__main__":
     if DEBUG_TIMING: st=timeit.default_timer()
     dx=write_to_netcdf(DETAWOUTPUT)
     if DEBUG_TIMING: print('detaw output to netcdf4 took',timeit.default_timer()-st, ' seconds')
-    (DETAWISL142) = timeseries_combine(DETAWOUTPUT,ilands,142,15,idates-1,streamlinemodel)
-    forNODCU(DETAWISL142,streamlinemodel,endyear)
+    (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,"")
+    forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"")
+    if streamlinemodel == "CALSIM3":
+        #print("in the double-counting process", idates)
+        tempfile = filepath+"\\Input\\planning_study\\"+"CS3_DCD_rate1.txt"
+        (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
+        forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex1")
+        
+        tempfile = filepath+"\\Input\\planning_study\\"+"CS3_DCD_rate2.txt"
+        (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
+        forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex2")
+        
+        tempfile = filepath+"\\Input\\planning_study\\"+"CS3_DCD_rate3.txt"
+        (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
+        forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex3")
+    else:
+        tempfile = filepath+"\\Input\\historical_study\\"+"CS3_DCD_rate1.txt"
+        (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
+        forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex1")
+        
+        tempfile = filepath+"\\Input\\historical_study\\"+"CS3_DCD_rate2.txt"
+        (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
+        forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex2")
+        
+        tempfile = filepath+"\\Input\\historical_study\\"+"CS3_DCD_rate3.txt"
+        (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
+        forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex3")
     print("done")
