@@ -28,16 +28,27 @@ import pandas as pd
 import pyhecdss
 import os,sys
 import shutil
+import platform
+
+def get_kernel_exe():
+    csys = platform.system()
+    if csys == 'Windows':
+        return '.\DCD_kernel.exe'
+    elif csys == 'Linux':
+        return './DCD_kernel'
+    else:
+        raise 'Unsupported platform: %s'%csys
+
 
 def callDCD(supmodel,leachoption,endyear,outputfile):
     owd = os.getcwd()
-    dir_dst = ".\\NODCU\\DCD_Cal\\"
+    dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    if not os.path.exists(".\DCD_outputs"):
-        os.mkdir(".\DCD_outputs")
-    shutil.copy('DCD_kernel.exe',".\DCD_outputs")
-    shutil.copy('WYTYPES',".\DCD_outputs")
-    os.chdir(".\DCD_outputs")
+    if not os.path.exists("./DCD_outputs"):
+        os.mkdir("./DCD_outputs")
+    shutil.copy(get_kernel_exe(),"./DCD_outputs")
+    shutil.copy('WYTYPES',"./DCD_outputs")
+    os.chdir("./DCD_outputs")
     
     os.environ['DICU5.14']='../../../../DETAW/Output/DICU5.14' 
     os.environ['DICU5.17']='../../../../DETAW/Output/DICU5.17' 
@@ -78,7 +89,7 @@ def callDCD(supmodel,leachoption,endyear,outputfile):
     # The leach scale factor   
     os.environ['leachscale']=str(leachoption)
         
-    status=os.system('DCD_kernel.exe')
+    status=os.system(get_kernel_exe())
     status=os.system('python ../converttoDSS.py roisl.txt')
     status=os.system('python ../converttoDSS.py gwbyisl.txt')
     status=os.system('python ../converttoDSS.py drn_wo_ro_isl.txt')
@@ -93,16 +104,22 @@ def callDCD(supmodel,leachoption,endyear,outputfile):
         daytomonth(tempfile,"DCD_island_month.dss")
         shutil.copy(tempfile, "D_"+tempfile)
         shutil.copy(tempfile, "C_"+tempfile)
+    out_dir=os.path.join(owd,'Output')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+        os.mkdir(os.path.join(owd,"Output/DSM2/"))
+        os.mkdir(os.path.join(owd,"Output/SCHISM/"))
+        os.mkdir(os.path.join(owd,"Output/CALSIM3/"))
     if supmodel == 1:
-        #shutil.copy(outputfile,owd+"\\Output\\DSM2\\")
-        shutil.copy("DCD_island_month.dss", owd+"\\Output\\DSM2\\")
+        #shutil.copy(outputfile,owd+"/Output/DSM2/")
+        shutil.copy("DCD_island_month.dss", os.path.join(owd,"Output/DSM2/"))
     elif supmodel == 2:
         #tempfile = outputfile.split(".")[0].strip()+"_noWS_leach"+str(leachoption)+".dss"
         #os.rename(outputfile,tempfile)
-        #shutil.copy(tempfile,owd+"\\Output\\SCHISM\\")
-        shutil.copy("DCD_island_month.dss", owd+"\\Output\\SCHISM\\")
+        #shutil.copy(tempfile,owd+"/Output/SCHISM/")
+        shutil.copy("DCD_island_month.dss", os.path.join(owd,"Output/SCHISM/"))
     elif supmodel == 3:
-        shutil.copy("DCD_island_month.dss",owd+"\\Output\\CALSIM3\\")
+        shutil.copy("DCD_island_month.dss",os.path.join(owd,"Output/CALSIM3/"))
     
     os.chdir(owd)
 
@@ -128,7 +145,7 @@ def callDETAW(supmodel,leachoption):
     endyear = templ.split(",")[1]  
     endmonth = int(templ.split(",")[2])
     outputfile = "DCD_"+months[endmonth-1]+endyear+"_Lch"+str(leachoption)+".dss" 
-    SKIP_DETAW=False # FIXME make this an option
+    SKIP_DETAW=True # FIXME make this an option
     if not SKIP_DETAW:
         status=os.system('python DETAW.py')
     os.chdir(owd)
@@ -151,8 +168,8 @@ def get_pathname(dssfh, path):
     
 def daytomonth(inputfile,outputfile):
     d=pyhecdss.DSSFile(inputfile)
-    #outputfile = os.getcwd()+"\\"+inputfile.split(".")[0]+"_mon.dss"
-    do=pyhecdss.DSSFile(outputfile)
+    #outputfile = os.getcwd()+"/"+inputfile.split(".")[0]+"_mon.dss"
+    do=pyhecdss.DSSFile(outputfile, create_new=True)
     plist=d.get_pathnames()
     for p in plist:
         df,u,p=d.read_rts(p)
@@ -168,7 +185,7 @@ def changepaths(inDSSfile,pathfile,outDSSfile,EPART):
             islands.append(line)
             
     dssifh=pyhecdss.DSSFile(inDSSfile)
-    dssofh=pyhecdss.DSSFile(outDSSfile)
+    dssofh=pyhecdss.DSSFile(outDSSfile, create_new=True)
     for i in range(len(islands)):
         templ = islands[i]        
         pathin = "//"+templ.split(",")[0].strip()+"/////"
@@ -182,13 +199,13 @@ def changepaths(inDSSfile,pathfile,outDSSfile,EPART):
 def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
     owd = os.getcwd()
     
-    dir_dst = ".\\NODCU\\DCD_Cal\\"
+    dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    if not os.path.exists(".\DCD_outputs"):
-        os.mkdir(".\DCD_outputs")
-    shutil.copy('DCD_kernel.exe',".\DCD_outputs")
-    shutil.copy('WYTYPES',".\DCD_outputs")
-    os.chdir(".\DCD_outputs")
+    if not os.path.exists("./DCD_outputs"):
+        os.mkdir("./DCD_outputs")
+    shutil.copy(get_kernel_exe(),"./DCD_outputs")
+    shutil.copy('WYTYPES',"./DCD_outputs")
+    os.chdir("./DCD_outputs")
     
     tempn = '../../../../DETAW/Output/DICU5_'+extension
     os.environ['DICU5.14']=tempn+'.14' 
@@ -232,7 +249,7 @@ def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
     # The leach scale factor   
     os.environ['leachscale']=str(leachoption)
         
-    status=os.system('DCD_kernel.exe')
+    status=os.system(get_kernel_exe())
     
     status=os.system('python ../converttoDSS.py roisl.txt')
     status=os.system('python ../converttoDSS.py gwbyisl.txt')
@@ -249,7 +266,7 @@ def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
         daytomonth(tempfile,"ext_DCD_island_month.dss")
     if extension == "ex3":
         if supmodel == 3:
-            shutil.copy("ext_DCD_island_month.dss",owd+"\\Output\\CALSIM3\\")
+            shutil.copy("ext_DCD_island_month.dss",os.path.join(owd,"Output/CALSIM3/"))
         tempstr = "python ../DCD_post-process_C3.py "+outputfile+" ex3"
         status = os.system(tempstr)
     
@@ -259,17 +276,17 @@ def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
 def createoutputs(outputfile,modeloption):
     owd = os.getcwd()
     
-    dir_dst = ".\\NODCU\\DCD_Cal\\"
+    dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    if not os.path.exists(".\DCD_outputs"):
-        os.mkdir(".\DCD_outputs")
-    shutil.copy('DCD_kernel.exe',".\DCD_outputs")
-    shutil.copy('WYTYPES',".\DCD_outputs")
-    os.chdir(".\DCD_outputs")
+    if not os.path.exists("./DCD_outputs"):
+        os.mkdir("./DCD_outputs")
+    shutil.copy(get_kernel_exe(),"./DCD_outputs")
+    shutil.copy('WYTYPES',"./DCD_outputs")
+    os.chdir("./DCD_outputs")
     tempstr = "python ../DCD_post-process_C3.py "+outputfile+" out_"+str(modeloption)
     status = os.system(tempstr)
     
-    #shutil.rmtree(".\DCD_outputs")
+    #shutil.rmtree("./DCD_outputs")
     os.chdir(owd)
 
 
@@ -294,7 +311,7 @@ def main():
     callDCD_ext(modeloption,leachoption,endyear,outputfile,"ex3")
     createoutputs(outputfile,modeloption)
     
-    shutil.rmtree(".\\NODCU\\DCD_Cal\\DCD_outputs", ignore_errors=True)
+    shutil.rmtree("./NODCU/DCD_Cal/DCD_outputs", ignore_errors=True)
     os.chdir(owd)
 
 if __name__ == "__main__":

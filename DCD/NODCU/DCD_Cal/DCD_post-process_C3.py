@@ -8,6 +8,10 @@ import os, sys, string
 import calendar
 import shutil
 
+def get_rts(file,path):
+    gen = pyhecdss.get_ts(file,path)
+    return list(gen)
+
 def get_pathname(dssfh, path, partno):
     '''
     reads catalog to get full pathname if it exists
@@ -31,12 +35,12 @@ def get_pathname(dssfh, path, partno):
     return pathname
     
 def PP_DSS():
-    inputfile =".\RO_island.dss"
-    outputfile = ".\DP_island.dss"
+    inputfile ="./RO_island.dss"
+    outputfile = "./DP_island.dss"
     
     pyhecdss.set_message_level(0)
     dssfh=pyhecdss.DSSFile(inputfile)
-    dssofh=pyhecdss.DSSFile(outputfile)
+    dssofh=pyhecdss.DSSFile(outputfile, create_new=True)
     plist=dssfh.get_pathnames()
     for p in plist:
         df,u,p=dssfh.read_rts(p)
@@ -47,8 +51,8 @@ def PP_DSS():
     
 def daytomonth(inputfile):
     d=pyhecdss.DSSFile(inputfile)
-    outputfile = os.getcwd()+"\\"+inputfile.split(".")[0]+"_mon.dss"
-    do=pyhecdss.DSSFile(outputfile)
+    outputfile = os.getcwd()+"/"+inputfile.split(".")[0]+"_mon.dss"
+    do=pyhecdss.DSSFile(outputfile, create_new=True)
     plist=d.get_pathnames()
     for p in plist:
         df,u,p=d.read_rts(p)
@@ -59,7 +63,7 @@ def daytomonth(inputfile):
 def DCD_to_CALSIM_ISLAND(divfile,spgfile,drnfile,rofile,inputfile):
     inputfile = inputfile.split(".")[0]+"_mon.dss"
     outputfile = inputfile.split(".")[0]+"_C3.dss"
-    dssofh=pyhecdss.DSSFile(outputfile)
+    dssofh=pyhecdss.DSSFile(outputfile, create_new=True)
     
     DCD_C3_islands = "../DCD_CALSIM3_islands_N.csv"
     C3_nodes = ["OMR","SJR_EAST","SJR_WEST","SAC_WEST","MOK","SAC_SOUTH","SAC_NORTH","50_PA2"]
@@ -131,12 +135,12 @@ def split_BBID(divfile, spgfile, drnfile, rofile, outputfile,option):
     for ifile in range(len(inputfiles)):
         extfile = "ext_" + inputfiles[ifile][2::]
         orgfile = inputfiles[ifile]
-        dssout=pyhecdss.DSSFile(orgfile)
+        dssout=pyhecdss.DSSFile(orgfile, create_new=True)
         for i in range(len(BBIDisl)):
             path1 = "/DICU-ISLAND/"+str(BBIDisl[i])+"/"+DCD_paths[ifile]+"//1DAY/DWR-BDO/"
             path2 = "/BBID/"+str(BBIDisl[i])+"/"+DCD_paths[ifile]+"//1DAY//"
-            tdss1 = pyhecdss.get_rts(orgfile,path1)
-            tdss2 = pyhecdss.get_rts(extfile,path2)
+            tdss1 = get_rts(orgfile,path1)
+            tdss2 = get_rts(extfile,path2)
             pathout = "/BBID/"+str(BBIDisl[i])+"/"+DCD_paths[ifile]+"//1DAY/DWR-BDO/"
             dssout.write_rts(pathout,tdss2[0][0].shift(freq='D'),tdss2[0][1],tdss2[0][2])
             pathout = path1.replace(str(BBIDisl[i]),str(BBIDisl[i])+"_w_BBID")
@@ -144,7 +148,7 @@ def split_BBID(divfile, spgfile, drnfile, rofile, outputfile,option):
             tdss1[0][0].iloc[:,0] = tdss1[0][0].iloc[:,0] - tdss2[0][0].iloc[:,0]
             dssout.write_rts(path1,tdss1[0][0].shift(freq='D'),tdss1[0][1],tdss1[0][2])
         
-        dssifh2=pyhecdss.DSSFile(extfile)
+        dssifh2=pyhecdss.DSSFile(extfile, create_new=True)
         dfcat=dssifh2.read_catalog()
         dfpath=dfcat[(dfcat.A!="BBID")]
         pathnames=dssifh2.get_pathnames(dfpath)
@@ -212,7 +216,7 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
         if drnnode[i] not in nodes:
             nodes.append(drnnode[i])        
     Sortednodes = np.sort(nodes)
-    dssout = pyhecdss.DSSFile(outputfile)
+    dssout = pyhecdss.DSSFile(outputfile, create_new=True)
     for ifile in range(len(inputfiles)-1):
         orgfile = inputfiles[ifile]
         dssinputf = pyhecdss.DSSFile(orgfile)
@@ -268,14 +272,14 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
             pathname = "/BBID/"+str(BBIDisl[i])+"/"+DCD_paths[ifile]+"//1DAY/DWR-BDO/" 
             if i == 0:
                 print(pathname,inputfiles[ifile])
-                tdssb = pyhecdss.get_rts(inputfiles[ifile],pathname) 
+                tdssb = get_rts(inputfiles[ifile],pathname) 
                 #print("1st Tdssb =",tdssb)
             else:
-                tdsst = pyhecdss.get_rts(inputfiles[ifile],pathname)
+                tdsst = get_rts(inputfiles[ifile],pathname)
                 tdssb[0][0].iloc[:,0] += tdsst[0][0].iloc[:,0]
             if ifile == 2:
                 pathname = "/BBID/"+str(BBIDisl[i])+"/"+DCD_paths[ifile+1]+"//1DAY/DWR-BDO/"
-                tdssro = pyhecdss.get_rts(inputfiles[ifile+1],pathname)
+                tdssro = get_rts(inputfiles[ifile+1],pathname)
                 tdssb[0][0].iloc[:,0] += tdssro[0][0].iloc[:,0]
                
         if ifile == 0:

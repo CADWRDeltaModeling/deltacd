@@ -37,7 +37,7 @@ if __name__ == "__main__":
     for line in f1:
         if ".dss" in line:
             outputfile = line.strip()
-            dssfh=pyhecdss.DSSFile(outputfile)
+            dssfh=pyhecdss.DSSFile(outputfile, create_new = True)
         else:
             if "A=" in line and oneseries == 0:
                 pathnames = line.split("=")

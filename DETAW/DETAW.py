@@ -96,6 +96,8 @@ def weatheroutput_to_netcdf(pcp,ET0):
         coords={'time':pd.date_range('1921-10-01',periods=pcp.shape[0],freq='D'), 'area': numpy.arange(pcp.shape[-1],dtype='i4')+1,}, 
         attrs={'units':'mm'},
         name='ET0')
+    if not os.path.exists('Output'):
+        os.mkdir('Output')
     dpcp.to_netcdf('Output/percip.nc')
     det0.to_netcdf('Output/ET0.nc')
 
@@ -2400,15 +2402,15 @@ if __name__ == "__main__":
     
     file = ["  "]*3
     
-    file[0] = "mm_Pcp.csv"
+    file[0] = "mm_pcp.csv"
     file[1] = "Percentage.csv"
     file[2] = "LODI_PT.csv"
 
     fileout = "weather.dss"
     if streamlinemodel == "CALSIM3":
-        source = filepath+"\\Input\\planning_study\\"+file[2]
+        source = filepath+"/Input/planning_study/"+file[2]
     else:
-        source = filepath+"\\Input\\historical_study\\"+file[2]
+        source = filepath+"/Input/historical_study/"+file[2]
     f0 = open(source, 'r')
     templ = ""
     tline = 0
@@ -2502,27 +2504,27 @@ if __name__ == "__main__":
     forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"")
     if streamlinemodel == "CALSIM3":
         #print("in the double-counting process", idates)
-        tempfile = filepath+"\\Input\\planning_study\\"+"CS3_DCD_rate1.txt"
+        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate1.txt"
         (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
         forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex1")
         
-        tempfile = filepath+"\\Input\\planning_study\\"+"CS3_DCD_rate2.txt"
+        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate2.txt"
         (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
         forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex2")
         
-        tempfile = filepath+"\\Input\\planning_study\\"+"CS3_DCD_rate3.txt"
+        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate3.txt"
         (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
         forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex3")
     else:
-        tempfile = filepath+"\\Input\\historical_study\\"+"CS3_DCD_rate1.txt"
+        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate1.txt"
         (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
         forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex1")
         
-        tempfile = filepath+"\\Input\\historical_study\\"+"CS3_DCD_rate2.txt"
+        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate2.txt"
         (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
         forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex2")
         
-        tempfile = filepath+"\\Input\\historical_study\\"+"CS3_DCD_rate3.txt"
+        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate3.txt"
         (DETAWISL168) = timeseries_combine(DETAWOUTPUT,ilands,ilands,15,idates-1,tempfile)
         forNODCU(DETAWISL168,streamlinemodel,endyear,ilands,"_ex3")
     print("done")

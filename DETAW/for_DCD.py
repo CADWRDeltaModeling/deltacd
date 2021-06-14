@@ -70,7 +70,7 @@ def forNODCU(DETAWISL168,inputversion,endyear,ilands,outfilenames):
     tyr = endyear-beginyear+1
     
     #dssfh=pyhecdss.DSSFile(inputfile)
-    tempname = ".\Output\DICU5"+outfilenames
+    tempname = "./Output/DICU5"+outfilenames
     f1 = open(tempname+".27","w")
     f2 = open(tempname+".14","w")
     f3 = open(tempname+".12","w")
@@ -78,9 +78,9 @@ def forNODCU(DETAWISL168,inputversion,endyear,ilands,outfilenames):
     f5 = open(tempname+".30","w")
     
     if inputversion.strip() == "CALSIM3":
-        daysfile = ".\Input\planning_study\calender.txt"    #update the txt file too!!!!
+        daysfile = "./Input/planning_study/calender.txt"    #update the txt file too!!!!
     else:
-        daysfile = ".\Input\historical_study\calender.txt"
+        daysfile = "./Input/historical_study/calender.txt"
     f0 = open(daysfile)
     daysofyear = zeros((366,4,tyr),int)
     isl = 0
