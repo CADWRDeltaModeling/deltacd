@@ -1,72 +1,49 @@
 import pyhecdss
 import pandas as pd
-from numpy import arange,pi,array,zeros
+from numpy import arange, pi, array, zeros
 
-import os, sys, string, math, numpy
+import os
+import sys
+import string
+import math
+import numpy
 from os import listdir
-from math import cos,sin,tan,atan,sqrt,pi,pow
+from math import cos, sin, tan, atan, sqrt, pi, pow
 
 
-def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
+def parse_parts(path_parts):
+    pi = [path_parts.find('%s=' % x) for x in 'ABCDEF']
+    pi.append(len(path_parts))
+    parts = [str.strip(path_parts[pi[i]+2:pi[i+1]]) for i in range(len(pi)-1)]
+    return dict(zip(list('ABCDEF'), parts))
+
+
+def hecdt2time(dstr):
+    '''Takes a string in HEC DSS format and returns a time stamp
+    E.g. 01OCT1921 2400 is parsed as a date and then 2400 is parsed as hour min
     '''
-    write to the pyhecdss.DSSFile for an array with starttime and assuming
-    daily data with the pathname path, cunits and ctype
-    '''
-    if "2400" in startdatetime:
-        startdatetime=startdatetime.replace("2400","2300")
-        
-    fstr='1D'
-    epart=path.split('/')[5]
-    if epart == '1DAY':
-        fstr='1D'
-    elif epart == '1MONTH':
-        fstr='1M'
-    else:
-        raise RuntimeError('Not recognized frequency in path: %s'%path)
-    df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
-    dssfh.write_rts(path,df.shift(freq='H'),cunits,'PER-AVER')
-    
-if __name__ == "__main__":    
+    d1, d2 = dstr.split(' ')
+    return pd.to_datetime(d1)+pd.to_timedelta(int(d2[0:2]), 'h')+pd.to_timedelta(int(d2[2:4]), 'm')
+
+
+def save_from_dssts_format(fname):
+    df = pd.read_csv(fname,header=None)
+    dssfname = df.iloc[0,0].strip()
+    ai = df[df.iloc[:, 0].str.match('A=')].index
+    ai=ai.append(pd.Index([len(df)-2])) # add end of the last data frame
+    with pyhecdss.DSSFile(dssfname,create_new=True) as dh:
+        for i in range(len(ai)-1):
+            dfi = pd.to_numeric(df.iloc[ai[i]+4:ai[i+1]-1, 0])#.reset_index().drop('index', axis=1)
+            path_parts = df.iloc[ai[i], 0]
+            cunits = df.iloc[ai[i]+1, 0].strip()
+            parts = parse_parts(path_parts)
+            sdate = hecdt2time(df.iloc[ai[i]+3,0])
+            freq=pyhecdss.DSSFile.get_freq_from_epart(parts['E'])
+            dfi.index = pd.period_range(start=sdate-freq,freq=freq,periods=len(dfi))
+            path='/'+'/'.join(parts.values())+'/'
+            dh.write_rts(path, dfi, cunits, 'PER-AVER')
+
+if __name__ == "__main__":
     pyhecdss.set_message_level(0)
-    
     f1 = open(sys.argv[1])
-    
-    #ileng = 0
-    tempseries = []
-    oneseries = 0
-    for line in f1:
-        if ".dss" in line:
-            outputfile = line.strip()
-            dssfh=pyhecdss.DSSFile(outputfile, create_new = True)
-        else:
-            if "A=" in line and oneseries == 0:
-                pathnames = line.split("=")
-                Apart = pathnames[1].split("  ")[0].strip()
-                Bpart = pathnames[2][:5].strip()
-                Cpart = pathnames[3].split("  ")[0].strip()
-                Epart = pathnames[5].split("  ")[0].strip()
-                Fpart = pathnames[6].strip()
-                path = "/"+Apart+"/"+Bpart+"/"+Cpart+"//"+Epart+"/"+Fpart+"/"
-                oneseries = 1 
-            elif oneseries == 1:
-                cunit = line.strip()
-                oneseries += 1
-            elif oneseries == 2:
-                ctype = line.strip()
-                oneseries += 1
-            elif oneseries == 3:
-                starttime = line.strip()
-                oneseries += 1
-            elif oneseries > 3:
-                if "END" in line:
-                    write_to_dss(dssfh, tempseries, path,starttime, cunit, ctype)
-                    oneseries = 0
-                    tempseries = []
-                elif "FINISH" in line:
-                    print("Done")         
-                else:
-                    tempseries.append(float(line.strip()))
-                    oneseries += 1
-    f1.close()
-    dssfh.close()
-    
+    save_from_dssts_format(f1)
