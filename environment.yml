@@ -1,0 +1,12 @@
+name: detaw
+channels:
+  - cadwr-dms
+  - defaults
+dependencies:
+  - python=3.7
+  - pyhecdss
+  - numba
+  - pandas
+  - xarray
+  - netcdf4
+  - scipy
