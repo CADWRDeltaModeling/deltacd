@@ -145,7 +145,7 @@ def callDETAW(supmodel,leachoption):
     endyear = templ.split(",")[1]  
     endmonth = int(templ.split(",")[2])
     outputfile = "DCD_"+months[endmonth-1]+endyear+"_Lch"+str(leachoption)+".dss" 
-    SKIP_DETAW=True # FIXME make this an option
+    SKIP_DETAW=False # FIXME make this an option
     if not SKIP_DETAW:
         status=os.system('python DETAW.py')
     os.chdir(owd)
