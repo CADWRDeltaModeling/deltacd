@@ -45,7 +45,7 @@ def PP_DSS():
     for p in plist:
         df,u,p=dssfh.read_rts(p)
         df.values[:]=df.values[:]*0.25
-        dssofh.write_rts(df.columns[0].replace("RO-FLOW","DP-FLOW"),df.shift(freq='D'),u,p)  #'PER-AVER')
+        dssofh.write_rts(df.columns[0].replace("RO-FLOW","DP-FLOW"),df,u,p)  #'PER-AVER')
     dssfh.close()
     dssofh.close()
     
@@ -142,11 +142,11 @@ def split_BBID(divfile, spgfile, drnfile, rofile, outputfile,option):
             tdss1 = get_rts(orgfile,path1)
             tdss2 = get_rts(extfile,path2)
             pathout = "/BBID/"+str(BBIDisl[i])+"/"+DCD_paths[ifile]+"//1DAY/DWR-BDO/"
-            dssout.write_rts(pathout,tdss2[0][0].shift(freq='D'),tdss2[0][1],tdss2[0][2])
+            dssout.write_rts(pathout,tdss2[0][0],tdss2[0][1],tdss2[0][2])
             pathout = path1.replace(str(BBIDisl[i]),str(BBIDisl[i])+"_w_BBID")
-            dssout.write_rts(pathout,tdss1[0][0].shift(freq='D'),tdss1[0][1],tdss1[0][2])
+            dssout.write_rts(pathout,tdss1[0][0],tdss1[0][1],tdss1[0][2])
             tdss1[0][0].iloc[:,0] = tdss1[0][0].iloc[:,0] - tdss2[0][0].iloc[:,0]
-            dssout.write_rts(path1,tdss1[0][0].shift(freq='D'),tdss1[0][1],tdss1[0][2])
+            dssout.write_rts(path1,tdss1[0][0],tdss1[0][1],tdss1[0][2])
         
         dssifh2=pyhecdss.DSSFile(extfile, create_new=True)
         dfcat=dssifh2.read_catalog()
@@ -158,7 +158,7 @@ def split_BBID(divfile, spgfile, drnfile, rofile, outputfile,option):
             tdss2,cunits,ctype = dssifh2.read_rts(pathnames[i])
             if option == 2:
                 tdss1.iloc[:,0] = tdss1.iloc[:,0]-tdss2.iloc[:,0]
-            dssout.write_rts(path1,tdss1.shift(freq='D'),cunits,ctype)
+            dssout.write_rts(path1,tdss1,cunits,ctype)
         dssifh2.close()
         dssout.close()
         
@@ -242,7 +242,7 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
                         pathout = "/DICU-HIST+NODE/" + str(Sortednodes[i])+"/DIV-FLOW//1DAY/DWR-BDO/"
                     elif ifile == 1:
                         pathout = "/DICU-HIST+NODE/" + str(Sortednodes[i])+"/SEEP-FLOW//1DAY/DWR-BDO/"
-                    dssout.write_rts(pathout,tdss1.shift(freq='D'),cunits,ctype)
+                    dssout.write_rts(pathout,tdss1,cunits,ctype)
         elif ifile == 2:
             orgfile2 = inputfiles[ifile+1]
             dssinputf2 = pyhecdss.DSSFile(orgfile2)
@@ -266,7 +266,7 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
                         tdss1,cunits,ctype = dssinputf.read_rts(get_pathname(dssinputf,pathisl,2))
                         tdss1.iloc[:,0] = tdss1.iloc[:,0]*0.0
                     pathout = "/DICU-HIST+NODE/" + str(Sortednodes[i])+"/DRAIN-FLOW//1DAY/DWR-BDO/"
-                    dssout.write_rts(pathout,tdss1.shift(freq='D'),cunits,ctype)
+                    dssout.write_rts(pathout,tdss1,cunits,ctype)
             dssinputf2.close()    
         for i in range(len(BBIDisl)):
             pathname = "/BBID/"+str(BBIDisl[i])+"/"+DCD_paths[ifile]+"//1DAY/DWR-BDO/" 
@@ -288,7 +288,7 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
             pathout = "/DICU-HIST+RSVR/BBID/SEEP-FLOW//1DAY/DWR-BDO/"
         elif ifile == 2:
             pathout = "/DICU-HIST+RSVR/BBID/DRAIN-FLOW//1DAY/DWR-BDO/"
-        dssout.write_rts(pathout,tdssb[0][0].shift(freq='D'),tdssb[0][1],tdssb[0][2])         
+        dssout.write_rts(pathout,tdssb[0][0],tdssb[0][1],tdssb[0][2])         
         dssinputf.close()
     dssout.close()
     
