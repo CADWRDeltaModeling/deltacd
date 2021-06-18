@@ -39,6 +39,14 @@ def get_kernel_exe():
     else:
         raise 'Unsupported platform: %s'%csys
 
+def ensure_output_dirs(owd):
+    out_dir=os.path.join(owd,'Output')
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+    subdirs =[os.path.join(out_dir, dir) for dir in ['DSM2','SCHISM','CALSIM']]
+    for sdir in subdirs:
+        if not os.path.exists(sdir):
+            os.mkdir(sdir)
 
 def callDCD(supmodel,leachoption,endyear,outputfile):
     owd = os.getcwd()
@@ -104,22 +112,17 @@ def callDCD(supmodel,leachoption,endyear,outputfile):
         daytomonth(tempfile,"DCD_island_month.dss")
         shutil.copy(tempfile, "D_"+tempfile)
         shutil.copy(tempfile, "C_"+tempfile)
-    out_dir=os.path.join(owd,'Output')
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-        os.mkdir(os.path.join(owd,"Output/DSM2/"))
-        os.mkdir(os.path.join(owd,"Output/SCHISM/"))
-        os.mkdir(os.path.join(owd,"Output/CALSIM3/"))
+    ensure_output_dirs(owd)
     if supmodel == 1:
         #shutil.copy(outputfile,owd+"/Output/DSM2/")
-        shutil.copy("DCD_island_month.dss", os.path.join(owd,"Output/DSM2/"))
+        shutil.copy("DCD_island_month.dss", os.path.join(owd,"Output","DSM2"))
     elif supmodel == 2:
         #tempfile = outputfile.split(".")[0].strip()+"_noWS_leach"+str(leachoption)+".dss"
         #os.rename(outputfile,tempfile)
         #shutil.copy(tempfile,owd+"/Output/SCHISM/")
-        shutil.copy("DCD_island_month.dss", os.path.join(owd,"Output/SCHISM/"))
+        shutil.copy("DCD_island_month.dss", os.path.join(owd,"Output","SCHISM"))
     elif supmodel == 3:
-        shutil.copy("DCD_island_month.dss",os.path.join(owd,"Output/CALSIM3/"))
+        shutil.copy("DCD_island_month.dss",os.path.join(owd,"Output","CALSIM3"))
     
     os.chdir(owd)
 
@@ -266,7 +269,7 @@ def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
         daytomonth(tempfile,"ext_DCD_island_month.dss")
     if extension == "ex3":
         if supmodel == 3:
-            shutil.copy("ext_DCD_island_month.dss",os.path.join(owd,"Output/CALSIM3/"))
+            shutil.copy("ext_DCD_island_month.dss",os.path.join(owd,"Output","CALSIM3"))
         tempstr = "python ../DCD_post-process_C3.py "+outputfile+" ex3"
         status = os.system(tempstr)
     
