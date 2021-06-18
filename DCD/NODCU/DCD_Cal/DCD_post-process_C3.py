@@ -146,7 +146,7 @@ def split_BBID(divfile, spgfile, drnfile, rofile, outputfile,option):
             pathout = path1.replace(str(BBIDisl[i]),str(BBIDisl[i])+"_w_BBID")
             dssout.write_rts(pathout,tdss1[0][0],tdss1[0][1],tdss1[0][2])
             tdss1[0][0].iloc[:,0] = tdss1[0][0].iloc[:,0] - tdss2[0][0].iloc[:,0]
-            dssout.write_rts(path1,tdss1[0][0],tdss1[0][1],tdss1[0][2])
+            dssout.write_rts(path1,tdss1[0][0],tdss1[0][1],tdss1[0][2]) 
         
         dssifh2=pyhecdss.DSSFile(extfile, create_new=True)
         dfcat=dssifh2.read_catalog()
@@ -288,7 +288,7 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
             pathout = "/DICU-HIST+RSVR/BBID/SEEP-FLOW//1DAY/DWR-BDO/"
         elif ifile == 2:
             pathout = "/DICU-HIST+RSVR/BBID/DRAIN-FLOW//1DAY/DWR-BDO/"
-        dssout.write_rts(pathout,tdssb[0][0],tdssb[0][1],tdssb[0][2])         
+        dssout.write_rts(pathout,tdssb[0][0].shift(-1),tdssb[0][1],tdssb[0][2])  #FIXME: why shift by 1 day? to match older results     
         dssinputf.close()
     dssout.close()
     
