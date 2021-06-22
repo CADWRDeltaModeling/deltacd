@@ -39,6 +39,8 @@ def get_kernel_exe():
     else:
         raise 'Unsupported platform: %s'%csys
 
+DCD_OUTPUT_TEMP_DIR='./DCD_outputs' # module level global for temp working space for DCD_kernel
+
 def ensure_output_dirs(owd):
     out_dir=os.path.join(owd,'Output')
     if not os.path.exists(out_dir):
@@ -48,15 +50,17 @@ def ensure_output_dirs(owd):
         if not os.path.exists(sdir):
             os.mkdir(sdir)
 
+
+
 def callDCD(supmodel,leachoption,endyear,outputfile):
     owd = os.getcwd()
     dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    if not os.path.exists("./DCD_outputs"):
-        os.mkdir("./DCD_outputs")
-    shutil.copy(get_kernel_exe(),"./DCD_outputs")
-    shutil.copy('WYTYPES',"./DCD_outputs")
-    os.chdir("./DCD_outputs")
+    if not os.path.exists(DCD_OUTPUT_TEMP_DIR):
+        os.mkdir(DCD_OUTPUT_TEMP_DIR)
+    shutil.copy(get_kernel_exe(),DCD_OUTPUT_TEMP_DIR)
+    shutil.copy('WYTYPES',DCD_OUTPUT_TEMP_DIR)
+    os.chdir(DCD_OUTPUT_TEMP_DIR)
     
     os.environ['DICU5_14']='../../../../DETAW/Output/DICU5.14' 
     os.environ['DICU5_17']='../../../../DETAW/Output/DICU5.17' 
@@ -204,7 +208,7 @@ def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
     
     dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    outdir="./DCD_outputs_%s"%extension
+    outdir=DCD_OUTPUT_TEMP_DIR
     if not os.path.exists(outdir):
         os.mkdir(outdir)
     shutil.copy(get_kernel_exe(),outdir)
@@ -282,15 +286,15 @@ def createoutputs(outputfile,modeloption):
     
     dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    if not os.path.exists("./DCD_outputs"):
-        os.mkdir("./DCD_outputs")
-    shutil.copy(get_kernel_exe(),"./DCD_outputs")
-    shutil.copy('WYTYPES',"./DCD_outputs")
-    os.chdir("./DCD_outputs")
+    if not os.path.exists(DCD_OUTPUT_TEMP_DIR):
+        os.mkdir(DCD_OUTPUT_TEMP_DIR)
+    shutil.copy(get_kernel_exe(),DCD_OUTPUT_TEMP_DIR)
+    shutil.copy('WYTYPES',DCD_OUTPUT_TEMP_DIR)
+    os.chdir(DCD_OUTPUT_TEMP_DIR)
     tempstr = "python ../DCD_post-process_C3.py "+outputfile+" out_"+str(modeloption)
     status = os.system(tempstr)
     
-    #shutil.rmtree("./DCD_outputs")
+    #shutil.rmtree(DCD_OUTPUT_TEMP_DIR)
     os.chdir(owd)
 
 
