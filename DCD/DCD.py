@@ -58,27 +58,27 @@ def callDCD(supmodel,leachoption,endyear,outputfile):
     shutil.copy('WYTYPES',"./DCD_outputs")
     os.chdir("./DCD_outputs")
     
-    os.environ['DICU5.14']='../../../../DETAW/Output/DICU5.14' 
-    os.environ['DICU5.17']='../../../../DETAW/Output/DICU5.17' 
-    os.environ['DICU5.12']='../../../../DETAW/Output/DICU5.12' 
-    os.environ['DICU5.27']='../../../../DETAW/Output/DICU5.27' 
-    os.environ['DICU5.30']='../../../../DETAW/Output/DICU5.30' 
+    os.environ['DICU5_14']='../../../../DETAW/Output/DICU5.14' 
+    os.environ['DICU5_17']='../../../../DETAW/Output/DICU5.17' 
+    os.environ['DICU5_12']='../../../../DETAW/Output/DICU5.12' 
+    os.environ['DICU5_27']='../../../../DETAW/Output/DICU5.27' 
+    os.environ['DICU5_30']='../../../../DETAW/Output/DICU5.30' 
     
     if supmodel == 3:
-        os.environ['GW_RATES.TXT'] = '../../../NODCU/GW_RATES_CALSIM3.TXT'
+        os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES_CALSIM3.TXT'
     else:
-        os.environ['GW_RATES.TXT'] = '../../../NODCU/GW_RATES.TXT'   #update data in the file each year ----no adjustment-GW_RATES.TXT
-    os.environ['GW_LOWLANDS.TXT']='../../../NODCU/GW_LOWLANDS.TXT' #set for DETAW-CD
-    #os.environ['DIVFCTR.RMA']='../../../NODCU/DIVFCTR.2020'
-    #os.environ['DRNFCTR.RMA']='../../../NODCU/DRNFCTR.2020'
-    os.environ['LEACHAPL.DAT']='../../../NODCU/LEACHAPL.DAT'
-    os.environ['LEACHDRN.DAT']='../../../NODCU/LEACHDRN.DAT'
-    os.environ['IDRNTDS.DAT']='../../../NODCU/IDRNTDS.DAT'
-    os.environ['DRNCL.123']='../../../NODCU/DRNCL.123'
-    os.environ['GEOM-NODES']='../../../NODCU/GEOM-NODES-1.5'
+        os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES.TXT'   #update data in the file each year ----no adjustment-GW_RATES.TXT
+    os.environ['GW_LOWLANDS_TXT']='../../../NODCU/GW_LOWLANDS.TXT' #set for DETAW-CD
+    #os.environ['DIVFCTR_RMA']='../../../NODCU/DIVFCTR.2020'
+    #os.environ['DRNFCTR_RMA']='../../../NODCU/DRNFCTR.2020'
+    os.environ['LEACHAPL_DAT']='../../../NODCU/LEACHAPL.DAT'
+    os.environ['LEACHDRN_DAT']='../../../NODCU/LEACHDRN.DAT'
+    os.environ['IDRNTDS_DAT']='../../../NODCU/IDRNTDS.DAT'
+    os.environ['DRNCL_123']='../../../NODCU/DRNCL.123'
+    os.environ['GEOM_NODES']='../../../NODCU/GEOM-NODES-1.5'
     
-    os.environ['IRREFF.DAT']='../../../NODCU/IRREFF-3MWQIregions'
-    os.environ['subarea-info']='../../../NODCU/subarea-info'
+    os.environ['IRREFF_DAT']='../../../NODCU/IRREFF-3MWQIregions'
+    os.environ['subarea_info']='../../../NODCU/subarea-info'
     
     
     # Runtime variables
@@ -204,36 +204,37 @@ def callDCD_ext(supmodel,leachoption,endyear,outputfile,extension):
     
     dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
-    if not os.path.exists("./DCD_outputs"):
-        os.mkdir("./DCD_outputs")
-    shutil.copy(get_kernel_exe(),"./DCD_outputs")
-    shutil.copy('WYTYPES',"./DCD_outputs")
-    os.chdir("./DCD_outputs")
+    outdir="./DCD_outputs_%s"%extension
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
+    shutil.copy(get_kernel_exe(),outdir)
+    shutil.copy('WYTYPES',outdir)
+    os.chdir(outdir)
     
     tempn = '../../../../DETAW/Output/DICU5_'+extension
-    os.environ['DICU5.14']=tempn+'.14' 
-    os.environ['DICU5.17']=tempn+'.17' 
-    os.environ['DICU5.12']=tempn+'.12' 
-    os.environ['DICU5.27']=tempn+'.27' 
-    os.environ['DICU5.30']=tempn+'.30' 
+    os.environ['DICU5_14']=tempn+'.14' 
+    os.environ['DICU5_17']=tempn+'.17' 
+    os.environ['DICU5_12']=tempn+'.12' 
+    os.environ['DICU5_27']=tempn+'.27' 
+    os.environ['DICU5_30']=tempn+'.30' 
     if supmodel == 3:
-        os.environ['GW_RATES.TXT'] = '../../../NODCU/GW_RATES_CALSIM3.TXT'
+        os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES_CALSIM3.TXT'
     else:
-        os.environ['GW_RATES.TXT'] = '../../../NODCU/GW_RATES.TXT'
-    os.environ['GW_LOWLANDS.TXT']='../../../NODCU/GW_LOWLANDS.TXT' #set for DETAW-CD
-    #os.environ['DIVFCTR.RMA']='../../../NODCU/DIVFCTR.2020'
-    #os.environ['DRNFCTR.RMA']='../../../NODCU/DRNFCTR.2020'
+        os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES.TXT'
+    os.environ['GW_LOWLANDS_TXT']='../../../NODCU/GW_LOWLANDS.TXT' #set for DETAW-CD
+    #os.environ['DIVFCTR_RMA']='../../../NODCU/DIVFCTR.2020'
+    #os.environ['DRNFCTR_RMA']='../../../NODCU/DRNFCTR.2020'
     tempn ='../../../NODCU/LEACHAPL_'+extension
-    os.environ['LEACHAPL.DAT']=tempn+'.DAT'
+    os.environ['LEACHAPL_DAT']=tempn+'.DAT'
     tempn ='../../../NODCU/LEACHDRN_'+extension    
-    os.environ['LEACHDRN.DAT']=tempn+'.DAT'
-    os.environ['IDRNTDS.DAT']='../../../NODCU/IDRNTDS.DAT'
-    os.environ['DRNCL.123']='../../../NODCU/DRNCL.123'
-    os.environ['GEOM-NODES']='../../../NODCU/GEOM-NODES-1.5'
+    os.environ['LEACHDRN_DAT']=tempn+'.DAT'
+    os.environ['IDRNTDS_DAT']='../../../NODCU/IDRNTDS.DAT'
+    os.environ['DRNCL_123']='../../../NODCU/DRNCL.123'
+    os.environ['GEOM_NODES']='../../../NODCU/GEOM-NODES-1.5'
     
-    os.environ['IRREFF.DAT']='../../../NODCU/IRREFF-3MWQIregions'
+    os.environ['IRREFF_DAT']='../../../NODCU/IRREFF-3MWQIregions'
     tempn ='../../../NODCU/subarea-info_'+extension
-    os.environ['subarea-info']=tempn+'.TXT'
+    os.environ['subarea_info']=tempn+'.TXT'
     
     
     # Runtime variables
