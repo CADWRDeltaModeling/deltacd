@@ -1642,7 +1642,7 @@ def historicalETAW(ts_per,ETo_corrector,Region,pcp,ET0,tmax,tmin,ilands,idates,i
     MonDsw = zeros((imonths+1),float)
     MonDswPos = zeros((imonths+1),float)
     MonNetApp = zeros((imonths+1),float)
-    yearType = numpy.empty(iyears+1,dtype='<U3')  ##"  "*(iyears+1)
+    yearType = numpy.empty(iyears+2,dtype='<U3')  ##"  "*(iyears+1)
     
     
     ## for HSA****.csv (not for OLDHSA****.csv)
