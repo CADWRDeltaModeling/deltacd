@@ -729,14 +729,14 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                             etMon = 10
                             etDay = 1
                             etdd = calc_etdd(
-                                dpy, etMon, yy, NII, NI, DswDaily, MonthlySWC, ETAWMonDay, etDay, NumDay)
+                                dpy, etMon, yy, NII, NI, DswDaily, MonthlySWC, ETAWMonDay, etDay, NumDaysPerMon)
                             # end of for etdd
 
                             # calculate aveage ETaw
                             SumNegETAW = 0.0
                             CountNegETAW = 0
                             calc_etawavg(ETAWMonDay, SumNegETAW,
-                                         CountNegETAW, NumDay)
+                                         CountNegETAW, NumDaysPerMon)
                             # convert etawdmon day to etaw daily
                             # ETAWDaily[1:dpy+1]=ETAWMonDay[(10:10+12)%12,(273+leap_year(yearCal):)]
                             etMon = 10
@@ -2515,9 +2515,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     return(DETAWOUTPUT)
 
 
-# _______________________________________________________________________________
-if __name__ == "__main__":
-    files = listdir(".")
+def main():
     filepath = os.getcwd()
 
     inputfile = "./Input/DETAW_para.inp"
@@ -2559,7 +2557,6 @@ if __name__ == "__main__":
     file[1] = "Percentage.csv"
     file[2] = "LODI_PT.csv"
 
-    fileout = "weather.dss"
     if streamlinemodel == "CALSIM3":
         source = filepath+"/Input/planning_study/"+file[2]
     else:
@@ -2576,7 +2573,6 @@ if __name__ == "__main__":
     print("idates =", idates)
     f0.close()
 
-    ts_type = "rts"
     #? why is start1 hardwired ?#
     start1 = numpy.array([1921, 9, 30, 23, 0], dtype='i4')
     iyears = endyear-start1[0]+1
@@ -2585,8 +2581,6 @@ if __name__ == "__main__":
     isites = 7
     NumDay = numpy.array([0, 31, 28, 31, 30, 31, 30, 31,
                          31, 30, 31, 30, 31], dtype='i4')
-    NumDayL = numpy.array([0, 31, 29, 31, 30, 31, 30, 31,
-                          31, 30, 31, 30, 31], dtype='i4')
     NI = numpy.array([31, 59, 90, 120, 151, 181, 212,
                      243, 273, 304, 334, 365], dtype='i4')
     NII = numpy.array([31, 60, 91, 121, 152, 182, 213,
@@ -2708,3 +2702,8 @@ if __name__ == "__main__":
             DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex3")
     print("done")
+
+
+# _______________________________________________________________________________
+if __name__ == "__main__":
+    main()
