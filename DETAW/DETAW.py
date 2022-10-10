@@ -85,7 +85,7 @@ def write_to_netcdf(detawoutput):
     coords = {'etvars': ["ETc", "ESpg", "PCP", "ETAW", "Dsw", "ER"],
               'area': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets", "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard", "Vineyard", "Riparian Vegetation", "Native Vegetation", "Non-irrig Grain", "Water Surface"],
-              'time': pd.date_range('1921-10-01', periods=detawoutput.shape[-1])}  # last dimension is time
+              'time': pd.date_range('2015-10-01', periods=detawoutput.shape[-1])}  # last dimension is time
     dx = xr.DataArray(detawoutput[:, :-1, :-1, :], dims=dims,
                       coords=coords, attrs={'units': 'Acre-feet'})
     dx.to_netcdf('Output/detawoutput.nc')
@@ -99,13 +99,13 @@ def weatheroutput_to_netcdf(pcp, ET0):
     dpcp = xr.DataArray(pcp,
                         dims=['time', 'area'],
                         coords={'time': pd.date_range(
-                            '1921-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
+                            '2015-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='precip')
     det0 = xr.DataArray(ET0,
                         dims=['time', 'area'],
                         coords={'time': pd.date_range(
-                            '1921-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
+                            '2015-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='ET0')
     if not os.path.exists('Output'):
@@ -628,7 +628,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 if y == 1 and ii == 274:
                     ik = 1
 
-                ytemp[ik] = y+1920
+                ytemp[ik] = y+2015
                 DOYtemp[ik] = ii
                 if DOYtemp[ik] == 1:
                     IrrigYear = IrrigYear + 1
@@ -706,7 +706,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
 
                         # @if iq ==1:
                         # @    SumDelSWC = 0
-                        if yDaily[iq] == 1921 and iq == 1:
+                        if yDaily[iq] == 2015 and iq == 1:
                             FCtemp = int(FCDaily[iq]*10)/10.0
                             ##PSWC = FCDaily[iq]
                             PSWC = FCtemp
@@ -1593,21 +1593,21 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
         if (yearCal % 4 != 0 and DOY[dd] == 365) or (yearCal % 4 == 0 and DOY[dd] == 366):
             Mon = 1
         if(j != 6):
-            if DOY[dd] >= DOYLIrrig[yDaily[dd]-1921]:
+            if DOY[dd] >= DOYLIrrig[yDaily[dd]-2015]:
                 ETAWDaily[dd] = 0
         else:
-            if DOYLIrrig[yDaily[dd]-1921] < 275:
-                if DOY[dd] >= DOYGrainLIrrig[yDaily[dd]-1921] and DOY[dd] < 275:
+            if DOYLIrrig[yDaily[dd]-2015] < 275:
+                if DOY[dd] >= DOYGrainLIrrig[yDaily[dd]-2015] and DOY[dd] < 275:
                     ETAWDaily[dd] = 0
             else:
-                if DOY[dd] >= DOYLIrrig[yDaily[dd]-1921]:
+                if DOY[dd] >= DOYLIrrig[yDaily[dd]-2015]:
                     ETAWDaily[dd] = 0
         CETAWDaily = CETAWDaily + ETAWDaily[dd]
         # y is for sep 30 each year, so for previous oct-Dec we subtract y by 1
         if Mon < 10:
-            MonETAW[yy-1920, Mon] = MonETAW[yy-1920, Mon] + ETAWDaily[dd]
+            MonETAW[yy-2015, Mon] = MonETAW[yy-2015, Mon] + ETAWDaily[dd]
         else:
-            MonETAW[yy-1921, Mon] = MonETAW[yy-1921, Mon] + ETAWDaily[dd]
+            MonETAW[yy-2015, Mon] = MonETAW[yy-2015, Mon] + ETAWDaily[dd]
     return CETAWDaily
 # _______________________________________________________________________________
 # _______________________________________________________________________________
@@ -1637,7 +1637,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     ctype = "INST-VAL"  # "PER-AVER"
     iplan = int(0)
     # ? why is start2 hardwired to 10 days after start1 ?
-    start2 = [1921, 10, 1, 23, 0]
+    start2 = [2015, 10, 1, 23, 0]
     startdate = str(start2[2])+monthname[start2[1]-1]+str(start2[0])
     starttime = str(start2[3])+"00"
     dpyAll = zeros((iyears+2), int)
@@ -1788,7 +1788,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     CETcDaily = zeros((idays+1), float)
     CDswDaily = zeros((idays+1), float)
     ETAWDaily = zeros((idays+1), float)
-    DETAWOUTPUT = zeros((6, ilands+1, icroptype+1, idates-1), float)
+    DETAWOUTPUT = zeros((6, ilands+1, icroptype+1, idates), float)
 
  # for irrigation and hydrology year convertion (((((
     ytemp = zeros((idays+1), int)
@@ -2026,49 +2026,49 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             DOYLIrrig[:] = 0
             DOYGrainLIrrig[:] = 0
             # for HSA*** (not for OLDHSA***)  +++++++++++++++++++++
-            datadays = zeros((32, idates-1), float)
-            dataday = zeros(idates-1, float)
-            data2day = zeros(idates-1, float)
-            data3day = zeros(idates-1, float)
-            data4day = zeros(idates-1, float)
-            data5day = zeros(idates-1, float)
-            data6day = zeros(idates-1, float)
-            data7day = zeros(idates-1, float)
-            data8day = zeros(idates-1, float)
-            data9day = zeros(idates-1, float)
-            data10day = zeros(idates-1, float)
-            data11day = zeros(idates-1, float)
-            data12day = zeros(idates-1, float)
-            data13day = zeros(idates-1, float)
-            data14day = zeros(idates-1, float)
-            data15day = zeros(idates-1, float)
-            data16day = zeros(idates-1, float)
-            data17day = zeros(idates-1, float)
-            data18day = zeros(idates-1, float)
-            data19day = zeros(idates-1, float)
-            data20day = zeros(idates-1, float)
-            data21day = zeros(idates-1, float)
-            data22day = zeros(idates-1, float)
-            data23day = zeros(idates-1, float)
-            data24day = zeros(idates-1, float)
-            data25day = zeros(idates-1, float)
-            data26day = zeros(idates-1, float)
-            data27day = zeros(idates-1, float)
-            data28day = zeros(idates-1, float)
-            data29day = zeros(idates-1, float)
-            data30day = zeros(idates-1, float)
-            data31day = zeros(idates-1, float)
-            data32day = zeros(idates-1, float)
-            data1day_14crops = zeros(idates-1, float)
-            data10day_14crops = zeros(idates-1, float)
-            data11day_14crops = zeros(idates-1, float)
-            data12day_14crops = zeros(idates-1, float)
-            data13day_14crops = zeros(idates-1, float)
-            data1day_water = zeros(idates-1, float)
-            data10day_water = zeros(idates-1, float)
-            data11day_water = zeros(idates-1, float)
-            data12day_water = zeros(idates-1, float)
-            data13day_water = zeros(idates-1, float)
+            datadays = zeros((32, idates), float)
+            dataday = zeros(idates, float)
+            data2day = zeros(idates, float)
+            data3day = zeros(idates, float)
+            data4day = zeros(idates, float)
+            data5day = zeros(idates, float)
+            data6day = zeros(idates, float)
+            data7day = zeros(idates, float)
+            data8day = zeros(idates, float)
+            data9day = zeros(idates, float)
+            data10day = zeros(idates, float)
+            data11day = zeros(idates, float)
+            data12day = zeros(idates, float)
+            data13day = zeros(idates, float)
+            data14day = zeros(idates, float)
+            data15day = zeros(idates, float)
+            data16day = zeros(idates, float)
+            data17day = zeros(idates, float)
+            data18day = zeros(idates, float)
+            data19day = zeros(idates, float)
+            data20day = zeros(idates, float)
+            data21day = zeros(idates, float)
+            data22day = zeros(idates, float)
+            data23day = zeros(idates, float)
+            data24day = zeros(idates, float)
+            data25day = zeros(idates, float)
+            data26day = zeros(idates, float)
+            data27day = zeros(idates, float)
+            data28day = zeros(idates, float)
+            data29day = zeros(idates, float)
+            data30day = zeros(idates, float)
+            data31day = zeros(idates, float)
+            data32day = zeros(idates, float)
+            data1day_14crops = zeros(idates, float)
+            data10day_14crops = zeros(idates, float)
+            data11day_14crops = zeros(idates, float)
+            data12day_14crops = zeros(idates, float)
+            data13day_14crops = zeros(idates, float)
+            data1day_water = zeros(idates, float)
+            data10day_water = zeros(idates, float)
+            data11day_water = zeros(idates, float)
+            data12day_water = zeros(idates, float)
+            data13day_water = zeros(idates, float)
 
             nmonths = 12*(iyears-1)
             datamon = zeros(nmonths, float)
@@ -2570,11 +2570,12 @@ def main():
             tline += 1
     endyear = int(templ.split(",")[1])
     idates = tline-1
+    # print("endyear =",endyear)
     print("idates =", idates)
     f0.close()
 
     #? why is start1 hardwired ?#
-    start1 = numpy.array([1921, 9, 30, 23, 0], dtype='i4')
+    start1 = numpy.array([2015, 10, 1, 23, 0], dtype='i4')
     iyears = endyear-start1[0]+1
     #? why is ilands,isites, etc... hardwired ?#
     ilands = 168
@@ -2668,38 +2669,38 @@ def main():
         print('detaw output to netcdf4 took',
               timeit.default_timer()-st, ' seconds')
     (DETAWISL168) = timeseries_combine(
-        DETAWOUTPUT, ilands, ilands, 15, idates-1, "")
+        DETAWOUTPUT, ilands, ilands, 15, idates, "")
     forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "")
     if streamlinemodel == "CALSIM3":
         #print("in the double-counting process", idates)
         tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate1.txt"
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex1")
 
         tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate2.txt"
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex2")
 
         tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate3.txt"
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex3")
     else:
         tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate1.txt"
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex1")
 
         tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate2.txt"
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex2")
 
         tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate3.txt"
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex3")
     print("done")
 

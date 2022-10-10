@@ -66,7 +66,8 @@ def forNODCU(DETAWISL168,inputversion,endyear,ilands,outfilenames):
     #Cpart[3] = "PCP"
     #Cpart[4] = "DSW"
     
-    beginyear = 1922
+    # this is hardwired and needs to be changed. This seems to be the water year associated with the start date.
+    beginyear = 2016
     tyr = endyear-beginyear+1
     
     #dssfh=pyhecdss.DSSFile(inputfile)
@@ -151,6 +152,7 @@ def forNODCU(DETAWISL168,inputversion,endyear,ilands,outfilenames):
                                     temp_c = 0.2
                                     tempts[iyr,iday] += DETAWISL168[ifile,iland-1,ndays-kday]*temp_c
                         else:
+                            # breakpoint()
                             tempts[iyr,iday] = DETAWISL168[ifile,iland-1,ndays]
                         ndays+=1  
             for iyr in range(0,tyr):
