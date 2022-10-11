@@ -95,7 +95,7 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     # The years assumed are incorrect, so 'N'
     os.environ['years_ok'] = 'N'
     # The correct beginning year to run is
-    os.environ['begwy'] = '1922'
+    os.environ['begwy'] = '2016'
     # The correct last year to run is
     os.environ['endwy'] = endyear
     # Type of drainage concentration data (1 for TDS, 2 for chloride)
@@ -263,8 +263,8 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
     # Runtime variables
     # The years assumed are incorrect, so 'N'
     os.environ['years_ok'] = 'N'
-    # The correct beginning year to run is
-    os.environ['begwy'] = '1922'
+    # The correct beginning water year to run is
+    os.environ['begwy'] = '2016'
     # The correct last year to run is
     os.environ['endwy'] = endyear
     # Type of drainage concentration data (1 for TDS, 2 for chloride)
