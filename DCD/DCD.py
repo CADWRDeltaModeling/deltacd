@@ -114,8 +114,8 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     status = os.system('python ../converttoDSS.py div_wo_spg_isl.txt')
     status = os.system('python ../converttoDSS.py spgisl.txt')
 
-    status = os.system(tempstr)
     tempstr = "python ../DCD_postprocess_C3.py "+outputfile + " base"
+    status = os.system(tempstr)
     filestocopy = ["drn_wo_ro_island.dss", "div_wo_spg_island.dss",
                    "GW_per_island.dss", "RO_island.dss", "DP_island.dss", "spg_island.dss"]
     for i in range(len(filestocopy)):
