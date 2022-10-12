@@ -16,12 +16,12 @@ c-----I'll use the data to compare DICU results to Report 4 AW data that
 c-----did not include seepage.
 
 c-----Modified program NODCU11                           NM (8/7/95)
-c-----Modified to include Paul's new seepage estimates and irrigation efficiency by 
+c-----Modified to include Paul's new seepage estimates and irrigation efficiency by
 c-----DOC subregion. See Chap 5 (Paul's work) in the 16th Annual Report.
 c-----Seepage changes: A drained seepage component has been added.
 c-----Irrigation efficiency: Varies by MWQI subregions.
 c-----As a quick fix the drained seepage values will be added to both the div and returns.
-c-----Both the seepage and irr eff. values are dependent on MWQI subregions. 
+c-----Both the seepage and irr eff. values are dependent on MWQI subregions.
 
 c-----MWQI subregion   Drained seepage(AF/acre)     Irrigation efficiency
 c-----High DOC region         0.095                    57%
@@ -42,8 +42,8 @@ c-----This may take some time to process. After this conversion is completed,
 c-----you may want to delete the file junk.txt, because it's fairly big.
 
 c-----Modified program NODCU9                          NM (3/10/95)
-c-----Modified to seperate seepage from irrigation diversions mainly 
-c-----for particle tracking modeling reasons. Total channel diversions will 
+c-----Modified to seperate seepage from irrigation diversions mainly
+c-----for particle tracking modeling reasons. Total channel diversions will
 c-----now be segregated and shown in two extra columns:irrigation diversions and seepage.
 c-----Changes are bracketed by CNM
 c-----ID1 is the irrigation diversion component of the total diversion from the channel
@@ -54,10 +54,10 @@ c-----changes were made to NODCU output files (NODCU10-WY.2?)
 
 c-----Modified program NODCU8                          - NM (2/25/92)
 c-----The main change is in the Ag Drain files. Parviz (PNT) needs
-c-----a new format for the Ag Drain Model. Instead of P-ET, we want 
+c-----a new format for the Ag Drain Model. Instead of P-ET, we want
 c-----the change in soil moisture. This file soil.prc is created by a new
 c-----version of dicu5 called dicu5.1. Changes can be noted by C@.
-c-----Change hard coding of the number of nodes. Now, the number of nodes willbe read 
+c-----Change hard coding of the number of nodes. Now, the number of nodes willbe read
 c-----from the GEOM-NODES file.
 c-----Changed DO LOOP maximum index for reading in DICU5.XX files
 
@@ -117,7 +117,7 @@ C  ISLANDS AND ALLOCATION TO DWR/RMA DELTA MODEL NODES   - KG FEB. 88
 C  INPUT FROM DICU5 RUN FOR CONSECUTIVE YEARS
 C    -INCLUDING MONTHLY DELTA NET CHANNEL DEPLETIONS     - KG MAR. 88
 C  RUNTIME SCREEN PRINT ADDED; INPUT FILE NAME CHANGE    - KG APR. 88
-C  
+C
 C  INPUT DATA INCLUDE:
 C
 C      1 - APPLIED WATER AND SEEPAGE (CONSUMPTIVE USE PROGRAM DICU4)
@@ -139,7 +139,7 @@ C..
       REAL*4 TCU,PREC,RO,CDNET,CDDNET,NCDNET
       REAL*4 NDS,TAF2CFS,WX,DIV,DIV1,DIV2,DRN,D2
 
-C..   
+C..
       INTEGER     MAXISL,MAXNODE
       PARAMETER   (MAXISL=168, MAXNODE=500)
       DIMENSION WMONTH(12),NODE(MAXNODE)
@@ -179,7 +179,7 @@ C..
      .            'JUN','JUL','AUG','SEP'/
       DATA DAYS_MONTH/31,61,92,123,151,182,212,243,273,304,335,365/
       DATA DAYS_MONTH_LEAP/31,61,92,123,152,183,213,244,274,305,336,366/
-      
+
       CHARACTER*1 JUNK, ANSWER
 	CHARACTER*4 tempyear
 	CHARACTER*80 DICU5_14,DICU5_17,DICU5_12,DICU5_27,DICU5_30,DIVFCTR_RMA,
@@ -190,7 +190,7 @@ C..
       REAL QDRN(MAXNODE,1922:2100,366),QIRR(MAXNODE,1922:2100,366),
      &     QSEEP(MAXNODE,1922:2100,366)
       REAL WYR(1922:2100),TEMPYR
-C***************************MONTHS TO DAYS************************************     
+C***************************MONTHS TO DAYS************************************
       LOGICAL NDFLG(MAXNODE)
 
 C12A
@@ -204,36 +204,36 @@ C..
       WRITE(*,'(48H*** PROGRAM NODCU12---VERSION January 2013*** //)')
 
       TAF2CFS = 0.50417
-C     actually TAF2CFS here is AF2CFS (43560/24/3600)      
+C     actually TAF2CFS here is AF2CFS (43560/24/3600)
       DO N=1,MAXNODE
          NDFLG(N)=.FALSE.
       ENDDO
-      
+
       IYR1=1922
       IYR2=2100
-C++++++++++++++++GROUNDWATER RATIOES++++++++++++++++++++++++++++++++      
+C++++++++++++++++GROUNDWATER RATIOES++++++++++++++++++++++++++++++++
       DO YR=IYR1,IYR2
          GW_RATE(YR)=0.0
       ENDDO
-      
+
  901  FORMAT(' THE CURRENT VERSION OF NODCU PROGRAM ASSUMES THAT THE'/
      &     ' DATABASE CONTAINS DATA FROM  YEAR: ',I4,'  TO  ',I4//
      &     ' IS THIS ASSUMPTION CORRECT? (Y/N): ',$)
 ccccccccccccccccccccccccccccccccccc      READ(*,801)ANSWER
-	CALL GETENV('years_ok',ANSWER)	
+	CALL GETENV('years_ok',ANSWER)
 
       IF(ANSWER.EQ.'N' .OR. ANSWER.EQ.'n')THEN
          WRITE(*,902)
  902     FORMAT(' ENTER BEGINNING AND ENDING YEAR yyyy yyyy: ',$)
 cccccccccccccccccccccccccccccccccc         READ*,IYR1,IYR2
  	   CALL GETENV('begwy',tempyear)
-       READ(tempyear,'(I4)') IYR1   
+       READ(tempyear,'(I4)') IYR1
        CALL GETENV('endwy',tempyear)
-       READ(tempyear,'(I4)') IYR2   
+       READ(tempyear,'(I4)') IYR2
 	   CALL GETENV('leachscale',tempconc)
 	   READ(tempconc,'(I8)') leachscale
       ENDIF
-      
+
       DO I=1,MAXISL
          TAID(I)=0.0
          TAD(I)=0.0
@@ -291,10 +291,10 @@ cccccccccccccccccccccccccccccccccc         READ*,IYR1,IYR2
       ENDDO
 Ccccccccccccccccccccccccccccccccccccccccccccccccccc      READ(*,*) CONC
 	CALL GETENV('datatype',tempconc)
-      READ(tempconc,'(I4)') CONC   
+      READ(tempconc,'(I4)') CONC
 
       WRITE(*,951)
- 951  FORMAT(/' DO YOU WANT TO CREATE AN ASCII FILE FOR LOADING DATA 
+ 951  FORMAT(/' DO YOU WANT TO CREATE AN ASCII FILE FOR LOADING DATA
      &   IN DSS?(Y/N): ',$)
 CccccccccccccccccccccccccccccccCcccccccccccccccccccccc      READ(*,801)ANSWER
 	CALL GETENV('ascii',ANSWER)
@@ -305,7 +305,7 @@ Ccccccccccccccccccccccccccccccccccccccccccccccccccc         READ(*,929)FLE
 	   write(*,*) FLE
 c 929     FORMAT(A120)
       ENDIF
-     
+
 
 
 C-----1. READS INPUT FILES FROM THE NEW PICKWY PROGRAM (YEAR IS PART OF FILENAME)
@@ -318,7 +318,7 @@ C-----1. READS INPUT FILES FROM THE NEW PICKWY PROGRAM (YEAR IS PART OF FILENAME
 	CALL GETENV('DICU5_27',DICU5_27)
 	CALL GETENV('DICU5_30',DICU5_30)
 	CALL GETENV('GW_RATES_TXT',GROUNDWATER)
-	
+
 	OPEN(1,FILE=DICU5_14,FORM='FORMATTED',STATUS='OLD')
       OPEN(2,FILE=DICU5_17,FORM='FORMATTED',STATUS='OLD')
       OPEN(3,FILE=IRREFF_DAT,FORM='FORMATTED',STATUS='OLD')
@@ -330,26 +330,26 @@ C-----1. READS INPUT FILES FROM THE NEW PICKWY PROGRAM (YEAR IS PART OF FILENAME
 C++++++++++++++++GROUNDWATER RATIOES++++++++++++++++++++++++++++++++
       OPEN(15,FILE=GROUNDWATER,STATUS='OLD')
       open(17,file='WYTYPES',form='formatted',status='old')
-      open(56,file='gwbyisl.txt',status='unknown') 
+      open(56,file='gwbyisl.txt',status='unknown')
       open(58,file='drn_wo_ro_isl.txt',status='unknown')
       open(60,file='div_wo_spg_isl.txt',status='unknown')
       open(62,file='spgisl.txt',status='unknown')
       open(64,file='roisl.txt',status='unknown')
       open(66,file='LRDisl.txt',status='unknown')
-      open(68,file='LRAisl.txt',status='unknown')      
-      open(70,file='tempdrnsisl.txt',status='unknown')       
+      open(68,file='LRAisl.txt',status='unknown')
+      open(70,file='tempdrnsisl.txt',status='unknown')
       open(72,file='GWAmount2isl.txt',status='unknown')
 
-      DO YR = IYR1,IYR2                                                 
+      DO YR = IYR1,IYR2
         READ(17,*) WYTYP,TEMPYR
-        IF(WYTYP.EQ.'C'.OR.WYTYP.EQ.'D') THEN 
+        IF(WYTYP.EQ.'C'.OR.WYTYP.EQ.'D') THEN
             WYR(YR) = 1
         ELSE
             WYR(YR) = 0
         ENDIF
       ENDDO
-      
-C*    MODIFY PROGRAM TO OUTPUT EITHER CL OR TDS CONCENTRATIONS --NM(5/7/91)      
+
+C*    MODIFY PROGRAM TO OUTPUT EITHER CL OR TDS CONCENTRATIONS --NM(5/7/91)
       IF (CONC.EQ.1) THEN
 	CALL GETENV('IDRNTDS_DAT',IDRNTDS_DAT)
 	write(*,*) "what is the IDRNTDS =", IDRNTDS_DAT
@@ -360,8 +360,8 @@ C*    MODIFY PROGRAM TO OUTPUT EITHER CL OR TDS CONCENTRATIONS --NM(5/7/91)
 	CALL GETENV('DRNCL_123',DRNCL_123)
       OPEN(12,FILE=DRNCL_123,FORM='FORMATTED',STATUS='OLD')
       ENDIF
-      
-      
+
+
 C-----write the island diverion, drainage and seepages
       OPEN(80, FILE="ISL_DIV.txt")
       OPEN(81, FILE="ISL_DRN.txt")
@@ -369,9 +369,9 @@ C-----write the island diverion, drainage and seepages
 
 C++++++++++++++++GROUNDWATER RATIOES++++++++++++++++++++++++++++++++
       DO YR = IYR1,IYR2
-         READ(15,*) IYR, GW_RATE(YR) 
+         READ(15,*) IYR, GW_RATE(YR)
       ENDDO
-      
+
       DO ISL=1,MAXISL
          READ(2,910)JUNK
          READ(1,910)JUNK
@@ -381,19 +381,19 @@ C++++++++++++++++GROUNDWATER RATIOES++++++++++++++++++++++++++++++++
  910     FORMAT(/A1)
 
          DO YR=IYR1,IYR2
-C********************************************************         
+C********************************************************
             IF (MOD(YR,4).EQ.0) THEN
                 DAYS_YR = 366
             ELSE
-                DAYS_YR = 365  
-            ENDIF        
+                DAYS_YR = 365
+            ENDIF
 C*********LEAP YEAR OR NOT, DAYS OF THE YEAR************
-            
+
             READ(2,980) ISLDICU,IYR,(AW(ISLDICU,M,YR),M=1,DAYS_YR)
             IF (IYR.NE.YR.OR. ISL.NE.ISLDICU) THEN
                WRITE(*,990)
- 990           FORMAT(' ERROR... Changes in the format of DICU output 
-     &          files'/ '          are detected. NODCU program must 
+ 990           FORMAT(' ERROR... Changes in the format of DICU output
+     &          files'/ '          are detected. NODCU program must
      &          be modified'/  '          to accomodate the changes')
                STOP
             ENDIF
@@ -401,7 +401,7 @@ C*********LEAP YEAR OR NOT, DAYS OF THE YEAR************
             READ(10,980)ISLDICU,IYR,(PREC(ISLDICU,M,YR),M=1,DAYS_YR)
             READ(11,980) ISLDICU,IYR,(TCU(ISLDICU,M,YR),M=1,DAYS_YR)
             READ(85,980)ISLDICU,IYR,(WNCU(ISLDICU,M,YR),M=1,DAYS_YR)
- 
+
  980		  FORMAT(I3,4X,I4,366F8.0)
          ENDDO
          IF(MOD(ISL,10).EQ.0 .OR. ISL.EQ.MAXISL)THEN
@@ -414,7 +414,7 @@ C*********LEAP YEAR OR NOT, DAYS OF THE YEAR************
       READ(8,15)((LRAM(I,M),M=1,12),I=1,MAXISL)
       READ(9,15)((LRDM(I,M),M=1,12),I=1,MAXISL)
       do i = 1, 12
-        write(*,*)"LRA ", i," = ", LRAM(1,i)      
+        write(*,*)"LRA ", i," = ", LRAM(1,i)
       enddo
 C12A---Read in data to calculate new seepage component (drained seepage)
 
@@ -428,7 +428,7 @@ C12A---Read in data to calculate new seepage component (drained seepage)
       do i=1,maxisl
          read(100,'(57X,I1,5X,I10,8X,A1)') uplow(i),area(i),docregion(i)
       end do
-      
+
       close(100)
 
 C---Calculte drained seepage for each subarea
@@ -436,30 +436,30 @@ C---Calculte drained seepage for each subarea
       do 100 i=1,maxisl
 
          if (uplow(i).eq.2.or.i.eq.133.or.i.eq.134.or.i.eq.135.or.i.eq.
-     &     136.or.i.eq.137.or.i.eq.140.or.i.eq.141.or.i.eq.142) then 
+     &     136.or.i.eq.137.or.i.eq.140.or.i.eq.141.or.i.eq.142) then
             drnseep(i)=0
             go to 100
          endif
          if (uplow(i).eq.1) then
             if (docregion(i).eq."L") drnseep(i)=0.013*area(i)
             if (docregion(i).eq."M") drnseep(i)=0.074*area(i)
-            if (docregion(i).eq."H") drnseep(i)=0.095*area(i)              
+            if (docregion(i).eq."H") drnseep(i)=0.095*area(i)
             go to 100
          endif
-         write(*,*) " Aghhhh! Subarea is neither in the Delta Lowlands 
-     &      or Uplands"   
+         write(*,*) " Aghhhh! Subarea is neither in the Delta Lowlands
+     &      or Uplands"
          stop
  100   continue
 
 C--------Add drn seepage component to seepage calculated by DICU program amd reported in DICU5.14
 
          do yr=iyr1,iyr2
-C********************************************************         
+C********************************************************
             IF(MOD(YR,4).EQ.0) LPYR=1
             IF (LPYR.EQ.1) THEN
-                DAYS_YR = 366            
+                DAYS_YR = 366
                 DO I = 1,MAXISL
-                    DO M= 1,DAYS_YR 
+                    DO M= 1,DAYS_YR
                         DO MM = 1,12
                             IF(MM.EQ.1) THEN
                                 IF(M.LE.DAYS_MONTH_LEAP(MM)) THEN
@@ -472,7 +472,7 @@ C********************************************************
                                 s(i,m,yr)=s(i,m,yr)+drnseep(i)
      &                           /(DAYS_MONTH_LEAP(MM)
      &                           -DAYS_MONTH_LEAP(MM-1))
-                                ENDIF 
+                                ENDIF
                             ENDIF
                         ENDDO
                     ENDDO
@@ -480,20 +480,20 @@ C********************************************************
              ELSE
                 DAYS_YR = 365
                 DO I = 1,MAXISL
-                    DO M= 1,DAYS_YR 
+                    DO M= 1,DAYS_YR
                         DO MM = 1,12
                             IF (MM.EQ.1) THEN
                                 IF(M.LE.DAYS_MONTH(MM)) THEN
                                     s(i,m,yr)=s(i,m,yr)+drnseep(i)
-     &                               /DAYS_MONTH(MM) 
+     &                               /DAYS_MONTH(MM)
                                ENDIF
-                            ELSE 
+                            ELSE
                                 IF(M.GT.DAYS_MONTH(MM-1).AND.
      &                             M.LE.DAYS_MONTH(MM)) THEN
                                     s(i,m,yr)=s(i,m,yr)+drnseep(i)/
      &                               (DAYS_MONTH(MM)-DAYS_MONTH(MM-1))
                                 ENDIF
-                           ENDIF 
+                           ENDIF
                         ENDDO
                     ENDDO
                 ENDDO
@@ -509,7 +509,7 @@ C-----READ THE LIST OF DWRDSM MODEL NODES
       DO 805 I=1,NUMBER
          READ (50,*) NODE(I)
  805  CONTINUE
-      
+
     8 CONTINUE
       READ(12,19)
       READ(12,13) ((DS(I,M),M=1,12),I=1,MAXISL)
@@ -543,9 +543,9 @@ C..
          RealYR=float(YR)
          IF(MOD(RealYR,4.).EQ.0) LPYR=1
          IF (LPYR.EQ.1) THEN
-            DAYS_YR = 366            
+            DAYS_YR = 366
             DO 205 I = 1,MAXISL
-                DO 204 M= 1,DAYS_YR 
+                DO 204 M= 1,DAYS_YR
                     DO 203 MM = 1,12
                         IF(MM.EQ.1) THEN
                             IF(M.LE.DAYS_MONTH_LEAP(MM)) THEN
@@ -559,7 +559,7 @@ C..
      &                       -DAYS_MONTH_LEAP(MM-1))
                             LRD(I,M) = LRDM(I,MM)/(DAYS_MONTH_LEAP(MM)
      &                       -DAYS_MONTH_LEAP(MM-1))
-                            ENDIF 
+                            ENDIF
                         ENDIF
  203                CONTINUE
  204        CONTINUE
@@ -567,7 +567,7 @@ C..
          ELSE
             DAYS_YR = 365
             DO 208 I = 1,MAXISL
-                DO 206 M= 1,DAYS_YR 
+                DO 206 M= 1,DAYS_YR
                     DO 207 MM = 1,12
                         IF (MM.EQ.1) THEN
                             IF(M.LE.DAYS_MONTH(MM)) THEN
@@ -582,12 +582,12 @@ C..
                                 LRD(I,M) = LRDM(I,MM)/(DAYS_MONTH(MM)
      &                          -DAYS_MONTH(MM-1))
                             ENDIF
-                       ENDIF 
+                       ENDIF
  207            CONTINUE
  206        CONTINUE
  208        CONTINUE
          ENDIF
-         
+
          DO 300 I=1,MAXISL
             DO 200 M=1,DAYS_YR
                 WX(I,M)=PREC(I,M,YR)
@@ -602,8 +602,8 @@ C..
             IF(YR.NE.IYR1) CLOSE(I)
 			PRINT *,YR,IYR1,I
  99      CONTINUE
-         
-        
+
+
          DO 500 I=1,MAXISL
             DO 531 IG = 1, DAYS_YR
              if (uplow(i).eq.1) then
@@ -611,21 +611,21 @@ C..
                 if (docregion(i).eq."M") gwrate=0.30 !0.4
                 if (docregion(i).eq."H") gwrate=0.25 !0.4
              else
-                gwrate = GW_RATE(YR)  
+                gwrate = GW_RATE(YR)
              endif
                GWAMOUNT1(I,IG) = gwrate*AW(I,IG,YR)/IIE(I)
-               GWAMOUNT2(I,IG) = gwrate*S(I,IG,YR)  
-               
+               GWAMOUNT2(I,IG) = gwrate*S(I,IG,YR)
+
                GWF(I,IG,YR)= GWAMOUNT1(I,IG)+GWAMOUNT2(I,IG)
-                
+
  531        CONTINUE
-                
+
 
             leachreduced = 0
-            
+
             DO 400 M=1,DAYS_YR
-                    
-               RO(I,M) = 0.75*RO(I,M)  
+
+               RO(I,M) = 0.75*RO(I,M)
 
                if (YR.eq.1977.and.M.ge.274.and.M.le.303) then
                   if (I.eq.132) then
@@ -643,7 +643,7 @@ C   drained seepage and groundwater to lower the groundwater table
                 tempe = (1.-IIE(I))/IIE(I)
                IF(MOD(YR,4).EQ.0) LPYR=1
                IF (LPYR.EQ.1) THEN
-                  
+
                       IF(M.GT.152) THEN
                           DO MM = 6,12
                             IF(M.GT.DAYS_MONTH_LEAP(MM-1).AND.
@@ -656,7 +656,7 @@ C     &                       +RO(I,M))) THEN
 C                                tempdrns = 0
 C                            ENDIF
                           ENDDO
-                      ELSE 
+                      ELSE
                           IF(M.LE.DAYS_MONTH_LEAP(1)) THEN
                                tempdrns = drnseep(i)/DAYS_MONTH_LEAP(1)
 C                                tempdrns = 0
@@ -668,11 +668,11 @@ C                                tempdrns = 0
      &                          -DAYS_MONTH_LEAP(MM-1))
 C                               tempdrns = 0
                               ENDIF
-                            ENDDO 
+                            ENDDO
                           ENDIF
-                      ENDIF   
-                      
-                  
+                      ENDIF
+
+
                ELSE
                   IF (M.GT.151) THEN
                        DO MM = 6,12
@@ -685,29 +685,29 @@ C                            IF(tempdrns.LT.((AW(I,M,YR)*tempe)+LRD(I,M)
 C     &                       +RO(I,M))) THEN
 C                                tempdrns = 0
 C                            ENDIF
-                      ENDDO       
+                      ENDDO
                   ELSE
                       IF(M.LE.DAYS_MONTH(1)) THEN
                           tempdrns = drnseep(i)/DAYS_MONTH(1)
 C                          tempdrns = 0
-                      ELSE                      
+                      ELSE
                           DO MM = 2,5
                             IF(M.GT.DAYS_MONTH(MM-1).AND.
      &                          M.LE.DAYS_MONTH(MM)) THEN
 C                                tempdrns = 0
                                 tempdrns = drnseep(i)/
-     &                              (DAYS_MONTH(MM)-DAYS_MONTH(MM-1))  
+     &                              (DAYS_MONTH(MM)-DAYS_MONTH(MM-1))
                             ENDIF
                           ENDDO
-                      ENDIF                          
-                  ENDIF                      
+                      ENDIF
+                  ENDIF
                  ENDIF
-               
+
 
 
 C +++++++++++++Leach water apl and drn reassumed double the originals and delay the apl time
 
-               LRA(I,M) = leachscale*LRA(I,M)               
+               LRA(I,M) = leachscale*LRA(I,M)
                LRD(I,M) = 1.0*LRD(I,M)
                if (LRA(I,M).gt.RO(I,M)) then
                     if(leachreduced.gt.0.0001) then
@@ -721,7 +721,7 @@ C +++++++++++++Leach water apl and drn reassumed double the originals and delay 
                     else
                         LRA(I,M) = LRA(I,M)- RO(I,M)
                         leachreduced = leachreduced+RO(I,M)
-                    endif                    
+                    endif
                else
                     LRA(I,M) = 0.
                     leachreduced = leachreduced+LRA(I,M)
@@ -753,14 +753,14 @@ C     &          + WNCU(I,M,YR)
 CNM2-----------
 
 C12A------------Add the drained seepage component to the drainage also
-               
-               tempe = (1.-IIE(I))/IIE(I)               
-                
-               D(I,M)=( AW(I,M,YR) * tempe ) + LRD(I,M) 
+
+               tempe = (1.-IIE(I))/IIE(I)
+
+               D(I,M)=( AW(I,M,YR) * tempe ) + LRD(I,M)
      &                 + RO(I,M) + tempdrns
                D2(I,M)=( AW(I,M,YR) * tempe ) + LRD(I,M)
      &                 + tempdrns
-                          
+
 C12B
                 DRN_Y(I,M,YR) = D2(I,M)
                 LRD_Y(I,M,YR) = LRD(I,M)
@@ -801,14 +801,14 @@ C..
 C..
 C  WRITE OUT ISLAND RESULTS IN ACRE-FEET
 C..
-C  add the island outputs         
+C  add the island outputs
          WRITE(80,*)YR
          WRITE(80,11)(I,(ID1(I,M),M=1,DAYS_YR),I=1,MAXISL)
          WRITE(81,*)YR
          WRITE(81,11)(I,(D(I,M),M=1,DAYS_YR),I=1,MAXISL)
          WRITE(82,*)YR
-         WRITE(82,11)(I,(ID2(I,M),M=1,DAYS_YR),I=1,MAXISL)  
-         write(*,*) YR               
+         WRITE(82,11)(I,(ID2(I,M),M=1,DAYS_YR),I=1,MAXISL)
+         write(*,*) YR
 CNM-10/04/95
 
 C..
@@ -820,7 +820,7 @@ C  USING ISLAND DRAINAGE TDS CONCENTRATIONS IN ARRAY DS
 C  AND ISLAND VOLUME CONTRIBUTIONS TO EACH NODE (NDSUB);
 C  LOAD ARRAY NDS
 C..
-      
+
          DO 750 N=1,MAXNODE
             DO 700 M=1,DAYS_YR
                NID(N,M)=0.
@@ -856,7 +856,7 @@ C...
                   IF(I.EQ.102 .AND. N.EQ.274) THEN
                      DSZ=DS(9,M)
                      NDS(N,M)=NDS(N,M) + (NDSUB(N,M)*DSZ)
-                  ELSEIF((I.EQ.103) .AND. (N.EQ.253 .OR. N.EQ.274 .OR. 
+                  ELSEIF((I.EQ.103) .AND. (N.EQ.253 .OR. N.EQ.274 .OR.
      >                    N.EQ.276 .OR.N.EQ.278)) THEN
                      DSZ=DS(9,M)
                      NDS(N,M)=NDS(N,M) + (NDSUB(N,M)*DSZ)
@@ -896,7 +896,7 @@ C..
                NID(N,M)=NID(N,M) * TAF2CFS
                NID1(N,M)=NID1(N,M) * TAF2CFS
                NID2(N,M)=NID2(N,M) * TAF2CFS
-               ND(N,M)=ND(N,M) * TAF2CFS               
+               ND(N,M)=ND(N,M) * TAF2CFS
  800        CONTINUE
  900     CONTINUE
 C..
@@ -923,7 +923,7 @@ C  WRITE NON ZERO DRAINAGE RETURNS BY ISLAND TO UNIT 27
 C...
 C         TAF2CFS(5)=0.018
 C         IF(LPYR.EQ.1) TAF2CFS(5)=0.01738
-        
+
 C...
          DO 780 I=1,MAXISL
             DO 776 N=1,MAXNODE
@@ -952,14 +952,14 @@ CNM2--------------
  770           CONTINUE
  776        CONTINUE
  780     CONTINUE
-    
+
 C-----4. FILES WRITTEN FOR AG-DRAIN (DELTA ISLAND) MODEL.
-         
+
 C..
 C  RESULTS IN DWR/DSM DELTA MODEL INPUT FORMAT  (CFS)
 C..
        DO 975 M=1,DAYS_YR
-            
+
             DO 957 K=1,NUMBER
                N=NODE(K)
                QDRN(N,YR,M)=ND(N,M)
@@ -972,26 +972,26 @@ C..
                ENDIF
  957        CONTINUE
 
- 975     CONTINUE  
+ 975     CONTINUE
       ENDDO
 C     end of the year cycle
 c---------------------add groundwater output
        WRITE(56,2989)
- 2989  FORMAT('GW_per_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2989  FORMAT('GW_per_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(56,2910) ISL
  2910      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=GW-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=GW-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(56,2911)GWF(ISL,M,YR)* TAF2CFS
                ENDDO
            ENDDO
@@ -1005,24 +1005,24 @@ c---------------------add groundwater output
 c---------------------end of groundwater output
 c---------------------add drainage_without_runoff output
        WRITE(58,2914)
- 2914  FORMAT('drn_wo_ro_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2914  FORMAT('drn_wo_ro_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(58,2915) ISL
  2915      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=DRN-WO-RO-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=DRN-WO-RO-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(58,2911)DRN_Y(ISL,M,YR)*TAF2CFS
                ENDDO
-           ENDDO          
+           ENDDO
            WRITE(58,2912)
       ENDDO
       WRITE(58,2913)
@@ -1030,24 +1030,24 @@ c---------------------add drainage_without_runoff output
 c---------------------end of drainage_without_runoff output
 c---------------------add diversion_without_seepage output
        WRITE(60,2916)
- 2916  FORMAT('div_wo_spg_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2916  FORMAT('div_wo_spg_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(60,2917) ISL
  2917      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=DIV-WO-SPG-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=DIV-WO-SPG-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(60,2911)DIV_Y(ISL,M,YR)* TAF2CFS
                ENDDO
-           ENDDO          
+           ENDDO
            WRITE(60,2912)
       ENDDO
       WRITE(60,2913)
@@ -1055,24 +1055,24 @@ c---------------------add diversion_without_seepage output
 c---------------------end of diversion without seepage output
 c---------------------add seepage output
        WRITE(62,2918)
- 2918  FORMAT('spg_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2918  FORMAT('spg_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(62,2919) ISL
  2919      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=SPG-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=SPG-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(62,2911)SPG_Y(ISL,M,YR)* TAF2CFS
                ENDDO
-           ENDDO          
+           ENDDO
            WRITE(62,2912)
       ENDDO
       WRITE(62,2913)
@@ -1080,21 +1080,21 @@ c---------------------add seepage output
 c---------------------end of seepage output
 c---------------------add runoff output
        WRITE(64,2920)
- 2920  FORMAT('RO_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2920  FORMAT('RO_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(64,2921) ISL
  2921      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=RO-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=RO-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(64,2911)RO_Y(ISL,M,YR)* TAF2CFS
                ENDDO
            ENDDO
@@ -1102,24 +1102,24 @@ c---------------------add runoff output
       ENDDO
       WRITE(64,2913)
       CLOSE(64)
-c---------------------end of runoff output 
+c---------------------end of runoff output
 c---------------------add leach drainage
        WRITE(66,2922)
- 2922  FORMAT('LRD_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2922  FORMAT('LRD_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(66,2923) ISL
  2923      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=LRD-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=LRD-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(66,2911)LRD_Y(ISL,M,YR)* TAF2CFS
                ENDDO
            ENDDO
@@ -1127,24 +1127,24 @@ c---------------------add leach drainage
       ENDDO
       WRITE(66,2913)
       CLOSE(66)
-c---------------------end of leach drainage 
+c---------------------end of leach drainage
 c---------------------add leach applied water
        WRITE(68,2924)
- 2924  FORMAT('LRA_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2924  FORMAT('LRA_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(68,2925) ISL
  2925      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=LRA-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=LRA-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(68,2911)LRA_Y(ISL,M,YR)* TAF2CFS
                ENDDO
            ENDDO
@@ -1152,24 +1152,24 @@ c---------------------add leach applied water
       ENDDO
       WRITE(68,2913)
       CLOSE(68)
-c---------------------end of leach applied water    
+c---------------------end of leach applied water
 c---------------------add temporary drainage
        WRITE(70,2926)
- 2926  FORMAT('tempD_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2926  FORMAT('tempD_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(70,2927) ISL
  2927      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=tempDRNs-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=tempDRNs-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(70,2911)tempD_Y(ISL,M,YR)* TAF2CFS
                ENDDO
            ENDDO
@@ -1177,24 +1177,24 @@ c---------------------add temporary drainage
       ENDDO
       WRITE(70,2913)
       CLOSE(70)
-c---------------------end of temporary drainage 
+c---------------------end of temporary drainage
 c---------------------add groundwater amount 2
        WRITE(72,2928)
- 2928  FORMAT('GWAmount2_island.dss') 
-       DO ISL = 1,MAXISL 
+ 2928  FORMAT('GWAmount2_island.dss')
+       DO ISL = 1,MAXISL
            WRITE(72,2929) ISL
  2929      FORMAT('A=DICU-ISLAND  B=',I4,
-     &       '  C=GWA2-FLOW  D=01JAN1920  E=1DAY  F=DWR-BDO'/
+     &       '  C=GWA2-FLOW  D=01JAN2015  E=1DAY  F=DWR-BDO'/
      &       'CFS'/
      &       'PER-AVER'/
-     &       '01OCT1921 2400')
+     &       '01OCT2015 2400')
            DO YR = iyr1,iyr2
                IF(MOD(YR,4).EQ.0) THEN
                    DAYS_YR = 366
                ELSE
                    DAYS_YR = 365
                ENDIF
-               DO M=1,DAYS_YR       
+               DO M=1,DAYS_YR
                    WRITE(72,2911)GWA2_Y(ISL,M,YR)* TAF2CFS
                ENDDO
            ENDDO
@@ -1202,7 +1202,7 @@ c---------------------add groundwater amount 2
       ENDDO
       WRITE(72,2913)
       CLOSE(72)
-     
+
       CLOSE(80)
       CLOSE(81)
       CLOSE(82)
@@ -1256,7 +1256,7 @@ CNM---1008 FORMAT(I5,2F10.2)
  1007 FORMAT('DWRDSM DELTA MODEL HYDROLOGY ENTRIES BY NODE (CFS)'/,
      .'DRAINAGES (INPUT) AND DIVERSIONS (OUTPUT) FOR ',
      &' - WATER YEAR ',I4 /,
-     .'CHANNEL DIVERSIONS ARE SEPARATED INTO IRRIGATION 
+     .'CHANNEL DIVERSIONS ARE SEPARATED INTO IRRIGATION
      & DIVERSIONS AND SEEPAGE'/,
      .' NODE      DRN	   CH DIV  IRRIG DIV   SEEPAGE  '/)
 
@@ -1304,15 +1304,15 @@ C-----.' - WATER YEAR ',I4 //' ISLAND CH. DEP    AG-RET    P - ET'/)
 C..
 
 CNM-10/04/95
- 1025 FORMAT(//'DELTA ISLAND CHANNEL DIVERSIONS: AW+LW, NO SEEPAGE 
+ 1025 FORMAT(//'DELTA ISLAND CHANNEL DIVERSIONS: AW+LW, NO SEEPAGE
      & INCLUDED (ACRE-FEET)'/
      .'FOR OCTOBER THRU SEPTEMBER - WATER YEAR ',I4 //' ISLAND',
      .T7,12(5X,A3))
 
  1024 FORMAT(I4,4X,366F8.0)
- 
+
 CNM-10/04/95
 
       STOP 'SUCCESS'
       END
-      
+
