@@ -27,21 +27,24 @@ def hecdt2time(dstr):
 
 
 def save_from_dssts_format(fname):
-    df = pd.read_csv(fname,header=None)
-    dssfname = df.iloc[0,0].strip()
+    df = pd.read_csv(fname, header=None)
+    dssfname = df.iloc[0, 0].strip()
     ai = df[df.iloc[:, 0].str.match('A=')].index
-    ai=ai.append(pd.Index([len(df)-2])) # add end of the last data frame
-    with pyhecdss.DSSFile(dssfname,create_new=True) as dh:
+    ai = ai.append(pd.Index([len(df)-2]))  # add end of the last data frame
+    with pyhecdss.DSSFile(dssfname, create_new=True) as dh:
         for i in range(len(ai)-1):
-            dfi = pd.to_numeric(df.iloc[ai[i]+4:ai[i+1]-1, 0])#.reset_index().drop('index', axis=1)
+            # .reset_index().drop('index', axis=1)
+            dfi = pd.to_numeric(df.iloc[ai[i]+4:ai[i+1]-1, 0])
             path_parts = df.iloc[ai[i], 0]
             cunits = df.iloc[ai[i]+1, 0].strip()
             parts = parse_parts(path_parts)
-            sdate = hecdt2time(df.iloc[ai[i]+3,0])
-            freq=pyhecdss.DSSFile.get_freq_from_epart(parts['E'])
-            dfi.index = pd.period_range(start=sdate-freq,freq=freq,periods=len(dfi))
-            path='/'+'/'.join(parts.values())+'/'
+            sdate = hecdt2time(df.iloc[ai[i]+3, 0])
+            freq = pyhecdss.DSSFile.get_freq_from_epart(parts['E'])
+            dfi.index = pd.period_range(
+                start=sdate-freq, freq=freq, periods=len(dfi))
+            path = '/'+'/'.join(parts.values())+'/'
             dh.write_rts(path, dfi, cunits, 'PER-AVER')
+
 
 if __name__ == "__main__":
     pyhecdss.set_message_level(0)
