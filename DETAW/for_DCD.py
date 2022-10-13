@@ -70,6 +70,20 @@ def timeseries_combine(DETAWOUTPUT, Oldisl, Newisl, Numcrop, idates, ratefile):
 
 
 def forNODCU(DETAWISL168, inputversion, endyear, ilands, outfilenames):
+    """ Process DETAW outputs for the DCD
+
+        Parameters
+        ----------
+        DETAWISL168
+        inputversion
+        endyear
+        ilands
+        outfilenames
+
+        Returens
+        --------
+        None
+    """
     # prepare the text input files for DCD-NODCU
     #Cpart[0] = "ETAW"
     #Cpart[1] = "ESPG"

@@ -57,8 +57,8 @@ def ensure_output_dirs(owd):
             os.mkdir(sdir)
 
 
-def callDCD(supmodel, leachoption, endyear, outputfile):
-    owd = os.getcwd()
+def change_dir_and_copy_files():
+    """ Create a temporary working directory and move into it. """
     dir_dst = "./NODCU/DCD_Cal/"
     os.chdir(dir_dst)
     if not os.path.exists(DCD_OUTPUT_TEMP_DIR):
@@ -67,11 +67,34 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     shutil.copy('WYTYPES', DCD_OUTPUT_TEMP_DIR)
     os.chdir(DCD_OUTPUT_TEMP_DIR)
 
-    os.environ['DICU5_14'] = '../../../../DETAW/Output/DICU5.14'
-    os.environ['DICU5_17'] = '../../../../DETAW/Output/DICU5.17'
-    os.environ['DICU5_12'] = '../../../../DETAW/Output/DICU5.12'
-    os.environ['DICU5_27'] = '../../../../DETAW/Output/DICU5.27'
-    os.environ['DICU5_30'] = '../../../../DETAW/Output/DICU5.30'
+
+def set_env_vars_for_nodcu(supmodel, leachoption, endyear, outputfile,
+                           extension):
+    """ Set environment variables for the Fortran code, NODCU
+
+        Parameters
+        ----------
+        supmodel: str
+            Target model for processing.
+        leachoption: str
+            Leach scale factor option
+        endyear: str
+            End year of the processing
+        outputfile: str
+            Output file from DETAW through this process
+        extenion: str
+            Extension name, empty string for the base case
+
+        Returns
+        -------
+        None
+    """
+    ext = f'_{extension}' if extension else ''
+    os.environ['DICU5_14'] = f'../../../../DETAW/Output/DICU5{ext}.14'
+    os.environ['DICU5_17'] = f'../../../../DETAW/Output/DICU5{ext}.17'
+    os.environ['DICU5_12'] = f'../../../../DETAW/Output/DICU5{ext}.12'
+    os.environ['DICU5_27'] = f'../../../../DETAW/Output/DICU5{ext}.27'
+    os.environ['DICU5_30'] = f'../../../../DETAW/Output/DICU5{ext}.30'
 
     if supmodel == 3:
         os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES_CALSIM3.TXT'
@@ -82,14 +105,14 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     os.environ['GW_LOWLANDS_TXT'] = '../../../NODCU/GW_LOWLANDS.TXT'
     # os.environ['DIVFCTR_RMA']='../../../NODCU/DIVFCTR.2020'
     # os.environ['DRNFCTR_RMA']='../../../NODCU/DRNFCTR.2020'
-    os.environ['LEACHAPL_DAT'] = '../../../NODCU/LEACHAPL.DAT'
-    os.environ['LEACHDRN_DAT'] = '../../../NODCU/LEACHDRN.DAT'
+    os.environ['LEACHAPL_DAT'] = f'../../../NODCU/LEACHAPL{ext}.DAT'
+    os.environ['LEACHDRN_DAT'] = f'../../../NODCU/LEACHDRN{ext}.DAT'
     os.environ['IDRNTDS_DAT'] = '../../../NODCU/IDRNTDS.DAT'
     os.environ['DRNCL_123'] = '../../../NODCU/DRNCL.123'
     os.environ['GEOM_NODES'] = '../../../NODCU/GEOM-NODES-1.5'
 
     os.environ['IRREFF_DAT'] = '../../../NODCU/IRREFF-3MWQIregions'
-    os.environ['subarea_info'] = '../../../NODCU/subarea-info'
+    os.environ['subarea_info'] = f'../../../NODCU/subarea-info{ext}.TXT'
 
     # Runtime variables
     # The years assumed are incorrect, so 'N'
@@ -107,12 +130,44 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     # The leach scale factor
     os.environ['leachscale'] = str(leachoption)
 
+
+def run_nodcu():
+    """ Run NODCU (the Fortran code) with the environment variables
+        set in the previous steps.
+    """
     status = os.system(get_kernel_exe())
     status = os.system('python ../converttoDSS.py roisl.txt')
     status = os.system('python ../converttoDSS.py gwbyisl.txt')
     status = os.system('python ../converttoDSS.py drn_wo_ro_isl.txt')
     status = os.system('python ../converttoDSS.py div_wo_spg_isl.txt')
     status = os.system('python ../converttoDSS.py spgisl.txt')
+
+
+def callDCD(supmodel, leachoption, endyear, outputfile):
+    """ Run NODCU (DCD_kernel)
+
+        Parameters
+        ----------
+        supmodel
+            Target model for processing.
+        leachoption
+            Leach scale factor option
+        endyear
+            End year of the processing
+        outputfile
+            Output file from DETAW through this process
+
+        Returns
+        -------
+        None
+            The function creates a few processed DSS files
+    """
+    owd = os.getcwd()
+    change_dir_and_copy_files()
+
+    set_env_vars_for_nodcu(supmodel, leachoption, endyear, outputfile, '')
+
+    run_nodcu()
 
     tempstr = "python ../../../dcd_postprocess.py "+outputfile + " base"
     status = os.system(tempstr)
@@ -224,65 +279,11 @@ def changepaths(inDSSfile, pathfile, outDSSfile, EPART):
 
 def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
     owd = os.getcwd()
+    change_dir_and_copy_files()
 
-    dir_dst = "./NODCU/DCD_Cal/"
-    os.chdir(dir_dst)
-    outdir = DCD_OUTPUT_TEMP_DIR
-    if not os.path.exists(outdir):
-        os.mkdir(outdir)
-    shutil.copy(get_kernel_exe(), outdir)
-    shutil.copy('WYTYPES', outdir)
-    os.chdir(outdir)
+    set_env_vars_for_nodcu(supmodel, leachoption, endyear, outputfile, extension)
 
-    tempn = '../../../../DETAW/Output/DICU5_'+extension
-    os.environ['DICU5_14'] = tempn+'.14'
-    os.environ['DICU5_17'] = tempn+'.17'
-    os.environ['DICU5_12'] = tempn+'.12'
-    os.environ['DICU5_27'] = tempn+'.27'
-    os.environ['DICU5_30'] = tempn+'.30'
-    if supmodel == 3:
-        os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES_CALSIM3.TXT'
-    else:
-        os.environ['GW_RATES_TXT'] = '../../../NODCU/GW_RATES.TXT'
-    # set for DETAW-CD
-    os.environ['GW_LOWLANDS_TXT'] = '../../../NODCU/GW_LOWLANDS.TXT'
-    # os.environ['DIVFCTR_RMA']='../../../NODCU/DIVFCTR.2020'
-    # os.environ['DRNFCTR_RMA']='../../../NODCU/DRNFCTR.2020'
-    tempn = '../../../NODCU/LEACHAPL_'+extension
-    os.environ['LEACHAPL_DAT'] = tempn+'.DAT'
-    tempn = '../../../NODCU/LEACHDRN_'+extension
-    os.environ['LEACHDRN_DAT'] = tempn+'.DAT'
-    os.environ['IDRNTDS_DAT'] = '../../../NODCU/IDRNTDS.DAT'
-    os.environ['DRNCL_123'] = '../../../NODCU/DRNCL.123'
-    os.environ['GEOM_NODES'] = '../../../NODCU/GEOM-NODES-1.5'
-
-    os.environ['IRREFF_DAT'] = '../../../NODCU/IRREFF-3MWQIregions'
-    tempn = '../../../NODCU/subarea-info_'+extension
-    os.environ['subarea_info'] = tempn+'.TXT'
-
-    # Runtime variables
-    # The years assumed are incorrect, so 'N'
-    os.environ['years_ok'] = 'N'
-    # The correct beginning water year to run is
-    os.environ['begwy'] = '2016'
-    # The correct last year to run is
-    os.environ['endwy'] = endyear
-    # Type of drainage concentration data (1 for TDS, 2 for chloride)
-    os.environ['datatype'] = '1'
-    # Do you want to creat an ascii file?
-    os.environ['ascii'] = 'Y'
-    # The dss file to save output
-    os.environ['dssfile'] = outputfile
-    # The leach scale factor
-    os.environ['leachscale'] = str(leachoption)
-
-    status = os.system(get_kernel_exe())
-
-    status = os.system('python ../converttoDSS.py roisl.txt')
-    status = os.system('python ../converttoDSS.py gwbyisl.txt')
-    status = os.system('python ../converttoDSS.py drn_wo_ro_isl.txt')
-    status = os.system('python ../converttoDSS.py div_wo_spg_isl.txt')
-    status = os.system('python ../converttoDSS.py spgisl.txt')
+    run_nodcu()
 
     tempstr = "python ../../../dcd_postprocess.py "+outputfile + " base"
     status = os.system(tempstr)
