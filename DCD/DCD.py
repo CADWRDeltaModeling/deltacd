@@ -114,7 +114,7 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     status = os.system('python ../converttoDSS.py div_wo_spg_isl.txt')
     status = os.system('python ../converttoDSS.py spgisl.txt')
 
-    tempstr = "python ../DCD_postprocess_C3.py "+outputfile + " base"
+    tempstr = "python ../../../dcd_postprocess.py "+outputfile + " base"
     status = os.system(tempstr)
     filestocopy = ["drn_wo_ro_island.dss", "div_wo_spg_island.dss",
                    "GW_per_island.dss", "RO_island.dss", "DP_island.dss", "spg_island.dss"]
@@ -284,7 +284,7 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
     status = os.system('python ../converttoDSS.py div_wo_spg_isl.txt')
     status = os.system('python ../converttoDSS.py spgisl.txt')
 
-    tempstr = "python ../DCD_postprocess_C3.py "+outputfile + " base"
+    tempstr = "python ../../../dcd_postprocess.py "+outputfile + " base"
     status = os.system(tempstr)
     filestocopy_day = ["spg_island.dss", "RO_island.dss", "drn_wo_ro_island.dss",
                        "div_wo_spg_island.dss", "DP_island.dss", "GW_per_island.dss"]
@@ -297,7 +297,7 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
         if supmodel == 3:
             shutil.copy("ext_DCD_island_month.dss",
                         os.path.join(owd, "Output", "CALSIM3"))
-        tempstr = "python ../DCD_postprocess_C3.py "+outputfile+" ex3"
+        tempstr = "python ../../../dcd_postprocess.py "+outputfile+" ex3"
         status = os.system(tempstr)
 
     os.chdir(owd)
@@ -313,7 +313,7 @@ def createoutputs(outputfile, modeloption):
     shutil.copy(get_kernel_exe(), DCD_OUTPUT_TEMP_DIR)
     shutil.copy('WYTYPES', DCD_OUTPUT_TEMP_DIR)
     os.chdir(DCD_OUTPUT_TEMP_DIR)
-    tempstr = "python ../DCD_postprocess_C3.py " + \
+    tempstr = "python ../../../dcd_postprocess.py " + \
         outputfile+" out_"+str(modeloption)
     status = os.system(tempstr)
 
