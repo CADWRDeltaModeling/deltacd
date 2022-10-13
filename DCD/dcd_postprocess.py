@@ -345,52 +345,82 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
     dssout.close()
 
 
+def dcd_postprocess_base():
+    """ Process the base extension """
+    PP_DSS()
+    daytomonth("DP_island.dss")
+    daytomonth("GW_per_island.dss")
+
+
+def dcd_postprocess_ex3(outputfile):
+    """ Postprocess with the ex3 extension option """
+    split_BBID("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+               "D_RO_island.dss", outputfile, 2)  # DSM2 node daily output
+    split_BBID("C_div_wo_spg_island.dss", "C_spg_island.dss",
+               "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile, 1)
+
+
+def dcd_postprocess_out1(outputfile):
+    """ Postprocess with the out1 extension option, DSM2 """
+    islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+                     "D_RO_island.dss", outputfile)  # DSM2 node daily output
+    islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
+                     "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile)
+    shutil.copy("delta_"+outputfile, "../../../Output/DSM2/")
+
+
+def dcd_postprocess_out2(outputfile):
+    """ Postprocess with the out2 extension option, SCHISM """
+    islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+                     "D_RO_island.dss", outputfile)  # DSM2 node daily output
+    islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
+                     "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile)
+    shutil.copy("delta_"+outputfile, "../../../Output/SCHISM/")
+
+
+def dcd_postprocess_out3(outputfile, extension):
+    """ Postprocess with the out3 extension option, CalSim3 """
+    islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+                     "D_RO_island.dss", outputfile)  # DSM2 node daily output
+    daytomonth(outputfile)  # DSM2 node monthly output
+    daytomonth("D_drn_wo_ro_island.dss")
+    daytomonth("D_RO_island.dss")
+    daytomonth("D_div_wo_spg_island.dss")
+    daytomonth("D_spg_island.dss")
+    DCD_to_CALSIM_ISLAND("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+                         "D_RO_island.dss", outputfile)  # combine island outputs to CS3 Delta grids
+
+    islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
+                     "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile)
+    daytomonth("delta_"+outputfile)
+    daytomonth("C_drn_wo_ro_island.dss")
+    daytomonth("C_RO_island.dss")
+    daytomonth("C_div_wo_spg_island.dss")
+    daytomonth("C_spg_island.dss")
+    DCD_to_CALSIM_ISLAND("C_div_wo_spg_island.dss", "C_spg_island.dss", "C_drn_wo_ro_island.dss",
+                         "C_RO_island.dss", "delta_" + outputfile)  # combine island outputs to CS3 Delta grids
+
+    finalfiles = [outputfile.split(
+        ".")[0]+"_mon.dss", outputfile.split(".")[0]+"_mon_C3.dss"]
+    for i in range(len(finalfiles)):
+        shutil.copy(finalfiles[i], "../../../Output/CALSIM3/")
+
+
+def dcd_postprocess(outputfile, extension):
+    if extension == "base":
+        dcd_postprocess_base()
+    if extension == "ex3":
+        dcd_postprocess_ex3(outputfile)
+    if extension == "out_1":
+        dcd_postprocess_out1(outputfile)
+    if extension == "out_2":
+        dcd_postprocess_out2(outputfile)
+    if extension == "out_3":
+        dcd_postprocess_out3(outputfile, extension)
+
+
 if __name__ == "__main__":
     pyhecdss.set_message_level(0)
-    if sys.argv[2].strip() == "base":
-        PP_DSS()
-        daytomonth("DP_island.dss")
-        daytomonth("GW_per_island.dss")
-    if sys.argv[2].strip() == "ex3":
-        split_BBID("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-                   "D_RO_island.dss", sys.argv[1].strip(), 2)  # DSM2 node daily output
-        split_BBID("C_div_wo_spg_island.dss", "C_spg_island.dss",
-                   "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+sys.argv[1].strip(), 1)
-    if sys.argv[2].strip() == "out_1":
-        islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-                         "D_RO_island.dss", sys.argv[1].strip())  # DSM2 node daily output
-        islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
-                         "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+sys.argv[1].strip())
-        shutil.copy("delta_"+sys.argv[1].strip(), "../../../Output/DSM2/")
-    if sys.argv[2].strip() == "out_2":
-        islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-                         "D_RO_island.dss", sys.argv[1].strip())  # DSM2 node daily output
-        islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
-                         "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+sys.argv[1].strip())
-        shutil.copy("delta_"+sys.argv[1].strip(), "../../../Output/SCHISM/")
-    if sys.argv[2].strip() == "out_3":
-        islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-                         "D_RO_island.dss", sys.argv[1].strip())  # DSM2 node daily output
-        daytomonth(sys.argv[1])  # DSM2 node monthly output
-        daytomonth("D_drn_wo_ro_island.dss")
-        daytomonth("D_RO_island.dss")
-        daytomonth("D_div_wo_spg_island.dss")
-        daytomonth("D_spg_island.dss")
-        DCD_to_CALSIM_ISLAND("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-                             "D_RO_island.dss", sys.argv[1])  # combine island outputs to CS3 Delta grids
-
-        islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
-                         "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+sys.argv[1].strip())
-        daytomonth("delta_"+sys.argv[1])
-        daytomonth("C_drn_wo_ro_island.dss")
-        daytomonth("C_RO_island.dss")
-        daytomonth("C_div_wo_spg_island.dss")
-        daytomonth("C_spg_island.dss")
-        DCD_to_CALSIM_ISLAND("C_div_wo_spg_island.dss", "C_spg_island.dss", "C_drn_wo_ro_island.dss",
-                             "C_RO_island.dss", "delta_"+sys.argv[1])  # combine island outputs to CS3 Delta grids
-
-        #finalfiles = [sys.argv[1],sys.argv[1].split(".")[0]+"_mon.dss",sys.argv[1].split(".")[0]+"_mon_C3.dss","delta_"+sys.argv[1],"delta_"+sys.argv[1].split(".")[0]+"_mon.dss","delta_"+sys.argv[1].split(".")[0]+"_mon_C3.dss"]
-        finalfiles = [sys.argv[1].split(
-            ".")[0]+"_mon.dss", sys.argv[1].split(".")[0]+"_mon_C3.dss"]
-        for i in range(len(finalfiles)):
-            shutil.copy(finalfiles[i], "../../../Output/CALSIM3/")
+    extension = sys.argv[2].strip()
+    outputfile = sys.argv[1].strip()
+    dcd_postprocess(outputfile, extension)

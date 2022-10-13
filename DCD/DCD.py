@@ -30,6 +30,7 @@ import os
 import sys
 import shutil
 import platform
+from dcd_postprocess import dcd_postprocess
 
 
 def get_kernel_exe():
@@ -169,8 +170,8 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
 
     run_nodcu()
 
-    tempstr = "python ../../../dcd_postprocess.py "+outputfile + " base"
-    status = os.system(tempstr)
+    dcd_postprocess(outputfile, "base")
+
     filestocopy = ["drn_wo_ro_island.dss", "div_wo_spg_island.dss",
                    "GW_per_island.dss", "RO_island.dss", "DP_island.dss", "spg_island.dss"]
     for i in range(len(filestocopy)):
@@ -285,8 +286,8 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
 
     run_nodcu()
 
-    tempstr = "python ../../../dcd_postprocess.py "+outputfile + " base"
-    status = os.system(tempstr)
+    dcd_postprocess(outputfile, "base")
+
     filestocopy_day = ["spg_island.dss", "RO_island.dss", "drn_wo_ro_island.dss",
                        "div_wo_spg_island.dss", "DP_island.dss", "GW_per_island.dss"]
     for i in range(len(filestocopy_day)):
@@ -298,8 +299,7 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
         if supmodel == 3:
             shutil.copy("ext_DCD_island_month.dss",
                         os.path.join(owd, "Output", "CALSIM3"))
-        tempstr = "python ../../../dcd_postprocess.py "+outputfile+" ex3"
-        status = os.system(tempstr)
+        dcd_postprocess(outputfile, extension)
 
     os.chdir(owd)
 
@@ -314,10 +314,9 @@ def createoutputs(outputfile, modeloption):
     shutil.copy(get_kernel_exe(), DCD_OUTPUT_TEMP_DIR)
     shutil.copy('WYTYPES', DCD_OUTPUT_TEMP_DIR)
     os.chdir(DCD_OUTPUT_TEMP_DIR)
-    tempstr = "python ../../../dcd_postprocess.py " + \
-        outputfile+" out_"+str(modeloption)
-    status = os.system(tempstr)
 
+    extension = f"out_{modeloption}"
+    dcd_postprocess(outputfile, extension)
     # shutil.rmtree(DCD_OUTPUT_TEMP_DIR)
     os.chdir(owd)
 
