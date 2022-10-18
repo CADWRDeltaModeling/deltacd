@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pyhecdss
 import pandas as pd
 import numpy as np
+import xarray as xr
 import os
 import sys
 import string
@@ -179,21 +180,28 @@ def split_BBID(divfile, spgfile, drnfile, rofile, outputfile, option):
                 tdss2[0][0].iloc[:, 0]
             dssout.write_rts(path1, tdss1[0][0], tdss1[0][1], tdss1[0][2])
 
-        dssifh2 = pyhecdss.DSSFile(extfile, create_new=True)
-        dfcat = dssifh2.read_catalog()
+
+        dss_ext = pyhecdss.DSSFile(extfile, create_new=True)
+        dfcat = dss_ext.read_catalog()
+        # Select all non-BBID pathnames
         dfpath = dfcat[(dfcat.A != "BBID")]
-        pathnames = dssifh2.get_pathnames(dfpath)
+        pathnames = dss_ext.get_pathnames(dfpath)
+        # Loop through paths not for BBID
         for i in range(len(pathnames)):
             path1 = "/DICU-ISLAND/" + \
                 pathnames[i].split("/")[2]+"/" + \
                 DCD_paths[ifile]+"//1DAY/DWR-BDO/"
-            tdss1, cunits, ctype = dssout.read_rts(
+            ts_org, cunits, ctype = dssout.read_rts(
                 get_pathname(dssout, path1, 5))
-            tdss2, cunits, ctype = dssifh2.read_rts(pathnames[i])
+            ts_ext, cunits, ctype = dss_ext.read_rts(pathnames[i])
+            # Only when option is 2, subtract the extension version from
+            # the DCD output. The option 2 seems for CalSim3, not
             if option == 2:
-                tdss1.iloc[:, 0] = tdss1.iloc[:, 0]-tdss2.iloc[:, 0]
-            dssout.write_rts(path1, tdss1, cunits, ctype)
-        dssifh2.close()
+                ts_org.iloc[:, 0] = ts_org.iloc[:, 0] - ts_ext.iloc[:, 0]
+            # Write the DCD values to the DCD file
+            # FIXME So... if the option is not 2, it does nothing?
+            dssout.write_rts(path1, ts_org, cunits, ctype)
+        dss_ext.close()
         dssout.close()
 
 
@@ -208,7 +216,6 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
     BBIDisl = [33, 34, 41, 103, 128, 130]
 
     # Allocate island values to DSM2 nodes
-
     divalloc = 687
     drnalloc = 427
     divisl = [0]*divalloc
@@ -249,6 +256,9 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
     for i in range(len(drnnode)):
         if drnnode[i] not in nodes:
             nodes.append(drnnode[i])
+
+    # Read the distribution rates and initialize variables above.
+    # Now distribute values with them.
     Sortednodes = np.sort(nodes)
     dssout = pyhecdss.DSSFile(outputfile, create_new=True)
     for ifile in range(len(inputfiles)-1):
@@ -345,28 +355,140 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
     dssout.close()
 
 
-def dcd_postprocess_base():
-    """ Process the base extension """
-    PP_DSS()
-    daytomonth("DP_island.dss")
-    daytomonth("GW_per_island.dss")
+def read_distribution_rates(path_file):
+    """ Read a island-to-node distribution file and create a distribution
+        matrix.
+
+        This function read a text file containing list of island-to-node
+        distribution values and create a xarray.DataArray with a dense
+        matrix size of (# of islands, # of distributed nodes).
+        The coordinates of the DataArray are one-based indices of the
+        islands and nodes.
+
+        Parameters
+        ----------
+        path_file
+            the input file name
+
+        Returns
+        -------
+        xarray.DataArray
+    """
+    df = pd.read_csv(path_file, delim_whitespace=True, skiprows=2).iloc[:, :3]
+    df["I"] = df["I"]
+    df["N"] = df["N"]
+    # Convert percentage to decimal numbers.
+    df["DIV"] = df["DIV"] * 0.01
+    # Get the list of unique islands
+    islands = np.sort(df["I"].unique())
+    n_islands = len(islands)
+    nodes = np.sort(df["N"].unique())
+    n_nodes = len(nodes)
+    # FIXME Using a dense matrix for now since it is not that big.
+    # The size is about 170 by 700, which is less than 1MB.
+    rates = np.zeros((n_islands, n_nodes))
+    for island in islands:
+        mask = (df["I"] == island)
+        nodes_to_find = df[mask]["N"]
+        node_args = np.vectorize(lambda x: np.argwhere(nodes == x))(nodes_to_find)
+        rates[island - 1, node_args] = df[mask]["DIV"]
+    da = xr.DataArray(data=rates, dims=["island", "node"],
+                      coords=dict(island=islands,
+                                  node=nodes))
+    return da
+
+
+def island_to_dsm2_nodes(extension):
+    """ Distribute DCD results to model nodes
+
+        FIXME WIP. Needs to be polished up.
+
+        Returns
+        -------
+        xarray.Dataset
+    """
+    # Read the updated DCD
+    # FIXME Do not use hard-wired file names, but OK for now?
+    ext = "" if extension == "" else f"_{ext}.nc"
+    path_dcd = f"DCD_islands{ext}.nc"
+    ds_dcd = xr.open_dataset(path_dcd)
+    # Read distribution rates
+    # FIXME Do not hard-wired file names
+    divratefile = '../../../NODCU/DIVFCTR_CS3_NorOMR.2020'
+    # drnratefile = '../../../NODCU/DRNFCTR_CS3_NorOMR.2020'
+    # Need to drop the last column with NaN
+    da_divrate = read_distribution_rates(divratefile)
+    # Just one example with DIV-FLOW
+    da_dcd_nodes = ds_dcd.div_wo_spg_island.dot(da_divrate)
+    ds_dcd_out = da_dcd_nodes.to_dataset(name="DIV-FLOW")
+    return ds_dcd_out
+
+
+def split_bbid_new():
+    """ Split BBID flows
+
+        The function uses a temporary function name.
+    """
+    # List of data
+    DCD_paths = ["DIV-WO-SPG-FLOW", "SPG-FLOW", "DRN-WO-RO-FLOW", "RO-FLOW"]
+    names_to_process = ["div_wo_spg_island", "spg_island",
+                        "drn_wo_ro_island", "RO_island"]
+    # FIXME bad idea to assume that the current directory is the temporary
+    path_nodcu_nc = "DCD_islands.nc"
+    ds_dcd_base = xr.open_dataset(path_nodcu_nc)
+    # working directory.
+    path_ext = "../../path_ext.csv"
+    df_path_ext = pd.read_csv(path_ext)
+    # Reduce BBID amounts from the island outputs and add BBID into the island outputs
+    extensions = pd.unique(df_path_ext["ext"])
+    dfs = []
+    # Loop through extension types
+    for ext in extensions:
+        df_bbid = df_path_ext.query("ext == @ext & part_a == 'BBID'")
+        # If there are no BBID in the extension, skip it.
+        if df_bbid.shape[0] == 0:
+            continue
+        # Read NODCU outputs that are saved for each extension previously
+        path_nodcu_ext_nc = f"DCD_islands_{ext}.nc"
+        ds_dcd_ext = xr.open_dataset(path_nodcu_ext_nc)
+        islands = df_bbid["part_b"].values
+        ds_bbid_base = ds_dcd_base.sel(island=islands)
+        ds_bbid_ext = ds_dcd_ext.sel(island=islands)
+        ds_bbid_corrected = ds_bbid_base - ds_bbid_ext
+        df = ds_bbid_corrected.to_dataframe()
+        dfs.append(df)
+    df_results = pd.concat(dfs)
+    # FIXME Let's save it for now.
+    path_bbid_split = f"bbid.pickle"
+    df_results.to_pickle(path_bbid_split)
 
 
 def dcd_postprocess_ex3(outputfile):
     """ Postprocess with the ex3 extension option """
-    split_BBID("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-               "D_RO_island.dss", outputfile, 2)  # DSM2 node daily output
+    # Commenting out the first call to save run time since the first call
+    # has nothing to do with DSM2.
+    # split_BBID("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+    #            "D_RO_island.dss", outputfile, 2)  # DSM2 node daily output
     split_BBID("C_div_wo_spg_island.dss", "C_spg_island.dss",
                "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile, 1)
 
 
 def dcd_postprocess_out1(outputfile):
-    """ Postprocess with the out1 extension option, DSM2 """
-    islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
-                     "D_RO_island.dss", outputfile)  # DSM2 node daily output
-    islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
-                     "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile)
-    shutil.copy("delta_"+outputfile, "../../../Output/DSM2/")
+    """ Postprocess with the out1 extension option, DSM2
+    """
+    # FIXME No BBID items yet.
+    ds_dcd = island_to_dsm2_nodes("")
+    # Save the output to a NetCDF file.
+    # FIXME Remove hard-wired path names.
+    filename = f"delta_{outputfile.split('.')[0]}.nc"
+    path_dsm2_out = f"../../../Output/DSM2/{filename}"
+    ds_dcd.to_netcdf(path_dsm2_out)
+    # FIXME the old code below.
+    # islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
+    #                  "D_RO_island.dss", outputfile)  # DSM2 node daily output
+    # islandtoDSM2node("C_div_wo_spg_island.dss", "C_spg_island.dss",
+    #                  "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile)
+    # shutil.copy("delta_"+outputfile, "../../../Output/DSM2/")
 
 
 def dcd_postprocess_out2(outputfile):
@@ -408,9 +530,9 @@ def dcd_postprocess_out3(outputfile, extension):
 
 def dcd_postprocess(outputfile, extension):
     if extension == "base":
-        dcd_postprocess_base()
+        dcd_postprocess_base(ds_all)
     if extension == "ex3":
-        dcd_postprocess_ex3(outputfile)
+        process_bbid(outputfile)
     if extension == "out_1":
         dcd_postprocess_out1(outputfile)
     if extension == "out_2":
@@ -419,8 +541,8 @@ def dcd_postprocess(outputfile, extension):
         dcd_postprocess_out3(outputfile, extension)
 
 
-if __name__ == "__main__":
-    pyhecdss.set_message_level(0)
-    extension = sys.argv[2].strip()
-    outputfile = sys.argv[1].strip()
-    dcd_postprocess(outputfile, extension)
+# if __name__ == "__main__":
+#     pyhecdss.set_message_level(0)
+#     extension = sys.argv[2].strip()
+#     outputfile = sys.argv[1].strip()
+#     dcd_postprocess(outputfile, extension)

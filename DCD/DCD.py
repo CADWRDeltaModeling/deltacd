@@ -24,13 +24,47 @@
 #    Python DCD1.2.py
 #
 
+from pathlib import Path
 import pandas as pd
 import pyhecdss
 import os
 import sys
 import shutil
 import platform
-from dcd_postprocess import dcd_postprocess
+import numpy as np
+import xarray as xr
+import dcd_postprocess
+
+
+def callDETAW(supmodel, leachoption):
+    owd = os.getcwd()
+    dir_dst = "../DETAW/"
+    os.chdir(dir_dst)
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+    if supmodel == 1 or supmodel == 2:
+        inputfile = "./Input/historical_study/LODI_PT.csv"
+    elif supmodel == 3:
+        inputfile = "./Input/planning_study/LODI_PT.csv"
+
+    f0 = open(inputfile, 'r')
+    templ = ""
+    endyear = 0
+    for line in f0:
+        if line:
+            templ = line
+            if line.split(",")[5].strip() == "0" and line.split(",")[6].strip() == "0":
+                break
+    endyear = templ.split(",")[1]
+    endmonth = int(templ.split(",")[2])
+    outputfile = "DCD_"+months[endmonth-1] + \
+        endyear+"_Lch"+str(leachoption)+".dss"
+    SKIP_DETAW = False  # FIXME make this an option
+    if not SKIP_DETAW:
+        status = os.system('python DETAW.py')
+    os.chdir(owd)
+    return(endyear, outputfile)
 
 
 def get_kernel_exe():
@@ -137,14 +171,81 @@ def run_nodcu():
         set in the previous steps.
     """
     status = os.system(get_kernel_exe())
-    status = os.system('python ../converttoDSS.py roisl.txt')
-    status = os.system('python ../converttoDSS.py gwbyisl.txt')
-    status = os.system('python ../converttoDSS.py drn_wo_ro_isl.txt')
-    status = os.system('python ../converttoDSS.py div_wo_spg_isl.txt')
-    status = os.system('python ../converttoDSS.py spgisl.txt')
+    files_to_convert = ['roisl.txt', 'gwbyisl.txt', 'drn_wo_ro_isl.txt',
+                        'div_wo_spg_isl.txt', 'spgisl.txt']
+    list_datasets = []
+    for pathfile in files_to_convert:
+        da = read_nodcu_out(pathfile)
+        ds = da.to_dataset(name=da.attrs['name'])
+        list_datasets.append(ds)
+    ds_all = xr.merge(list_datasets)
+    return ds_all
 
 
-def callDCD(supmodel, leachoption, endyear, outputfile):
+def read_nodcu_out(filepath):
+    """ Read NODCU output and return in a pandas.DataFrame.
+
+        The function reads a NODCU output file. It is assumed that the
+        ordering of the data blocks (time series) are in an ascending order
+        of the island indices.
+
+        Parameters
+        ----------
+        filepath
+            file name to read
+
+        Returns
+        -------
+        xarray.DataArray
+    """
+    # Read the file to figure out the number of years in the file
+    df = pd.read_csv(filepath, skiprows=5, header=None, nrows=200*365)
+    n_count = df[df[0] == 'END'].index[0]
+    # Get some info from the header
+    with open(filepath, 'r') as fh:
+        # First line for the file name
+        l_name = fh.readline().strip()
+        # Second line for DSS parts
+        l_parts = fh.readline()
+        parts = [x.split()[0] for x in l_parts.split("=")[1:]]
+        l_unit = fh.readline().strip()
+        l_period_type = fh.readline().strip()
+        l_start_time = fh.readline().strip()
+
+    # Read the file again while skipping non-data parts
+    df = pd.read_csv(filepath,
+                     skiprows=lambda x: x % (n_count + 5) < 5,
+                     dtype='f4',
+                     header=None)
+    # Create a 2-d array
+    n_islands = df.shape[0] // n_count
+    data = np.hstack(
+        [df.loc[i * n_count:(i + 1) * n_count - 1, :].values
+         for i in range(n_islands)])
+
+    # Put dates column
+    start_date = pd.to_datetime(l_start_time.split()[0])
+    end_data = start_date + pd.to_timedelta(n_count - 1, unit='D')
+    dates = pd.date_range(start=start_date, end=end_data)
+
+    # Create a DataArray
+    da = xr.DataArray(data,
+                      dims=["date", "island"],
+                      coords=dict(date=dates,
+                                  island=np.arange(n_islands) + 1))
+
+    # Add metadata
+    da.attrs["name"] = l_name.split(".")[0]
+    da.attrs["part_a"] = parts[0]
+    da.attrs["part_c"] = parts[2]
+    da.attrs["part_e"] = parts[4]
+    da.attrs["part_f"] = parts[5]
+    da.attrs["unit"] = l_unit
+    da.attrs["period_type"] = l_period_type
+    return da
+
+
+def callDCD(supmodel, leachoption, endyear, outputfile, extension):
     """ Run NODCU (DCD_kernel)
 
         Parameters
@@ -157,6 +258,8 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
             End year of the processing
         outputfile
             Output file from DETAW through this process
+        extension
+            Extension option name
 
         Returns
         -------
@@ -166,66 +269,72 @@ def callDCD(supmodel, leachoption, endyear, outputfile):
     owd = os.getcwd()
     change_dir_and_copy_files()
 
-    set_env_vars_for_nodcu(supmodel, leachoption, endyear, outputfile, '')
+    set_env_vars_for_nodcu(supmodel, leachoption, endyear, outputfile,
+                           extension)
 
-    run_nodcu()
+    ds_all = run_nodcu()
 
-    dcd_postprocess(outputfile, "base")
+    # First, calculate deep percolation
+    da_ro_island = ds_all.RO_island
+    # Assuming 25% of the surface runoff goes to the deep percolation
+    # See Annual Report 2017, Chapter 3.
+    dp_factor = 0.25
+    da_dp_island = da_ro_island * dp_factor
+    da_dp_island.attrs = da_ro_island.attrs
+    da_dp_island.attrs["name"] = "DP_island"
+    da_dp_island.attrs["part_c"] = "DP-FLOW"
+    ds_all[da_dp_island.attrs["name"]] = da_dp_island
+    # Save the data for later uses
+    suffix = f"_{extension}" if extension != "" else ""
+    path_out = f"DCD_islands{suffix}.nc"
+    ds_all.to_netcdf(path_out)
 
-    filestocopy = ["drn_wo_ro_island.dss", "div_wo_spg_island.dss",
-                   "GW_per_island.dss", "RO_island.dss", "DP_island.dss", "spg_island.dss"]
-    for i in range(len(filestocopy)):
-        tempfile = filestocopy[i]
-        daytomonth(tempfile, "DCD_island_month.dss")
-        shutil.copy(tempfile, "D_"+tempfile)
-        shutil.copy(tempfile, "C_"+tempfile)
-    ensure_output_dirs(owd)
-    if supmodel == 1:
-        # shutil.copy(outputfile,owd+"/Output/DSM2/")
-        shutil.copy("DCD_island_month.dss",
-                    os.path.join(owd, "Output", "DSM2"))
-    elif supmodel == 2:
-        #tempfile = outputfile.split(".")[0].strip()+"_noWS_leach"+str(leachoption)+".dss"
-        # os.rename(outputfile,tempfile)
-        # shutil.copy(tempfile,owd+"/Output/SCHISM/")
-        shutil.copy("DCD_island_month.dss",
-                    os.path.join(owd, "Output", "SCHISM"))
-    elif supmodel == 3:
-        shutil.copy("DCD_island_month.dss",
-                    os.path.join(owd, "Output", "CALSIM3"))
+    # Take monthly averages of the NODCU outputs
+    names_to_process = ["drn_wo_ro_island", "div_wo_spg_island",
+                        "GW_per_island", "RO_island",
+                        "DP_island", "spg_island"]
+    for name in names_to_process:
+        da = ds_all[name]
+        da_mon = take_monthly_average(da)
+        name_mon = f"{name}_mon"
+        ds_all[name_mon] = da_mon
 
+    # Write monthly data
+    name_out = "DCD_island_month"
+    if extension == "":
+        ensure_output_dirs(owd)
+        if supmodel == 1:  # DSM2
+            model = "DSM2"
+        elif supmodel == 2:
+            model = "SCHISM"
+        elif supmodel == 3:
+            model = "CALSISM3"
+        else:
+            raise ValueError()
+        path_output = Path(owd) / f"Output/{model}/{name_out}.nc"
+        names_to_write = [f"{x}_mon" for x in names_to_process]
+        ds_all[names_to_write].to_netcdf(path_output)
+    else:
+        if extension == "ex3":
+            if supmodel == 3:
+                path_output = Path(owd) / f"Output/CALSIM3/{name_out}.nc"
+                names_to_write = [f"ext_{x}_mon" for x in names_to_process]
+                ds_all[names_to_write].to_netcdf(path_output)
+            dcd_postprocess.split_bbid_new()
     os.chdir(owd)
 
 
-def callDETAW(supmodel, leachoption):
-    owd = os.getcwd()
-    dir_dst = "../DETAW/"
-    os.chdir(dir_dst)
-    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-    if supmodel == 1 or supmodel == 2:
-        inputfile = "./Input/historical_study/LODI_PT.csv"
-    elif supmodel == 3:
-        inputfile = "./Input/planning_study/LODI_PT.csv"
-
-    f0 = open(inputfile, 'r')
-    templ = ""
-    endyear = 0
-    for line in f0:
-        if line:
-            templ = line
-            if line.split(",")[5].strip() == "0" and line.split(",")[6].strip() == "0":
-                break
-    endyear = templ.split(",")[1]
-    endmonth = int(templ.split(",")[2])
-    outputfile = "DCD_"+months[endmonth-1] + \
-        endyear+"_Lch"+str(leachoption)+".dss"
-    SKIP_DETAW = False  # FIXME make this an option
-    if not SKIP_DETAW:
-        status = os.system('python DETAW.py')
-    os.chdir(owd)
-    return(endyear, outputfile)
+def take_monthly_average(da):
+    df = pd.DataFrame(data=da.values, index=da.date)
+    df_mon = df.resample('M').mean()
+    da_mon = xr.DataArray(data=df_mon.values,
+                          dims=["month", "island"],
+                          coords=dict(month=df_mon.index,
+                                      island=da.island),
+                          attrs=da.attrs)
+    da_mon.attrs["name"] = f"{da.attrs['name']}_mon"
+    da_mon.attrs["part_e"] = "1MON"
+    return da_mon
 
 
 def get_pathname(dssfh, path):
@@ -282,7 +391,8 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
     owd = os.getcwd()
     change_dir_and_copy_files()
 
-    set_env_vars_for_nodcu(supmodel, leachoption, endyear, outputfile, extension)
+    set_env_vars_for_nodcu(supmodel, leachoption,
+                           endyear, outputfile, extension)
 
     run_nodcu()
 
@@ -290,17 +400,6 @@ def callDCD_ext(supmodel, leachoption, endyear, outputfile, extension):
 
     filestocopy_day = ["spg_island.dss", "RO_island.dss", "drn_wo_ro_island.dss",
                        "div_wo_spg_island.dss", "DP_island.dss", "GW_per_island.dss"]
-    for i in range(len(filestocopy_day)):
-        tempfile = "ext_"+filestocopy_day[i]
-        changepaths(
-            filestocopy_day[i], "../../../NODCU/path_"+extension+".txt", tempfile, "1DAY")
-        daytomonth(tempfile, "ext_DCD_island_month.dss")
-    if extension == "ex3":
-        if supmodel == 3:
-            shutil.copy("ext_DCD_island_month.dss",
-                        os.path.join(owd, "Output", "CALSIM3"))
-        dcd_postprocess(outputfile, extension)
-
     os.chdir(owd)
 
 
@@ -316,7 +415,7 @@ def createoutputs(outputfile, modeloption):
     os.chdir(DCD_OUTPUT_TEMP_DIR)
 
     extension = f"out_{modeloption}"
-    dcd_postprocess(outputfile, extension)
+    dcd_postprocess.dcd_postprocess(outputfile, extension)
     # shutil.rmtree(DCD_OUTPUT_TEMP_DIR)
     os.chdir(owd)
 
@@ -336,10 +435,10 @@ def main():
                 if "Leach scale factor" in line:
                     leachoption = int(line.split("=")[1])
     (endyear, outputfile) = callDETAW(modeloption, leachoption)
-    callDCD(modeloption, leachoption, endyear, outputfile)
-    callDCD_ext(modeloption, leachoption, endyear, outputfile, "ex1")
-    callDCD_ext(modeloption, leachoption, endyear, outputfile, "ex2")
-    callDCD_ext(modeloption, leachoption, endyear, outputfile, "ex3")
+    callDCD(modeloption, leachoption, endyear, outputfile, "")
+    callDCD(modeloption, leachoption, endyear, outputfile, "ex1")
+    callDCD(modeloption, leachoption, endyear, outputfile, "ex2")
+    callDCD(modeloption, leachoption, endyear, outputfile, "ex3")
     createoutputs(outputfile, modeloption)
 
     shutil.rmtree("./NODCU/DCD_Cal/DCD_outputs", ignore_errors=True)
