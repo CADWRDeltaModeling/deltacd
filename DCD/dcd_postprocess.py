@@ -356,7 +356,7 @@ def islandtoDSM2node(divfile, spgfile, drnfile, rofile, outputfile):
 
 
 def read_distribution_rates(path_file):
-    """ Read a island-to-node distribution file and create a distribution
+    """ Read an island-to-node distribution file and create a distribution
         matrix.
 
         This function read a text file containing list of island-to-node
@@ -374,24 +374,30 @@ def read_distribution_rates(path_file):
         -------
         xarray.DataArray
     """
+    # Read the file, and drop the last column that is filled by
+    # read_csv automatically.
     df = pd.read_csv(path_file, delim_whitespace=True, skiprows=2).iloc[:, :3]
     df["I"] = df["I"]
     df["N"] = df["N"]
     # Convert percentage to decimal numbers.
-    df["DIV"] = df["DIV"] * 0.01
+    colname_rate = df.columns[2]
+    df[colname_rate] = df[colname_rate] * 0.01
     # Get the list of unique islands
     islands = np.sort(df["I"].unique())
     n_islands = len(islands)
+    # Get the list of unique node numbers
     nodes = np.sort(df["N"].unique())
     n_nodes = len(nodes)
-    # FIXME Using a dense matrix for now since it is not that big.
-    # The size is about 170 by 700, which is less than 1MB.
+    # Create an empty rate matrix
     rates = np.zeros((n_islands, n_nodes))
+    # Loop through islands
     for island in islands:
         mask = (df["I"] == island)
         nodes_to_find = df[mask]["N"]
-        node_args = np.vectorize(lambda x: np.argwhere(nodes == x))(nodes_to_find)
-        rates[island - 1, node_args] = df[mask]["DIV"]
+        node_args = np.vectorize(
+            lambda x: np.argwhere(nodes == x))(nodes_to_find)
+        rates[island - 1, node_args] = df[mask][colname_rate]
+    # Create a xarray.DataArray.
     da = xr.DataArray(data=rates, dims=["island", "node"],
                       coords=dict(island=islands,
                                   node=nodes))
@@ -410,57 +416,113 @@ def island_to_dsm2_nodes(extension):
     # Read the updated DCD
     # FIXME Do not use hard-wired file names, but OK for now?
     ext = "" if extension == "" else f"_{ext}.nc"
-    path_dcd = f"DCD_islands{ext}.nc"
-    ds_dcd = xr.open_dataset(path_dcd)
+    path_dcd_adj = f"DCD_islands_adj.nc"
+    ds_dcd_adj = xr.open_dataset(path_dcd_adj)
+
     # Read distribution rates
-    # FIXME Do not hard-wired file names
+    # FIXME Do not hard-wire file names
     divratefile = '../../../NODCU/DIVFCTR_CS3_NorOMR.2020'
     # drnratefile = '../../../NODCU/DRNFCTR_CS3_NorOMR.2020'
     # Need to drop the last column with NaN
     da_divrate = read_distribution_rates(divratefile)
-    # Just one example with DIV-FLOW
-    da_dcd_nodes = ds_dcd.div_wo_spg_island.dot(da_divrate)
-    ds_dcd_out = da_dcd_nodes.to_dataset(name="DIV-FLOW")
-    return ds_dcd_out
+    drnratefile = '../../../NODCU/DRNFCTR_CS3_NorOMR.2020'
+    da_drnrate = read_distribution_rates(drnratefile)
+    # Merge the two because their locations are not the same, and the
+    # original approach has all three even though they do not need to be.
+    ds_dist_rates = xr.merge((da_divrate.to_dataset(name='divrate'),
+                              da_drnrate.to_dataset(name='drnrate')),
+                             fill_value=0.)
+
+    # Diversion
+    da_div_nodes = ds_dcd_adj.div_wo_spg_island.dot(ds_dist_rates.divrate)
+
+    # Seepage
+    da_spg_nodes = ds_dcd_adj.spg_island.dot(ds_dist_rates.divrate)
+
+    # Drainage
+    da_drn_nodes = ds_dcd_adj.drn_wo_ro_island.dot(ds_dist_rates.drnrate) + \
+        ds_dcd_adj.RO_island.dot(ds_dist_rates.drnrate)
+
+    # BBID
+    # FIXME I think that this can be folded with the code above, but
+    #       I am not sure the best way to deal with the BBID island index.
+    # FIXME a hard-wired path information. Not good.
+    path_ext = "../../path_ext.csv"
+    df_path_ext = pd.read_csv(path_ext)
+    extensions = df_path_ext['ext'].unique()
+    dss = []
+    for ext in extensions:
+        # Read NODCU outputs that are saved for each extension previously
+        # FIXME Better not to use intermediate files
+        # FIXME A similar job is done in `split_bbid_new` already.
+        path_nodcu_ext_nc = f"DCD_islands_{ext}.nc"
+        ds_dcd_ext = xr.open_dataset(path_nodcu_ext_nc)
+        df_islands = df_path_ext.query("ext == @ext & part_a == 'BBID'")
+        if not df_islands.empty:
+            ds = ds_dcd_ext.sel(island=df_islands["part_b"].values)
+            dss.append(ds)
+    ds_bbid_sum = xr.concat(dss, dim='island').sum(dim='island')
+    # Add back run off to the drainage
+    # FIXME this is not done completely.
+    ds_bbid_sum['DRAIN-FLOW'] = ds_bbid_sum['drn_wo_ro_island'] + \
+                                ds_bbid_sum['RO_island']
+
+    path_dcd_base = f"DCD_islands.nc"
+    ds_dcd_base = xr.open_dataset(path_dcd_base)
+    bbid_islands = df_path_ext[df_path_ext["part_a"] == 'BBID']["part_b"].values
+    ds_dcd_base.sel(island=bbid_islands)
+
+    # Create a xarray.Dataset.
+    ds_dcd_nodes = da_div_nodes.to_dataset(name="DIV-FLOW")
+    ds_dcd_nodes["SEEP-FLOW"] = da_spg_nodes
+    ds_dcd_nodes["DRIAN-FLOW"] = da_drn_nodes
+
+    return ds_dcd_nodes
 
 
 def split_bbid_new():
     """ Split BBID flows
 
-        The function uses a temporary function name.
+        The function uses a temporary name with _new suffix.
     """
     # List of data
     DCD_paths = ["DIV-WO-SPG-FLOW", "SPG-FLOW", "DRN-WO-RO-FLOW", "RO-FLOW"]
     names_to_process = ["div_wo_spg_island", "spg_island",
                         "drn_wo_ro_island", "RO_island"]
     # FIXME bad idea to assume that the current directory is the temporary
+    # working directory.
     path_nodcu_nc = "DCD_islands.nc"
     ds_dcd_base = xr.open_dataset(path_nodcu_nc)
-    # working directory.
+    ds_dcd_adjusted = ds_dcd_base.copy(deep=True)
+
+    # FIXME a hard-wired path information. Not good.
     path_ext = "../../path_ext.csv"
     df_path_ext = pd.read_csv(path_ext)
-    # Reduce BBID amounts from the island outputs and add BBID into the island outputs
-    extensions = pd.unique(df_path_ext["ext"])
-    dfs = []
-    # Loop through extension types
+    extensions = df_path_ext['ext'].unique()
     for ext in extensions:
         df_bbid = df_path_ext.query("ext == @ext & part_a == 'BBID'")
         # If there are no BBID in the extension, skip it.
         if df_bbid.shape[0] == 0:
             continue
         # Read NODCU outputs that are saved for each extension previously
+        # FIXME Better not to use intermediate files
         path_nodcu_ext_nc = f"DCD_islands_{ext}.nc"
         ds_dcd_ext = xr.open_dataset(path_nodcu_ext_nc)
-        islands = df_bbid["part_b"].values
-        ds_bbid_base = ds_dcd_base.sel(island=islands)
-        ds_bbid_ext = ds_dcd_ext.sel(island=islands)
-        ds_bbid_corrected = ds_bbid_base - ds_bbid_ext
-        df = ds_bbid_corrected.to_dataframe()
-        dfs.append(df)
-    df_results = pd.concat(dfs)
-    # FIXME Let's save it for now.
-    path_bbid_split = f"bbid.pickle"
-    df_results.to_pickle(path_bbid_split)
+        for _, row in df_path_ext[df_path_ext['ext'] == ext].iterrows():
+            # BBID
+            island_i = row['part_b']
+            if row['part_a'] == 'BBID':
+                ds_dcd_adjusted.loc[dict(island=island_i)] -= \
+                    ds_dcd_ext.sel(island=island_i)
+            else:
+                # TODO Need to add special treatment for SCHISM
+                # FIXME Is this the best place to put this logic here?
+                pass
+
+    # Save the results
+    # FIXME bad idea to use a file. It will be removed later.
+    path_out = "DCD_islands_adj.nc"
+    ds_dcd_adjusted.to_netcdf(path_out)
 
 
 def dcd_postprocess_ex3(outputfile):
@@ -470,7 +532,7 @@ def dcd_postprocess_ex3(outputfile):
     # split_BBID("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
     #            "D_RO_island.dss", outputfile, 2)  # DSM2 node daily output
     split_BBID("C_div_wo_spg_island.dss", "C_spg_island.dss",
-               "C_drn_wo_ro_island.dss", "C_RO_island.dss", "delta_"+outputfile, 1)
+               "C_drn_wo_ro_island.dss", "C_RO_island.dss", 1)
 
 
 def dcd_postprocess_out1(outputfile):
@@ -480,8 +542,9 @@ def dcd_postprocess_out1(outputfile):
     ds_dcd = island_to_dsm2_nodes("")
     # Save the output to a NetCDF file.
     # FIXME Remove hard-wired path names.
-    filename = f"delta_{outputfile.split('.')[0]}.nc"
-    path_dsm2_out = f"../../../Output/DSM2/{filename}"
+    fname_base = outputfile.split('.')[0]
+    fname_nc = f"delta_{fname_base}.nc"
+    path_dsm2_out = f"../../../Output/DSM2/{fname_nc}"
     ds_dcd.to_netcdf(path_dsm2_out)
     # FIXME the old code below.
     # islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
@@ -500,7 +563,7 @@ def dcd_postprocess_out2(outputfile):
     shutil.copy("delta_"+outputfile, "../../../Output/SCHISM/")
 
 
-def dcd_postprocess_out3(outputfile, extension):
+def dcd_postprocess_out3(outputfile):
     """ Postprocess with the out3 extension option, CalSim3 """
     islandtoDSM2node("D_div_wo_spg_island.dss", "D_spg_island.dss", "D_drn_wo_ro_island.dss",
                      "D_RO_island.dss", outputfile)  # DSM2 node daily output
@@ -528,17 +591,13 @@ def dcd_postprocess_out3(outputfile, extension):
         shutil.copy(finalfiles[i], "../../../Output/CALSIM3/")
 
 
-def dcd_postprocess(outputfile, extension):
-    if extension == "base":
-        dcd_postprocess_base(ds_all)
-    if extension == "ex3":
-        process_bbid(outputfile)
-    if extension == "out_1":
+def dcd_postprocess(outputfile, output_option):
+    if output_option == "out_1":
         dcd_postprocess_out1(outputfile)
-    if extension == "out_2":
+    if output_option == "out_2":
         dcd_postprocess_out2(outputfile)
-    if extension == "out_3":
-        dcd_postprocess_out3(outputfile, extension)
+    if output_option == "out_3":
+        dcd_postprocess_out3(outputfile)
 
 
 # if __name__ == "__main__":

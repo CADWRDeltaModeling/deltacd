@@ -318,6 +318,7 @@ def callDCD(supmodel, leachoption, endyear, outputfile, extension):
         if extension == "ex3":
             if supmodel == 3:
                 path_output = Path(owd) / f"Output/CALSIM3/{name_out}.nc"
+                # FIXME The final output writing is better not to be here.
                 names_to_write = [f"ext_{x}_mon" for x in names_to_process]
                 ds_all[names_to_write].to_netcdf(path_output)
             dcd_postprocess.split_bbid_new()
