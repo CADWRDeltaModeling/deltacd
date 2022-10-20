@@ -33,6 +33,9 @@ import shutil
 import platform
 import numpy as np
 import xarray as xr
+# FIXME Remove this path kludge later
+sys.path.append("../DETAW")
+import detaw
 import dcd_postprocess
 
 
@@ -62,7 +65,9 @@ def callDETAW(supmodel, leachoption):
         endyear+"_Lch"+str(leachoption)+".dss"
     SKIP_DETAW = False  # FIXME make this an option
     if not SKIP_DETAW:
-        status = os.system('python DETAW.py')
+        # FIXME Using a hardwired file name for now...
+        path_detaw_yaml = "../DETAW/Input/detaw.yaml"
+        detaw.detaw(path_detaw_yaml)
     os.chdir(owd)
     return(endyear, outputfile)
 

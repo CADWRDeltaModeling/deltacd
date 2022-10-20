@@ -29,6 +29,8 @@ if not sys.warnoptions:
     import warnings
     warnings.simplefilter("ignore")
 
+import argparse
+import logging
 import pyhecdss
 import pandas as pd
 import xarray as xr
@@ -46,12 +48,16 @@ from for_DCD import timeseries_combine, forNODCU
 
 import timeit
 import numba
+import yaml
 
 
 DEBUG_TIMING = True
 DEBUG_OUTPUT = False
 NO_OUTPUT = True
 
+# Set up a logger
+# FIXME The log level can be managed by the user input.
+logging.basicConfig(level=logging.INFO)
 
 def read_and_clean_crop_info(source):
     '''
@@ -2515,44 +2521,47 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     return(DETAWOUTPUT)
 
 
-def main():
+def create_argparser() -> argparse.ArgumentParser:
+    """ Create an argument parser.
+
+        Returns
+        -------
+        argepase.ArgumentParser
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("input_yaml", type=str,
+                         help="An input YAML file to provide parameters")
+    return parser
+
+
+def detaw(fname_main_yaml: str) -> None:
+    """ Run DETAW and DCD with a YAML file
+
+        Parameters
+        ----------
+        fname_main_yaml: str
+            the main input file name
+    """
+    logging.info(f"Reading the main YAML input: {fname_main_yaml}")
+    with open(fname_main_yaml, 'r') as file_in:
+        model_params = yaml.safe_load(file_in)
+
+    # FIXME For now, passing the yaml information to the current model
+    #       parameters. They cane be passed as a dict directly.
+    detaw_params = model_params["detaw"]
+    streamlinemodel = detaw_params["target_model"]
+    idayoutput = detaw_params["daily_output"]
+    imonthoutput = detaw_params["monthly_output"]
+    iyearoutput = detaw_params["yearly_output"]
+    itotaloutput = detaw_params["delta_output"]
+    dailyunit = detaw_params["daily_output_unit"]
+    forDSM2_daily = detaw_params["for_dsm2_only"]
+
+    # FIXME Avoid to use a current directory for jobs
     filepath = os.getcwd()
 
-    inputfile = "./Input/DETAW_para.inp"
-    f0 = open(inputfile, 'r')
-    itemp = 0
-    endyear = 0
-    for line in f0:
-        if line:
-            if not("#" in line):
-                itemp = itemp + 1
-                if "Model to streamline" in line:
-                    modelno = int(line.split("=")[1])
-                    if modelno == 1:
-                        streamlinemodel = "DSM2"
-                    elif modelno == 2:
-                        streamlinemodel = "SCHISM"
-                    elif modelno == 3:
-                        streamlinemodel = "CALSIM3"
-                if "Daily output" in line:
-                    idayoutput = int(line.split("=")[1])
-                if "Monthly output" in line:
-                    imonthoutput = int(line.split("=")[1])
-                if "Yearly output" in line:
-                    iyearoutput = int(line.split("=")[1])
-                if "Delta output" in line:
-                    itotaloutput = int(line.split("=")[1])
-                if "Daily output unit" in line:
-                    dailyunit = int(line.split("=")[1])
-                if "forDSM2_daily" in line:
-                    forDSM2_daily = int(line.split("=")[1])
-                # if "End year" in line:
-                #    endyear = int(line.split("=")[1])
-                # if "Days" in line:
-                #    idates = int(line.split("=")[1])
-
+    # FIXME Do not use hardwired values
     file = ["  "]*3
-
     file[0] = "mm_pcp.csv"
     file[1] = "Percentage.csv"
     file[2] = "LODI_PT.csv"
@@ -2703,6 +2712,26 @@ def main():
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
         forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex3")
     print("done")
+
+
+def main() -> None:
+    """ Run ETAW and post-process ETAW results for DCD
+
+        This function accepts one command line argument for model parameters,
+        e.g.
+
+        $ python detaw.py detaw.yaml
+
+        Returns
+        -------
+        None
+    """
+    # Create an argument parser to get command line input
+    parser = create_argparser()
+    args = parser.parse_args()
+    # Read the main yaml input file
+    fname_main_yaml = args.input_yaml
+    detaw(fname_main_yaml)
 
 
 # _______________________________________________________________________________
