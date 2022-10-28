@@ -267,6 +267,89 @@ def calculate_groundwater_rates(df_subareas, dates):
     return da_gwrates
 
 
+def adjust_leach_water(da_lwa, da_lwd, da_ro):
+    """ Adjust (Reduce) leach water with runoff
+
+        When there is runoff from precipitation, applied leach water can be
+        reduced by the amount of the runoff. Even more, the leftover of the
+        runoff can be applied as leach water for following days, if available.
+        This logic is adopted from the previous Fortran version of DCD
+        with some modification.
+
+        Parameters
+        ----------
+        da_lwa: xarray.DataArray
+            DataArray of daily applied leach water of all areas
+        da_lwd: xarray.DataArray
+            DataArray of daily drained leach water of all areas
+        da_ro: xarray.DataArray
+            DataArray of daily runoff of all areas
+
+        Returns
+        -------
+        xarray.DataArray, xarray.DataArray
+           DataArray of adjusted applied and drained leach water
+    """
+    da_lwa_adj = da_lwa.copy(deep=True)
+    da_lwd_adj = da_lwd.copy(deep=True)
+    dates = pd.date_range(da_lwa.date.values[0], da_lwa.date.values[-1])
+    years = range(dates[0].year + 1, dates[-1].year + 1)
+    areas = da_lwa.area.values
+    n_areas = len(areas)
+    for year in years:
+        leach_saved = np.zeros((n_areas, ))
+        lwa = da_lwa.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
+        lwd = da_lwd.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
+        ro = da_ro.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
+        lwa_adj = np.full_like(lwa, np.nan)
+        lwd_adj = np.full_like(lwd, np.nan)
+        for r_i in range(lwa.shape[0]):
+            month = dates[r_i].month
+            n_days = dates[r_i].days_in_month
+            leach_saved, lwa_adj[r_i, :], lwd_adj[r_i, :] = \
+                np.vectorize(use_runoff_for_leach)(leach_saved,
+                                              lwa[r_i, :],
+                                              lwd[r_i, :],
+                                              ro[r_i, :],
+                                              month,
+                                              n_days)
+        da_lwa_adj.loc[f"{year - 1}-10-01":f"{year}-09-30", :] = lwa_adj
+        da_lwd_adj.loc[f"{year - 1}-10-01":f"{year}-09-30", :] = lwd_adj
+
+    return da_lwa_adj, da_lwd_adj
+
+
+def use_runoff_for_leach(leach_saved, lwa, lwd, ro, month, n_days):
+    """ Use runoff for leach water (daily)
+
+        This function adjusts applied and drained leach water with runoff
+        at each day at each area.
+    """
+    if lwa > 0.:
+        lwa_adj = lwa - ro - leach_saved
+        if lwa_adj > 0.:
+            leach_saved = 0.
+        else:
+            leach_saved = -lwa_adj
+            lwa_adj = 0.
+    else:
+        lwa_adj = lwa
+    if leach_saved > 0. and lwd > 0.:
+        if month == 1:
+            lwd_adj = lwd - leach_saved * 0.56 / n_days
+        elif month == 2:
+            lwd_adj = lwd - leach_saved * 0.29 / n_days
+        elif month == 3:
+            lwd_adj = lwd - leach_saved * 0.14 / n_days
+        else:
+            lwd_adj = lwd - leach_saved * 0.01 / n_days
+        if lwd_adj < 0.:
+            lwd_adj = 0.
+    else:
+        lwd_adj = 0.
+    return leach_saved, lwa_adj, lwd_adj
+
+
 def main():
     """ A main function to run DCD
 
@@ -320,6 +403,12 @@ def main():
     # This will be coordinates in many arrays later.
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
     n_dates = len(dates)
+    # Create an array of days in each month for later use
+    days_in_month = dates.days_in_month
+    da_days_in_month = xr.DataArray(data=days_in_month,
+                                    dims=["date"],
+                                    coords=dict(date=dates))
+
     # Create months in the modeling period
     months = pd.period_range(start=start_date, end=end_date, freq='M')
 
@@ -340,6 +429,7 @@ def main():
     df_lwa = df_lwam.resample('1D').ffill()
     da_lwa = xr.DataArray(data=df_lwa.values, dims=["date", "area"],
                           coords=dict(date=dates, area=areas))
+    da_lwa /= da_days_in_month
 
     path_lwdm = "LEACHDRN.DAT"
     df_lwdm = pd.read_csv(path_lwdm, delim_whitespace=True,
@@ -351,14 +441,9 @@ def main():
     df_lwd = df_lwdm.resample('1D').ffill()
     da_lwd = xr.DataArray(data=df_lwd.values, dims=["date", "area"],
                           coords=dict(date=dates, area=areas))
+    da_lwd /= da_days_in_month
 
-    # Create an array of days in each month for later use
-    days_in_month = dates.days_in_month
-    da_days_in_month = xr.DataArray(data=days_in_month,
-                                    dims=["date"],
-                                    coords=dict(date=dates))
-
-    #---------------------------------------------------------------
+    # ---------------------------------------------------------------
     # Calculate channel depletion
 
     # Calculate drained seepage (S_D) for each subarea
@@ -386,6 +471,14 @@ def main():
     leach_scale = 5.0
     da_lwa *= leach_scale
 
+    # FIXME hard-wired value
+    runoff_rate = 0.75
+    # Update the runoff (RO) with the coefficient
+    da_runoff *= runoff_rate
+
+    # Adjust leach water
+    da_lwa, da_lwd = adjust_leach_water(da_lwa, da_lwd, da_runoff)
+
     # Calculate diversion without seepage
     # NOTE Routines to adjust runoff in leach water are not implemented.
     # NOTE FIXME 1977 adjustment of applied water is not implemented.
@@ -398,15 +491,10 @@ def main():
     # Calculate seepage
     da_seepage -= da_gw2
 
-    #-----------------------------------------
+    # -----------------------------------------
     # Write out results
     # Conversion factor.
     taf2cfs = 0.50417
-
-    # FIXME hard-wired value
-    runoff_rate = 0.75
-    # Update the runoff (RO) with the coefficient
-    da_runoff *= runoff_rate
 
     # Write out data
     # FIXME Add attributes
