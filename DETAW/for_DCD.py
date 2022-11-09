@@ -69,13 +69,14 @@ def timeseries_combine(DETAWOUTPUT, Oldisl, Newisl, Numcrop, idates, ratefile):
     return DETAWISLnew
 
 
-def forNODCU(DETAWISL168, inputversion, endyear, ilands, outfilenames):
+def forNODCU(DETAWISL168, inputversion, model_start_year, endyear, ilands, outfilenames,daysofyear):
     """ Process DETAW outputs for the DCD
 
         Parameters
         ----------
         DETAWISL168
         inputversion
+        model_start_year
         endyear
         ilands
         outfilenames
@@ -91,8 +92,8 @@ def forNODCU(DETAWISL168, inputversion, endyear, ilands, outfilenames):
     #Cpart[3] = "PCP"
     #Cpart[4] = "DSW"
 
-    # this is hardwired and needs to be changed. This seems to be the water year associated with the start date.
-    beginyear = 2016
+    # This seems to be the water year associated with the model start year.
+    beginyear = model_start_year + 1
     tyr = endyear-beginyear+1
 
     # dssfh=pyhecdss.DSSFile(inputfile)
@@ -103,29 +104,29 @@ def forNODCU(DETAWISL168, inputversion, endyear, ilands, outfilenames):
     f4 = open(tempname+".17", "w")
     f5 = open(tempname+".30", "w")
 
-    if inputversion.strip() == "CALSIM3":
-        daysfile = "./Input/planning_study/calender.txt"  # update the txt file too!!!!
-    else:
-        daysfile = "./Input/historical_study/calender.txt"
-    f0 = open(daysfile)
-    daysofyear = zeros((366, 4, tyr), int)
-    isl = 0
-    idays = 0
-    iyr = 0
-    for line in f0:
-        if line:
-            if isl > 0:
-                ll = line.split()
-                if int(ll[1]) == 10 and int(ll[2]) == 1:
-                    idays = 0
-                    iyr = int(ll[0])+1-beginyear
-                daysofyear[idays, 0, iyr] = int(ll[0])
-                daysofyear[idays, 1, iyr] = int(ll[1])
-                daysofyear[idays, 2, iyr] = int(ll[2])
-                daysofyear[idays, 3, iyr] = int(ll[3])
-            isl = isl + 1
-            idays += 1
-    f0.close()
+    # if inputversion.strip() == "CALSIM3":
+    #     daysfile = "./Input/planning_study/calender.txt"  # update the txt file too!!!!
+    # else:
+    #     daysfile = "./Input/historical_study/calender.txt"
+    # f0 = open(daysfile)
+    # daysofyear = zeros((366, 4, tyr), int)
+    # isl = 0
+    # idays = 0
+    # iyr = 0
+    # for line in f0:
+    #     if line:
+    #         if isl > 0:
+    #             ll = line.split()
+    #             if int(ll[1]) == 10 and int(ll[2]) == 1:
+    #                 idays = 0
+    #                 iyr = int(ll[0])+1-beginyear
+    #             daysofyear[idays, 0, iyr] = int(ll[0])
+    #             daysofyear[idays, 1, iyr] = int(ll[1])
+    #             daysofyear[idays, 2, iyr] = int(ll[2])
+    #             daysofyear[idays, 3, iyr] = int(ll[3])
+    #         isl = isl + 1
+    #         idays += 1
+    # f0.close()
 
     for ifile in range(0, 5):
         print(ifile)

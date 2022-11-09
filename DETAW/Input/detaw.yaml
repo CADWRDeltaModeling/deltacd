@@ -36,6 +36,13 @@ detaw:
   #-------------------------------------------------
   # Other model parameters
   # FIXME Need more documentations here for parameters.
+  start_date: '1921-10-01'
+  end_date: '2020-09-30'
+  input_pcp: 'mm_pcp_full.csv'
+  input_temperature: 'LODI_PT_full.csv'
+  et_correction: 'Percentage.csv'
+  calendar: 'calendar.txt'
+  # Model Output control
   daily_output: 1
   monthly_output: 1
   yearly_output: 0

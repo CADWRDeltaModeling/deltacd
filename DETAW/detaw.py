@@ -83,7 +83,7 @@ def fill_zeros_with_last(arr):
     return arr[prev]
 
 
-def write_to_netcdf(detawoutput):
+def write_to_netcdf(detawoutput,start_date):
     '''
     write the detaw output array of etvars x area x crop x times to netcdf format
     '''
@@ -91,27 +91,27 @@ def write_to_netcdf(detawoutput):
     coords = {'etvars': ["ETc", "ESpg", "PCP", "ETAW", "Dsw", "ER"],
               'area': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets", "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard", "Vineyard", "Riparian Vegetation", "Native Vegetation", "Non-irrig Grain", "Water Surface"],
-              'time': pd.date_range('2015-10-01', periods=detawoutput.shape[-1])}  # last dimension is time
+              'time': pd.date_range(start_date, periods=detawoutput.shape[-1])}  # last dimension is time
     dx = xr.DataArray(detawoutput[:, :-1, :-1, :], dims=dims,
                       coords=coords, attrs={'units': 'Acre-feet'})
     dx.to_netcdf('Output/detawoutput.nc')
     return dx
 
 
-def weatheroutput_to_netcdf(pcp, ET0):
+def weatheroutput_to_netcdf(pcp, ET0,start_date):
     '''
     write the precip and ET0 for all areas to netcdf4 format
     '''
     dpcp = xr.DataArray(pcp,
                         dims=['time', 'area'],
                         coords={'time': pd.date_range(
-                            '2015-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
+                            start_date, periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='precip')
     det0 = xr.DataArray(ET0,
                         dims=['time', 'area'],
                         coords={'time': pd.date_range(
-                            '2015-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
+                            start_date, periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='ET0')
     if not os.path.exists('Output'):
@@ -306,7 +306,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                    data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day, data17day, data18day, data26day,
                    data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput, datamon, data2mon, data3mon,
                    data4mon, data5mon, data6mon, data7mon, data8mon, data9mon, data12mon, data13mon, data14mon, data15mon, data16mon, data17mon,
-                   data18mon, data21mon, data10mon, data19mon, data11mon, data20mon):
+                   data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year):
 
     nmonth = 0  # pointer for datamon* arrays
     for y in range(1, iyears+1):
@@ -634,7 +634,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 if y == 1 and ii == 274:
                     ik = 1
 
-                ytemp[ik] = y+2015
+                ytemp[ik] = y+model_start_year
                 DOYtemp[ik] = ii
                 if DOYtemp[ik] == 1:
                     IrrigYear = IrrigYear + 1
@@ -712,7 +712,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
 
                         # @if iq ==1:
                         # @    SumDelSWC = 0
-                        if yDaily[iq] == 2015 and iq == 1:
+                        if yDaily[iq] == model_start_year and iq == 1:
                             FCtemp = int(FCDaily[iq]*10)/10.0
                             ##PSWC = FCDaily[iq]
                             PSWC = FCtemp
@@ -753,7 +753,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                             CETAWDaily = 0
                             Mon = 10
                             CETAWDaily = calc_etaw_daily(
-                                dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW)
+                                dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year)
                             # split loop
                             temp_vector = HAcreDaily[1:dpy+1]*0.00328084
                             if idayoutput == 1:
@@ -1582,7 +1582,7 @@ def calc_etaw_month(dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily)
 
 
 @numba.jit(nopython=True, cache=True)
-def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW):
+def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year):
     for dd in range(1, dpy+1):
         if Mon < 10:
             yearCal = yy
@@ -1599,21 +1599,21 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
         if (yearCal % 4 != 0 and DOY[dd] == 365) or (yearCal % 4 == 0 and DOY[dd] == 366):
             Mon = 1
         if(j != 6):
-            if DOY[dd] >= DOYLIrrig[yDaily[dd]-2015]:
+            if DOY[dd] >= DOYLIrrig[yDaily[dd]-model_start_year]:
                 ETAWDaily[dd] = 0
         else:
-            if DOYLIrrig[yDaily[dd]-2015] < 275:
-                if DOY[dd] >= DOYGrainLIrrig[yDaily[dd]-2015] and DOY[dd] < 275:
+            if DOYLIrrig[yDaily[dd]-model_start_year] < 275:
+                if DOY[dd] >= DOYGrainLIrrig[yDaily[dd]-model_start_year] and DOY[dd] < 275:
                     ETAWDaily[dd] = 0
             else:
-                if DOY[dd] >= DOYLIrrig[yDaily[dd]-2015]:
+                if DOY[dd] >= DOYLIrrig[yDaily[dd]-model_start_year]:
                     ETAWDaily[dd] = 0
         CETAWDaily = CETAWDaily + ETAWDaily[dd]
         # y is for sep 30 each year, so for previous oct-Dec we subtract y by 1
         if Mon < 10:
-            MonETAW[yy-2015, Mon] = MonETAW[yy-2015, Mon] + ETAWDaily[dd]
+            MonETAW[yy-model_start_year, Mon] = MonETAW[yy-model_start_year, Mon] + ETAWDaily[dd]
         else:
-            MonETAW[yy-2015, Mon] = MonETAW[yy-2015, Mon] + ETAWDaily[dd]
+            MonETAW[yy-model_start_year, Mon] = MonETAW[yy-model_start_year, Mon] + ETAWDaily[dd]
     return CETAWDaily
 # _______________________________________________________________________________
 # _______________________________________________________________________________
@@ -1621,7 +1621,7 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
 
 def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, idates, isites, ts_year, ts_mon,
                    ts_days, start1, filepath, NI, NII, NumDaysPerMon, iyears, idayoutput, imonthoutput,
-                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel):
+                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,yearType,HAcre):
     InpHSACrop = "  "
     SACropDaily = "  "
     HSACropDailyMean = "  "
@@ -1642,10 +1642,8 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     pyhecdss.set_program_name('DETAW')
     ctype = "INST-VAL"  # "PER-AVER"
     iplan = int(0)
-    # ? why is start2 hardwired to 10 days after start1 ?
-    start2 = [2015, 10, 1, 23, 0]
-    startdate = str(start2[2])+monthname[start2[1]-1]+str(start2[0])
-    starttime = str(start2[3])+"00"
+    startdate = str(start1[2])+monthname[start1[1]-1]+str(start1[0])
+    starttime = str(start1[3])+"00"
     dpyAll = zeros((iyears+2), int)
     Beta1 = 2.6
     IKc = zeros((iyears+2, idays+1), float)
@@ -1662,7 +1660,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     Date1Daily = "  "*(iyears+2)*(idays+1)
     WSCESpg = zeros((iyears+2, idays+1), float)
 
-    HAcre = zeros((ilands+1, iyears+2, icroptype+1), float)
+    # HAcre = zeros((ilands+1, iyears+2, icroptype+1), float)
     Kc1 = zeros((icroptype+1), float)
     Kc2 = zeros((icroptype+1), float)
     Kc3 = zeros((icroptype+1), float)
@@ -1753,7 +1751,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     MonDsw = zeros((imonths+1), float)
     MonDswPos = zeros((imonths+1), float)
     MonNetApp = zeros((imonths+1), float)
-    yearType = numpy.empty(iyears+2, dtype='<U3')  # "  "*(iyears+1)
+    # yearType = numpy.empty(iyears+2, dtype='<U3')  # "  "*(iyears+1)
 
     # for HSA****.csv (not for OLDHSA****.csv)
     SACropDaily = "  "
@@ -1969,42 +1967,44 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     # step5: read land use from .\Landuse folder !!!!!!!Not checked 3/13/2009
     # get year type of each year
 
-    if streamlinemodel == "CALSIM3":
-        source = os.path.join(
-            filepath, 'Input', 'planning_study', 'Landuse', 'SA0001.csv')
-    else:
-        source = os.path.join(
-            filepath, 'Input', 'historical_study', 'Landuse', 'SA0001.csv')
-    f0 = open(source)
-    iline0 = 1
-    ncount = 0
-    yearType[ncount] = "AN"
-    for line in f0:
-        if line:
-            if line[0] == "1" or line[0] == "2":
-                ncount = ncount+1
-                yearType[ncount] = line.split(",")[1].strip()
-    ncount = ncount+1
-    yearType[ncount] = "AN"  # for last year
-    # get Hectares of each crop type, year and island
-    if streamlinemodel == "CALSIM3":
-        hist_path = os.path.join(
-            filepath, 'Input', 'planning_study', 'Landuse')  # ---08/02/2010
-    else:
-        hist_path = os.path.join(
-            filepath, 'Input', 'historical_study', 'Landuse')
-    files = listdir(hist_path)
-    ts_type = "rts"
-    for file in files:
-        if ".csv" in file:
-            sheetname = file.replace(".csv", "")
-            ilandno = int(sheetname.split("A0")[1])  # Landuse ---08/02/2010
-            source = os.path.join(hist_path, file)
-            df = pd.read_csv(source)
-            if ilandno > ilands:
-                break
-            HAcre[ilandno-1, 1:iyears, 1:icroptype+1] = df.iloc[1:iyears,
-                                                                2:icroptype+2].astype('float').values
+    # if streamlinemodel == "CALSIM3":
+    #     source = os.path.join(
+    #         filepath, 'Input', 'planning_study', 'Landuse', 'SA0001.csv')
+    # else:
+    #     source = os.path.join(
+    #         filepath, 'Input', 'historical_study', 'Landuse', 'SA0001.csv')
+    # f0 = open(source)
+    # iline0 = 1
+    # ncount = 0
+    # #? XXX why pad the first year with AN type?
+    # yearType[ncount] = "AN"
+    # for line in f0:
+    #     if line:
+    #         if line[0] == "1" or line[0] == "2":
+    #             ncount = ncount+1
+    #             yearType[ncount] = line.split(",")[1].strip()
+    # ncount = ncount+1
+    # #? XXX why pad the last year with AN type?
+    # yearType[ncount] = "AN"  # for last year
+    # # get Hectares of each crop type, year and island
+    # if streamlinemodel == "CALSIM3":
+    #     hist_path = os.path.join(
+    #         filepath, 'Input', 'planning_study', 'Landuse')  # ---08/02/2010
+    # else:
+    #     hist_path = os.path.join(
+    #         filepath, 'Input', 'historical_study', 'Landuse')
+    # files = listdir(hist_path)
+    # ts_type = "rts"
+    # for file in files:
+    #     if ".csv" in file:
+    #         sheetname = file.replace(".csv", "")
+    #         ilandno = int(sheetname.split("A0")[1])  # Landuse ---08/02/2010
+    #         source = os.path.join(hist_path, file)
+    #         df = pd.read_csv(source)
+    #         if ilandno > ilands:
+    #             break
+    #         HAcre[ilandno-1, 1:iyears, 1:icroptype+1] = df.iloc[1:iyears,
+    #                                                             2:icroptype+2].astype('float').values
     # End of data input
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ##
@@ -2107,8 +2107,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             data6yr = zeros(iyears-1, float)
             data7yr = zeros(iyears-1, float)
             data8yr = zeros(iyears-1, float)
-            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, CropType1, y, f1, YTD, osSWDx, erd, aw1, ADep1 = calc_kc_vals(
-                iyears, yearType, CCropType, j, CBeginDate, CEndDate, Cf, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, CSDx, CRDxU, CRDxL, CawL, CawU, CADep, Region, k, NCCropType, NCBeginDate, NCEndDate, NCf, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, NCSDx, NCRDxU, NCRDxL, NCawL, NCawU, NCADep, osIkc, OKc, EToDaily, IGETo, osFkc, isIkc, Beta1)
+            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, CropType1, y, f1, YTD, osSWDx, erd, aw1, ADep1 = calc_kc_vals(iyears, yearType, CCropType, j, CBeginDate, CEndDate, Cf, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, CSDx, CRDxU, CRDxL, CawL, CawU, CADep, Region, k, NCCropType, NCBeginDate, NCEndDate, NCf, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, NCSDx, NCRDxU, NCRDxL, NCawL, NCawU, NCADep, osIkc, OKc, EToDaily, IGETo, osFkc, isIkc, Beta1)
             # end of for  y<iyears  ********************************
             # calculates values of osIkc, isIkc, osFkc and IGETo
             # Identify initial growth Kc(KcB) and final Kc(KcE)
@@ -2191,7 +2190,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                            dataday, date_index, data2day, data6day, data7day, data8day, data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day,
                            data17day, data18day, data26day, data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput,
                            datamon, data2mon, data3mon, data4mon, data5mon, data6mon, data7mon, data8mon, data9mon, data12mon, data13mon, data14mon, data15mon,
-                           data16mon, data17mon, data18mon, data21mon, data10mon, data19mon, data11mon, data20mon)
+                           data16mon, data17mon, data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year)
             SACETC = 0
             SACERN = 0
             SACSpg = 0
@@ -2533,6 +2532,179 @@ def create_argparser() -> argparse.ArgumentParser:
                          help="An input YAML file to provide parameters")
     return parser
 
+def read_pcp(streamlinemodel, start_date,end_date,pcplocs,fn):
+    """ Read pcp input data
+
+        Parameters
+        ----------
+            streamlinemodel: str
+            start_date: str
+            end_date: str
+            pcplocs: str
+            fn: str
+        Returns
+        -------
+            ts_pcp: timeseries of station precipitation
+    """
+    # FIXME Avoid to use a current directory for jobs
+    filepath = os.getcwd()
+
+    if streamlinemodel == "CALSIM3":
+        source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    else:
+        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+
+    pcp_df = pd.read_csv(source,index_col=False)
+    # add date column to dataframe
+    pcp_df['file_dates'] = pd.to_datetime(pcp_df[['year', 'month', 'day']])
+    mask = pcp_df['file_dates'].between(start_date,end_date)
+
+    # subset the precip values and transpose before converting to array
+    ts_pcp = pcp_df.loc[mask,pcplocs].T.to_numpy()
+    return(ts_pcp)
+
+def read_temperature(streamlinemodel, start_date,end_date,fn):
+    """ Read temperature input data
+
+        Parameters
+        ----------
+            streamlinemodel: str
+            start_date: str
+            end_date: str
+            fn: str
+        Returns
+        -------
+            ts_year: array of years
+            ts_mon: array of mon
+            ts_days: array of days
+            ts_LODI_tx: array tmax
+            ts_LODI_tn: array tmin
+    """
+    # FIXME Avoid to use a current directory for jobs
+    filepath = os.getcwd()
+
+    if streamlinemodel == "CALSIM3":
+        source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    else:
+        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+
+    temp_df = pd.read_csv(source,parse_dates=[0],index_col=0,header=0)
+
+    ts_year = temp_df[start_date:end_date]['Year'].T.to_numpy()
+    ts_mon = temp_df[start_date:end_date]['Month'].T.to_numpy()
+    ts_days = temp_df[start_date:end_date]['DOY'].T.to_numpy()
+    ts_LODI_tx = temp_df[start_date:end_date]['Tx(oC)'].T.to_numpy()
+    ts_LODI_tn = temp_df[start_date:end_date]['Tn(oC)'].T.to_numpy()
+
+    return(ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn)
+
+def read_landuse(streamlinemodel, iyears, water_years, n_areas, icroptype):
+    """ Read landuse acreages
+
+        Parameters
+        ----------
+            streamlinemodel: str
+            water_years: str
+            n_areas: int
+                number of areas
+            icroptype: int
+        Returns
+        -------
+            yearType: array
+            HAcre: array
+    """
+    # FIXME Avoid to use a current directory for jobs
+    filepath = os.getcwd()
+
+    # FIXME year_type is set to iyears but should be water_years like
+    year_type = numpy.empty(iyears+1, dtype='<U3')
+    HAcre = zeros((n_areas, len(water_years) + 1, icroptype + 1), float)
+    year_type[0]="AN"
+    if streamlinemodel == "CALSIM3":
+        hist_path = os.path.join(filepath, 'Input', 'planning_study', 'Landuse')  # ---08/02/2010
+    else:
+        hist_path = os.path.join(filepath, 'Input', 'historical_study', 'Landuse')
+    files = listdir(hist_path)
+    for area_i, file in enumerate(files):
+        if '.csv' in file:
+            source = os.path.join(hist_path, file)
+            df = pd.read_csv(source, header=[0], skiprows=[1])
+            mask = df['DATE'].isin(water_years)
+            sub_df = df.loc[mask, :]
+            # assign the landuse acreages to HAcre
+            HAcre[area_i, 1:, 1:] = sub_df.iloc[:, 2:]
+            # yearType is the same in all landuse files
+            year_type[1:len(sub_df.iloc[:,1].values)+1] = sub_df.iloc[:,1].values
+    # FIXME when year_type above is cor
+    year_type[-1] = "AN"
+    year_type = year_type.astype(dtype='<U3')
+
+    return (year_type, HAcre)
+
+
+def read_calendar(streamlinemodel, model_start_year,endyear,water_years, fn):
+
+    # FIXME Avoid to use a current directory for jobs
+    filepath = os.getcwd()
+
+    if streamlinemodel == "CALSIM3":
+        source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    else:
+        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+
+    tyr = len(water_years)
+    f0 = open(source)
+    daysofyear = zeros((366, 4, tyr), int)
+    isl = 0
+    idays = 0
+    iyr = 0
+    for line in f0:
+        if line:
+            if isl > 0:
+                ll = line.split()
+                if int(ll[0]) >= model_start_year and int(ll[0]) <= endyear:
+                    if int(ll[1]) == 10 and int(ll[2]) == 1:
+                        idays = 0
+                        iyr = int(ll[0])+1-water_years[0]
+                    if iyr < tyr:
+                        daysofyear[idays, 0, iyr] = int(ll[0])
+                        daysofyear[idays, 1, iyr] = int(ll[1])
+                        daysofyear[idays, 2, iyr] = int(ll[2])
+                        daysofyear[idays, 3, iyr] = int(ll[3])
+                    idays += 1
+            isl = isl + 1
+    f0.close()
+
+    return daysofyear
+
+def read_et_correction_factors(streamlinemodel,perclocs,fn):
+    """ Read et correction factors
+
+        Parameters
+        ----------
+            streamlinemodel: str
+            fn: str
+        Returns
+        -------
+            ts_per: array
+            ETo_corrector: array
+            Region: array
+    """
+    # FIXME Avoid to use a current directory for jobs
+    filepath = os.getcwd()
+
+    if streamlinemodel == "CALSIM3":
+        source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    else:
+        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+
+    # read data from the csv file
+    data = pd.read_csv(source,index_col=False)
+    ts_per = data.loc[:,perclocs].T.to_numpy()
+    ETo_corrector = data.loc[:,'ETo Corection Factor'].T.to_numpy()
+    Region = data.loc[:,'REGION'].T.to_numpy()
+    return(ts_per,ETo_corrector,Region)
+
 
 def detaw(fname_main_yaml: str) -> None:
     """ Run DETAW and DCD with a YAML file
@@ -2556,37 +2728,35 @@ def detaw(fname_main_yaml: str) -> None:
     itotaloutput = detaw_params["delta_output"]
     dailyunit = detaw_params["daily_output_unit"]
     forDSM2_daily = detaw_params["for_dsm2_only"]
+    start_date = detaw_params["start_date"]
+    end_date = detaw_params['end_date']
+    fn_input_pcp = detaw_params['input_pcp']
+    fn_input_temperature = detaw_params['input_temperature']
+    fn_et_correction = detaw_params['et_correction']
+    fn_calendar = detaw_params['calendar']
 
     # FIXME Avoid to use a current directory for jobs
     filepath = os.getcwd()
 
-    # FIXME Do not use hardwired values
-    file = ["  "]*3
-    file[0] = "mm_pcp.csv"
-    file[1] = "Percentage.csv"
-    file[2] = "LODI_PT.csv"
-
-    if streamlinemodel == "CALSIM3":
-        source = filepath+"/Input/planning_study/"+file[2]
-    else:
-        source = filepath+"/Input/historical_study/"+file[2]
-    f0 = open(source, 'r')
-    templ = ""
-    tline = 0
-    for line in f0:
-        if line:
-            templ = line
-            tline += 1
-    endyear = int(templ.split(",")[1])
-    idates = tline-1
+    # convert string to datetime
+    start_date_dt = pd.to_datetime(start_date)
+    enddate = pd.to_datetime(end_date)
+    model_start_year = start_date_dt.year
+    mod_date_range = pd.DataFrame()
+    mod_date_range['dates'] = pd.date_range(start_date,end_date,freq='D')
+    mod_date_range['water_year'] = mod_date_range.dates.dt.year.where(mod_date_range.dates.dt.month < 10, mod_date_range.dates.dt.year + 1)
+    water_years = numpy.unique(mod_date_range['water_year'])
+    # get endyear for the model run
+    endyear = enddate.year
+    # get length in days for the model run
+    idates = len(pd.date_range(start=start_date,end=end_date,freq='D'))
     # print("endyear =",endyear)
     print("idates =", idates)
-    f0.close()
 
-    #? why is start1 hardwired ?#
-    start1 = numpy.array([2015, 10, 1, 23, 0], dtype='i4')
+    start1 = numpy.array([start_date_dt.year, start_date_dt.month, start_date_dt.day, 23, 0], dtype='i4')
     iyears = endyear-start1[0]+1
-    #? why is ilands,isites, etc... hardwired ?#
+
+    #? FIXME why is ilands,isites, etc... hardwired ?#
     ilands = 168
     isites = 7
     NumDay = numpy.array([0, 31, 28, 31, 30, 31, 30, 31,
@@ -2598,7 +2768,14 @@ def detaw(fname_main_yaml: str) -> None:
     pcplocs = ["Brentwood", "Davis", "Galt",
                "Lodi", "RioVista", "Stockton", "Tracy"]
     perclocs = ["Davis", "Stockton", "Lodi",
-                "Tracy Carbona", "Rio Vista", "Brentwood", "Galt"]
+                "Tracy_Carbona", "Rio Vista", "Brentwood", "Galt"]
+    cropname = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
+            "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
+            "Vineyard", "Riparian Vegetation", "Native Vegetation",
+            "Non-irrig Grain", "Water Surface"]
+    icroptype = len(cropname)
+
+    # XXX Need to fix hardwired stations
     #? all the above are hardwired. why?#
     ts_pcp = zeros((isites, idates), float)
     ts_per = zeros((isites, ilands), float)
@@ -2609,108 +2786,77 @@ def detaw(fname_main_yaml: str) -> None:
     ts_days = zeros((idates), int)
     ts_LODI_tx = zeros((idates), float)
     ts_LODI_tn = zeros((idates), float)
-    #! move reading in of precip and other input data to its own function !#
-    for ifile in range(0, 3):
-        print(file[ifile])
-        if streamlinemodel == "CALSIM3":
-            source = os.path.join(
-                filepath, 'Input', 'planning_study', file[ifile])
-        else:
-            source = os.path.join(
-                filepath, 'Input', 'historical_study', file[ifile])
-        ff = open(source, "r")
-        if ifile == 0:
-            icon = 0
-            for line in ff:
-                if icon > idates:
-                    break
-                if icon > 0:
-                    for j in range(0, isites):
-                        ts_pcp[j, icon-1] = float(line.split(",")[4+j])
-                icon += 1
-        if ifile == 1:
-            icon = 0
-            for line in ff:
-                if icon > ilands:
-                    break
-                if icon > 0:
-                    for j in range(0, isites):
-                        for k in range(0, isites):
-                            if perclocs[j][0:2] in pcplocs[k]:
-                                ts_per[k, icon-1] = float(line.split(",")[j+1])
-                    ETo_corrector[icon-1] = float(line.split(",")[8])
-                    Region[icon-1] = int(line.split(",")[9])
-                icon += 1
-        if ifile == 2:
-            icon = 0
-            for line in ff:
-                if icon > idates:
-                    break
-                if icon > 0:
-                    ts_year[icon-1] = int(line.split(",")[1])
-                    ts_mon[icon-1] = int(line.split(",")[2])
-                    ts_days[icon-1] = int(line.split(",")[3])
-                    ts_LODI_tx[icon-1] = float(line.split(",")[5])
-                    ts_LODI_tn[icon-1] = float(line.split(",")[6])
-                icon += 1
-        ff.close()
+
+    ts_pcp = read_pcp(streamlinemodel,start_date,end_date,pcplocs,fn_input_pcp)
+
+    [ts_per,ETo_corrector,Region] = read_et_correction_factors(streamlinemodel=streamlinemodel,perclocs=perclocs,fn=fn_et_correction)
+
+    [ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn] = read_temperature(streamlinemodel, start_date, end_date, fn_input_temperature)
+
+    [yearType,HAcre] = read_landuse(streamlinemodel, iyears, water_years, ilands, icroptype)
+
+    daysofyear = read_calendar(streamlinemodel, model_start_year, endyear, water_years, fn_calendar)
+
     if DEBUG_TIMING:
         st = timeit.default_timer()
     (pcp, ET0) = weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, ts_LODI_tx,
                                ts_LODI_tn, ilands, idates, isites, ETo_corrector, filepath, start1)
-    weatheroutput_to_netcdf(pcp, ET0)
+    weatheroutput_to_netcdf(pcp, ET0,start_date)
     if DEBUG_TIMING:
         print('weather output took', timeit.default_timer()-st, ' seconds')
     pcp = pcp.T
     ET0 = ET0.T
     if DEBUG_TIMING:
         st = timeit.default_timer()
+    # output dimensioned by (var, island,landuse,time)
     (DETAWOUTPUT) = historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, ts_LODI_tx, ts_LODI_tn,
                                    ilands, idates, isites, ts_year, ts_mon, ts_days, start1, filepath, NI, NII, NumDay, iyears,
-                                   idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel)
+                                   idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,
+                                   yearType,HAcre)
     if DEBUG_TIMING:
         print('historical etaw calculations took ',
               timeit.default_timer()-st, ' seconds')
     if DEBUG_TIMING:
         st = timeit.default_timer()
-    dx = write_to_netcdf(DETAWOUTPUT)
+    dx = write_to_netcdf(DETAWOUTPUT,start_date)
     if DEBUG_TIMING:
         print('detaw output to netcdf4 took',
               timeit.default_timer()-st, ' seconds')
+    # output dimensioned by (var, island, time)
     (DETAWISL168) = timeseries_combine(
         DETAWOUTPUT, ilands, ilands, 15, idates, "")
-    forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "")
+    forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "",daysofyear)
     if streamlinemodel == "CALSIM3":
         #print("in the double-counting process", idates)
         tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate1.txt"
         (DETAWISL168) = timeseries_combine(
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex1")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
 
         tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate2.txt"
         (DETAWISL168) = timeseries_combine(
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex2")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
 
         tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate3.txt"
         (DETAWISL168) = timeseries_combine(
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex3")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
     else:
         tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate1.txt"
         (DETAWISL168) = timeseries_combine(
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex1")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
 
         tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate2.txt"
         (DETAWISL168) = timeseries_combine(
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex2")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
 
         tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate3.txt"
         (DETAWISL168) = timeseries_combine(
             DETAWOUTPUT, ilands, ilands, 15, idates, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, endyear, ilands, "_ex3")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
     print("done")
 
 
