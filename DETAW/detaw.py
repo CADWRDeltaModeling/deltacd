@@ -2767,8 +2767,8 @@ def detaw(fname_main_yaml: str) -> None:
                       244, 274, 305, 335, 366], dtype='i4')
     pcplocs = ["Brentwood", "Davis", "Galt",
                "Lodi", "RioVista", "Stockton", "Tracy"]
-    perclocs = ["Davis", "Stockton", "Lodi",
-                "Tracy_Carbona", "Rio Vista", "Brentwood", "Galt"]
+    perclocs = ["Brentwood", "Davis", "Galt",
+                "Lodi", "Rio Vista", "Stockton", "Tracy_Carbona"]
     cropname = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
             "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
             "Vineyard", "Riparian Vegetation", "Native Vegetation",
