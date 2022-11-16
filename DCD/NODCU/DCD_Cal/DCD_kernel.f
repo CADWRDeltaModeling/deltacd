@@ -197,7 +197,10 @@ C12A
       CHARACTER*1 docregion(maxisl)
       CHARACTER*100 junk1
 	CHARACTER*120 FLE
-      INTEGER uplow(maxisl),area(maxisl),drnseep(maxisl)
+      INTEGER uplow(maxisl)
+      REAL*4 area(maxisl),drnseep(maxisl)
+      REAL*4 leachreduced, leachscale
+      REAL*4 gwrate
 C12B
 
 C..
@@ -231,7 +234,8 @@ cccccccccccccccccccccccccccccccccc         READ*,IYR1,IYR2
        CALL GETENV('endwy',tempyear)
        READ(tempyear,'(I4)') IYR2
 	   CALL GETENV('leachscale',tempconc)
-	   READ(tempconc,'(I8)') leachscale
+	   READ(tempconc,'(I8)') i_temp
+       leachscale = real(i_temp)
       ENDIF
 
       DO I=1,MAXISL
@@ -426,7 +430,8 @@ C12A---Read in data to calculate new seepage component (drained seepage)
       enddo
 
       do i=1,maxisl
-         read(100,'(57X,I1,5X,I10,8X,A1)') uplow(i),area(i),docregion(i)
+         read(100,'(57X,I1,5X,I10,8X,A1)') uplow(i),i_temp,docregion(i)
+         area(i) = real(i_temp)
       end do
 
       close(100)
