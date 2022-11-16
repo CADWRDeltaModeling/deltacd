@@ -43,7 +43,6 @@ import numpy
 from os import listdir
 from math import cos, sin, tan, atan, sqrt, pi, pow
 
-import for_DCD
 from for_DCD import timeseries_combine, forNODCU
 
 import timeit
@@ -83,7 +82,7 @@ def fill_zeros_with_last(arr):
     return arr[prev]
 
 
-def write_to_netcdf(detawoutput,model_start_year):
+def write_to_netcdf(detawoutput, model_start_year):
     '''
     write the detaw output array of etvars x area x crop x times to netcdf format
     '''
@@ -93,12 +92,13 @@ def write_to_netcdf(detawoutput,model_start_year):
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets", "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard", "Vineyard", "Riparian Vegetation", "Native Vegetation", "Non-irrig Grain", "Water Surface"],
               'time': pd.date_range(str(model_start_year) + '-10-01', periods=detawoutput.shape[-1])}  # last dimension is time
     dx = xr.DataArray(detawoutput[:, :-1, :-1, :], dims=dims,
-                      coords=coords, attrs={'units': 'Acre-feet'})
+                      coords=coords, attrs={'units': 'Acre-feet'},
+                      name="detaw")
     dx.to_netcdf('Output/detawoutput.nc')
     return dx
 
 
-def weatheroutput_to_netcdf(pcp, ET0,model_start_year):
+def weatheroutput_to_netcdf(pcp, ET0, model_start_year):
     '''
     write the precip and ET0 for all areas to netcdf4 format
     '''
@@ -114,9 +114,10 @@ def weatheroutput_to_netcdf(pcp, ET0,model_start_year):
                             str(model_start_year) + '-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='ET0')
+    # FIXME Remove hardwired file names
     if not os.path.exists('Output'):
         os.mkdir('Output')
-    dpcp.to_netcdf('Output/percip.nc')
+    dpcp.to_netcdf('Output/precip.nc')
     det0.to_netcdf('Output/ET0.nc')
 
 
@@ -181,10 +182,10 @@ def write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile):
 
 def weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, Tmax, Tmin, ilands, idates, isites, ETo_corrector, filepath, start1):
     """
-        calculate the precipitation and reference evapotranpiration for each island
+        calculate the precipitation and reference evapotranspiration for each island
 
     input: daily precipitation at seven sites
-           precentages of seven sites for 168 islands
+           percentages of seven sites for 168 islands
     output: Nothing,
             Generate daily file and monthly weather file.
     """
@@ -2722,7 +2723,7 @@ def detaw(fname_main_yaml: str) -> None:
         model_params = yaml.safe_load(file_in)
 
     # FIXME For now, passing the yaml information to the current model
-    #       parameters. They cane be passed as a dict directly.
+    #       parameters. They can be passed as a dict directly.
     detaw_params = model_params["detaw"]
     streamlinemodel = detaw_params["target_model"]
     idayoutput = detaw_params["daily_output"]
@@ -2813,7 +2814,7 @@ def detaw(fname_main_yaml: str) -> None:
         st = timeit.default_timer()
     (pcp, ET0) = weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, ts_LODI_tx,
                                ts_LODI_tn, ilands, idates, isites, ETo_corrector, filepath, start1)
-    weatheroutput_to_netcdf(pcp, ET0,model_start_year)
+    weatheroutput_to_netcdf(pcp, ET0, model_start_year)
     if DEBUG_TIMING:
         print('weather output took', timeit.default_timer()-st, ' seconds')
     pcp = pcp.T
