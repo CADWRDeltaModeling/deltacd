@@ -717,8 +717,8 @@ C +++++++++++++Leach water apl and drn reassumed double the originals and delay 
                if (LRA(I,M).gt.RO(I,M)) then
                     if(leachreduced.gt.0.0001) then
                         if(leachreduced.gt.LRA(I,M)) then
-                            LRA(I,M) = 0.0
                             leachreduced = leachreduced - LRA(I,M)
+                            LRA(I,M) = 0.0
                         else
                             LRA(I,M) = LRA(I,M) - leachreduced
                             leachreduced = 0.0
@@ -728,8 +728,8 @@ C +++++++++++++Leach water apl and drn reassumed double the originals and delay 
                         leachreduced = leachreduced+RO(I,M)
                     endif
                else
-                    LRA(I,M) = 0.
                     leachreduced = leachreduced+LRA(I,M)
+                    LRA(I,M) = 0.
                endif
                if(LRD(I,M).gt.0.and.leachreduced.gt.0.0001)then
                     if (M.gt.92.and.M.le.123) then
