@@ -2835,41 +2835,44 @@ def detaw(fname_main_yaml: str) -> None:
     if DEBUG_TIMING:
         print('detaw output to netcdf4 took',
               timeit.default_timer()-st, ' seconds')
-    # output dimensioned by (var, island, time)
-    (DETAWISL168) = timeseries_combine(
-        DETAWOUTPUT, ilands, ilands, 15, idates-1, "")
-    forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "",daysofyear)
-    if streamlinemodel == "CALSIM3":
-        #print("in the double-counting process", idates)
-        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate1.txt"
-        (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
 
-        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate2.txt"
+    run_for_dcd = True
+    if run_for_dcd:
+        # output dimensioned by (var, island, time)
         (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
+            DETAWOUTPUT, ilands, ilands, 15, idates-1, "")
+        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "",daysofyear)
+        if streamlinemodel == "CALSIM3":
+            #print("in the double-counting process", idates)
+            tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate1.txt"
+            (DETAWISL168) = timeseries_combine(
+                DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
 
-        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate3.txt"
-        (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
-    else:
-        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate1.txt"
-        (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
+            tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate2.txt"
+            (DETAWISL168) = timeseries_combine(
+                DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
 
-        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate2.txt"
-        (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
+            tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate3.txt"
+            (DETAWISL168) = timeseries_combine(
+                DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
+        else:
+            tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate1.txt"
+            (DETAWISL168) = timeseries_combine(
+                DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
 
-        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate3.txt"
-        (DETAWISL168) = timeseries_combine(
-            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
+            tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate2.txt"
+            (DETAWISL168) = timeseries_combine(
+                DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
+
+            tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate3.txt"
+            (DETAWISL168) = timeseries_combine(
+                DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
+            forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
     print("done")
 
 
