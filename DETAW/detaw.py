@@ -83,19 +83,42 @@ def fill_zeros_with_last(arr):
 
 
 def write_to_netcdf(detawoutput, model_start_year):
+    ''' Write DETAW output array into a NetCDF
+
+        This function writes out DETAW outputs in a numpy array into a NetCDF
+        file after converting the array into an xarray.Dataset. The converted
+        dataset is returned.
+
+        Parameters
+        ----------
+        detawoutput: numpy.ndarray
+            Output array from `historicalETAW`. The dimensions of the array are
+            (etvars, areas, crops, times).
+        model_start_year: int
+            start year in water year
+
+        Returns
+        -------
+        xarray.Dataset
+            DETAW output converted into xarray.Dataset.
     '''
-    write the detaw output array of etvars x area x crop x times to netcdf format
-    '''
-    dims = ['etvars', 'area', 'crop', 'time']
-    coords = {'etvars': ["ETc", "ESpg", "PCP", "ETAW", "Dsw", "ER"],
-              'area': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
-              'crop': ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets", "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard", "Vineyard", "Riparian Vegetation", "Native Vegetation", "Non-irrig Grain", "Water Surface"],
-              'time': pd.date_range(str(model_start_year) + '-10-01', periods=detawoutput.shape[-1])}  # last dimension is time
-    dx = xr.DataArray(detawoutput[:, :-1, :-1, :], dims=dims,
-                      coords=coords, attrs={'units': 'Acre-feet'},
-                      name="detaw")
-    dx.to_netcdf('Output/detawoutput.nc')
-    return dx
+    etvars = ["et_c", "s_e", "precip", "et_aw", "d_sw", "e_r"]
+    dims = ['area', 'crop', 'time']
+    coords = {'area': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
+              'crop': ["Urban", "Irrig pasture", "Alfalfa", "All Field",
+                       "Sugar beets", "Irrig Grain", "Rice", "Truck Crops",
+                       "Tomato", "Orchard", "Vineyard", "Riparian Vegetation",
+                       "Native Vegetation", "Non-irrig Grain", "Water Surface"],
+              'time': pd.date_range(str(model_start_year) + '-10-01',
+                                    periods=detawoutput.shape[-1])}  # last dimension is time
+
+    ds = xr.Dataset({etvar: xr.DataArray(detawoutput[i, :-1, :-1, :],
+                                         dims=dims,
+                                         coords=coords, attrs={'units': 'Acre-feet'})
+                     for i, etvar in enumerate(etvars)})
+    # FIXME Do not use a hardwired file name
+    ds.to_netcdf('Output/detawoutput.nc')
+    return ds
 
 
 def weatheroutput_to_netcdf(pcp, ET0, model_start_year):
