@@ -2859,7 +2859,7 @@ def detaw(fname_main_yaml: str) -> None:
         print('detaw output to netcdf4 took',
               timeit.default_timer()-st, ' seconds')
 
-    run_for_dcd = True
+    run_for_dcd = False
     if run_for_dcd:
         # output dimensioned by (var, island, time)
         (DETAWISL168) = timeseries_combine(
