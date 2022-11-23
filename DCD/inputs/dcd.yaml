@@ -1,6 +1,6 @@
 dcd:
   # Input files
-  path_wateryear_types: "NODCU/WYTYPES"
+  # path_wateryear_types: "NODCU/WYTYPES"
   path_subarea_info: "NODCU/subarea-info.TXT"
   path_irrigation_efficiency: "NODCU/IRREFF-3MWQIregions"
   path_leach_applied: "NODCU/LEACHAPL.DAT"
