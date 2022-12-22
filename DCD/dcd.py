@@ -125,33 +125,6 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
     da_drnseep.loc[lowland_no_seepage] = 0.
     return da_drnseep
 
-# XXX This commented function is no longer needed and can be deleted as the gwrates now have to be preprocessed
-# def calculate_groundwater_rates(df_subareas, df_gw_rates, dates):
-#     """
-#     """
-#     # Create an empty groundwater array
-#     n_dates = len(dates)
-#     areas = df_subareas["area"].values
-#     n_areas = len(areas)
-#     da_gwrates = xr.DataArray(data=np.full((n_dates, n_areas), np.nan),
-#                               dims=["time", "area"],
-#                               coords=dict(time=dates, area=areas))
-
-#     areas_lower = df_subareas.query("uplow == 1 & docregion == 'Lower'")[
-#         'area'].values
-#     areas_mid = df_subareas.query("uplow == 1 & docregion == 'Midrange'")[
-#         'area'].values
-#     areas_high = df_subareas.query("uplow == 1 & docregion == 'High'")[
-#         'area'].values
-
-#     for year in range(dates[0].year + 1, dates[-1].year + 1):
-#         da_gwrates.loc[f"{year - 1}-10-01":f"{year}-09-30",
-#                        :] = df_gw_rates.query("year == @year")["gw_rate"].values
-#     da_gwrates.loc[:, areas_lower] = 0.35
-#     da_gwrates.loc[:, areas_mid] = 0.30
-#     da_gwrates.loc[:, areas_high] = 0.25
-#     return da_gwrates
-
 
 def adjust_leach_water(da_lwa, da_lwd, da_ro):
     """ Adjust (Reduce) leach water with runoff
@@ -259,25 +232,8 @@ def calculate_model_depletion(ds_dcd, model_params):
     da_percolation.attrs = ds_dcd.runoff.attrs
     da_percolation.attrs["name"] = "DP_island"
     da_percolation.attrs["part_c"] = "DP-FLOW"
-    # ds_all[da_percolation.attrs["name"]] = da_percolation
-    # Save the data for later uses
-    # suffix = f"_{extension}" if extension != "" else ""
-    # path_out = f"DCD_islands{suffix}.nc"
-    # ds_all.to_netcdf(path_out)
 
-    # Take monthly averages of the NODCU outputs
-    # names_to_process = ["drn_wo_ro_island", "div_wo_spg_island",
-    #                     "GW_per_island", "RO_island",
-    #                     "DP_island", "spg_island"]
-    # for name in names_to_process:
-    #     da = ds_dcd[name]
-    #     da_mon = take_monthly_average(da)
-    #     name_mon = f"{name}_mon"
-    #     ds_dcd[name_mon] = da_mon
-
-    # FIXME DSM2 only
-    extension = ""
-    ds_dcd_nodes = island_to_nodes(ds_dcd, model_params, extension)
+    ds_dcd_nodes = island_to_nodes(ds_dcd, model_params)
     return ds_dcd_nodes
 
 
@@ -330,7 +286,7 @@ def read_distribution_rates(path_file):
     return da
 
 
-def island_to_nodes(ds_dcd, model_params, extension):
+def island_to_nodes(ds_dcd, model_params):
     """ Distribute DCD results to model nodes
 
         FIXME WIP. Needs to be polished up.
@@ -342,10 +298,6 @@ def island_to_nodes(ds_dcd, model_params, extension):
     # FIXME Some dead code can be removed.
     logging.info("Distribute depletion to nodes...")
     # Read the updated DCD
-    # FIXME Do not use hard-wired file names, but OK for now?
-    # ext = "" if extension == "" else f"_{ext}.nc"
-    # path_dcd_adj = f"DCD_islands_adj.nc"
-    # ds_dcd_adj = xr.open_dataset(path_dcd_adj)
 
     # Read distribution rates
     divratefile = model_params.get("path_dsm2_diversion_rates")
@@ -368,36 +320,6 @@ def island_to_nodes(ds_dcd, model_params, extension):
     # Drainage
     da_drn_nodes = ds_dcd.drainage.dot(ds_dist_rates.drnrate) + \
         ds_dcd.runoff.dot(ds_dist_rates.drnrate)
-
-    # BBID
-    # FIXME I think that this can be folded with the code above, but
-    #       I am not sure the best way to deal with the BBID island index.
-    # FIXME a hard-wired path information. Not good.
-    # FIXME Temporaryly commenting out the BBID section
-    # path_ext = "../../path_ext.csv"
-    # df_path_ext = pd.read_csv(path_ext)
-    # extensions = df_path_ext['ext'].unique()
-    # dss = []
-    # for ext in extensions:
-    #     # Read NODCU outputs that are saved for each extension previously
-    #     # FIXME Better not to use intermediate files
-    #     # FIXME A similar job is done in `split_bbid_new` already.
-    #     path_nodcu_ext_nc = f"DCD_islands_{ext}.nc"
-    #     ds_dcd_ext = xr.open_dataset(path_nodcu_ext_nc)
-    #     df_islands = df_path_ext.query("ext == @ext & part_a == 'BBID'")
-    #     if not df_islands.empty:
-    #         ds = ds_dcd_ext.sel(island=df_islands["part_b"].values)
-    #         dss.append(ds)
-    # ds_bbid_sum = xr.concat(dss, dim='island').sum(dim='island')
-    # # Add back run off to the drainage
-    # # FIXME this is not done completely.
-    # ds_bbid_sum['DRAIN-FLOW'] = ds_bbid_sum['drn_wo_ro_island'] + \
-    #                             ds_bbid_sum['RO_island']
-
-    # path_dcd_base = f"DCD_islands.nc"
-    # ds_dcd_base = xr.open_dataset(path_dcd_base)
-    # bbid_islands = df_path_ext[df_path_ext["part_a"] == 'BBID']["part_b"].values
-    # ds_dcd_base.sel(island=bbid_islands)
 
     # Create a xarray.Dataset.
     # NOTE We may come up with better names. For now, use the old name for
@@ -440,10 +362,11 @@ def read_groundwater_rates(fpath, dates):
     """
     start_date = dates[0]
     end_date = dates[-1]
-    df_gw_rates = pd.read_csv(fpath,header=0,index_col=0,parse_dates=True)
+    df_gw_rates = pd.read_csv(fpath, header=0, index_col=0, parse_dates=True)
     df_gw_rates = df_gw_rates.query("time >= @start_date & time <= @end_date")
     n_dates = len(dates)
-    areas = np.linspace(1,df_gw_rates.shape[1],df_gw_rates.shape[1],dtype=int)
+    areas = np.linspace(
+        1, df_gw_rates.shape[1], df_gw_rates.shape[1], dtype=int)
     n_areas = len(areas)
     da_gwrates = xr.DataArray(data=np.full((n_dates, n_areas), df_gw_rates.values),
                               dims=["time", "area"],
@@ -501,11 +424,12 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     param_name = "path_groundwater_rates"
     path_groundwater_rates = model_params.get(param_name)
     if path_groundwater_rates is None:
-        raise ValueError(f"The input does not include parameter, {param_name}.")
+        raise ValueError(
+            f"The input does not include parameter, {param_name}.")
     if not os.path.exists(path_groundwater_rates):
         raise ValueError(f"File {path_groundwater_rates} not found.")
     da_gwrates = read_groundwater_rates(path_groundwater_rates,
-                                         dates)
+                                        dates)
 
     # Read monthly applied leach water (LW_A) and drained leach water (LW_D)
     path_lwam = model_params.get("path_leach_applied")
@@ -532,14 +456,12 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     da_waterbody = (ds_detaw.et_c.sel(
         crop=cropname) - ds_detaw.precip.sel(crop=cropname)).clip(0.)
 
-
     # n_dates = len(dates)
     # Create an array of days in each month for later use
     days_in_month = dates.days_in_month
     da_days_in_month = xr.DataArray(data=days_in_month,
                                     dims=["time"],
                                     coords=dict(time=dates))
-
 
     # Months in the ordering in a water year, which is from October
     # to September, 10, 11, 12, 1, ..., 9
