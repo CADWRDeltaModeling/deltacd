@@ -6,7 +6,7 @@ dcd:
   path_leach_applied: "NODCU/LEACHAPL.DAT"
   path_leach_drained: "NODCU/LEACHDRN.DAT"
   path_detaw_output: "../DETAW/Output/detawoutput.nc"
-  path_groundwater_rates: "NODCU/GW_RATES.TXT"
+  path_groundwater_rates: "NODCU/GW_RATES_NAREA.csv"
   path_dsm2_diversion_rates: "NODCU/DIVFCTR_CS3_NorOMR.2020"
   path_dsm2_drainage_rates: "NODCU/DRNFCTR_CS3_NorOMR.2020"
 

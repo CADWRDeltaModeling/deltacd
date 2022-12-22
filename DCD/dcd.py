@@ -125,32 +125,32 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
     da_drnseep.loc[lowland_no_seepage] = 0.
     return da_drnseep
 
+# XXX This commented function is no longer needed and can be deleted as the gwrates now have to be preprocessed
+# def calculate_groundwater_rates(df_subareas, df_gw_rates, dates):
+#     """
+#     """
+#     # Create an empty groundwater array
+#     n_dates = len(dates)
+#     areas = df_subareas["area"].values
+#     n_areas = len(areas)
+#     da_gwrates = xr.DataArray(data=np.full((n_dates, n_areas), np.nan),
+#                               dims=["time", "area"],
+#                               coords=dict(time=dates, area=areas))
 
-def calculate_groundwater_rates(df_subareas, df_gw_rates, dates):
-    """
-    """
-    # Create an empty groundwater array
-    n_dates = len(dates)
-    areas = df_subareas["area"].values
-    n_areas = len(areas)
-    da_gwrates = xr.DataArray(data=np.full((n_dates, n_areas), np.nan),
-                              dims=["time", "area"],
-                              coords=dict(time=dates, area=areas))
+#     areas_lower = df_subareas.query("uplow == 1 & docregion == 'Lower'")[
+#         'area'].values
+#     areas_mid = df_subareas.query("uplow == 1 & docregion == 'Midrange'")[
+#         'area'].values
+#     areas_high = df_subareas.query("uplow == 1 & docregion == 'High'")[
+#         'area'].values
 
-    areas_lower = df_subareas.query("uplow == 1 & docregion == 'Lower'")[
-        'area'].values
-    areas_mid = df_subareas.query("uplow == 1 & docregion == 'Midrange'")[
-        'area'].values
-    areas_high = df_subareas.query("uplow == 1 & docregion == 'High'")[
-        'area'].values
-
-    for year in range(dates[0].year + 1, dates[-1].year + 1):
-        da_gwrates.loc[f"{year - 1}-10-01":f"{year}-09-30",
-                       :] = df_gw_rates.query("year == @year")["gw_rate"].values
-    da_gwrates.loc[:, areas_lower] = 0.35
-    da_gwrates.loc[:, areas_mid] = 0.30
-    da_gwrates.loc[:, areas_high] = 0.25
-    return da_gwrates
+#     for year in range(dates[0].year + 1, dates[-1].year + 1):
+#         da_gwrates.loc[f"{year - 1}-10-01":f"{year}-09-30",
+#                        :] = df_gw_rates.query("year == @year")["gw_rate"].values
+#     da_gwrates.loc[:, areas_lower] = 0.35
+#     da_gwrates.loc[:, areas_mid] = 0.30
+#     da_gwrates.loc[:, areas_high] = 0.25
+#     return da_gwrates
 
 
 def adjust_leach_water(da_lwa, da_lwd, da_ro):
@@ -423,28 +423,32 @@ def create_argparser() -> argparse.ArgumentParser:
     return parser
 
 
-def read_groundwater_rates(fpath, start_year, end_year) -> pd.DataFrame:
+def read_groundwater_rates(fpath, dates):
     """ Read groundwater rate from a text file
 
         Parameters
         ----------
         fpath: str
             file name to read
-        start_year: int
-            start year to clip
-        end_year: int
-            end year to clip the data
+        dates:
+            Dates used in the run
 
         Returns
         -------
-        pandas.DataFrame
+        xr.DataArray
             groundwater rates
     """
-    df_gw_rates = pd.read_csv(fpath,
-                              delim_whitespace=True, header=None)
-    df_gw_rates.rename(columns={0: "year", 1: "gw_rate"}, inplace=True)
-    df_gw_rates = df_gw_rates.query("year >= @start_year & year <= @end_year")
-    return df_gw_rates
+    start_date = dates[0]
+    end_date = dates[-1]
+    df_gw_rates = pd.read_csv(fpath,header=0,index_col=0,parse_dates=True)
+    df_gw_rates = df_gw_rates.query("time >= @start_date & time <= @end_date")
+    n_dates = len(dates)
+    areas = np.linspace(1,df_gw_rates.shape[1],df_gw_rates.shape[1],dtype=int)
+    n_areas = len(areas)
+    da_gwrates = xr.DataArray(data=np.full((n_dates, n_areas), df_gw_rates.values),
+                              dims=["time", "area"],
+                              coords=dict(time=dates, area=areas))
+    return da_gwrates
 
 
 def calculate_depletion(model_params: dict) -> xr.Dataset:
@@ -469,6 +473,11 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     start_date = pd.to_datetime(f'{start_water_year - 1}-10-01')
     end_date = pd.to_datetime(f'{end_water_year}-09-30')
     n_years = end_date.year - start_date.year
+    # Create the dates in the date range.
+    # This will be coordinates in many arrays later.
+    dates = pd.date_range(start=start_date, end=end_date, freq='D')
+    # Create months in the modeling period
+    months = pd.period_range(start=start_date, end=end_date, freq='M')
 
     # Read a water year types
     # path_wy_types = model_params.get("path_wateryear_types")
@@ -495,8 +504,8 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
         raise ValueError(f"The input does not include parameter, {param_name}.")
     if not os.path.exists(path_groundwater_rates):
         raise ValueError(f"File {path_groundwater_rates} not found.")
-    df_gw_rates = read_groundwater_rates(path_groundwater_rates,
-                                         start_water_year, end_water_year)
+    da_gwrates = read_groundwater_rates(path_groundwater_rates,
+                                         dates)
 
     # Read monthly applied leach water (LW_A) and drained leach water (LW_D)
     path_lwam = model_params.get("path_leach_applied")
@@ -523,9 +532,7 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     da_waterbody = (ds_detaw.et_c.sel(
         crop=cropname) - ds_detaw.precip.sel(crop=cropname)).clip(0.)
 
-    # Create the dates in the date range.
-    # This will be coordinates in many arrays later.
-    dates = pd.date_range(start=start_date, end=end_date, freq='D')
+
     # n_dates = len(dates)
     # Create an array of days in each month for later use
     days_in_month = dates.days_in_month
@@ -533,8 +540,6 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
                                     dims=["time"],
                                     coords=dict(time=dates))
 
-    # Create months in the modeling period
-    months = pd.period_range(start=start_date, end=end_date, freq='M')
 
     # Months in the ordering in a water year, which is from October
     # to September, 10, 11, 12, 1, ..., 9
@@ -570,7 +575,7 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     da_seepage += da_drnseep
 
     # Calculate daily groundwater rate per area
-    da_gwrates = calculate_groundwater_rates(df_subareas, df_gw_rates, dates)
+    # da_gwrates = calculate_groundwater_rates(df_subareas, df_gw_rates, dates)
 
     # Calculate groundwater component 1
     da_gw1 = da_gwrates * da_aw / da_eta
