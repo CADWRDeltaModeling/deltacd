@@ -523,7 +523,7 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     # Preprocess DETAW outputs
     logging.info("Preprocessing DETAW output...")
     # Aggregating by areas
-    da_aw = ds_detaw.et_aw.sum('crop')
+    da_aw = ds_detaw.et_aw.sum('crop').clip(0.)
     da_seepage = ds_detaw.s_e.sum('crop')
     da_runoff = (ds_detaw.precip - ds_detaw.e_r).sum(
         'crop').rolling(time=5, min_periods=1).mean()
