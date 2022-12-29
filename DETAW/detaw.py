@@ -2559,7 +2559,7 @@ def create_argparser() -> argparse.ArgumentParser:
                          help="An input YAML file to provide parameters")
     return parser
 
-def read_pcp(streamlinemodel, start_date_str,end_date_str,pcplocs,fn):
+def read_pcp(start_date_str, end_date_str, fn):
     """ Read pcp input data
 
         Parameters
@@ -2574,18 +2574,21 @@ def read_pcp(streamlinemodel, start_date_str,end_date_str,pcplocs,fn):
             ts_pcp: timeseries of station precipitation
     """
     # FIXME Avoid to use a current directory for jobs
-    filepath = os.getcwd()
+    # filepath = os.getcwd()
 
-    if streamlinemodel == "CALSIM3":
-        source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    else:
-        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+    # if streamlinemodel == "CALSIM3":
+    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    # else:
+    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
 
-    pcp_df = pd.read_csv(source,index_col=False)
+    pcp_df = pd.read_csv(fn,index_col=False)
     # add date column to dataframe
     pcp_df['file_dates'] = pd.to_datetime(pcp_df[['year', 'month', 'day']])
     mask = pcp_df['file_dates'].between(start_date_str,end_date_str)
-
+    # get the column_names from the dataframe
+    column_names = pcp_df.columns.values.tolist()
+    skip_cols =['year','month','day','DOY','file_dates']
+    pcplocs = list((filter(lambda val: val not in skip_cols, column_names)))
     # subset the precip values and transpose before converting to array
     ts_pcp = pcp_df.loc[mask,pcplocs].T.to_numpy()
     return(ts_pcp)
@@ -2608,14 +2611,14 @@ def read_temperature(streamlinemodel, start_date_str,end_date_str,fn):
             ts_LODI_tn: array tmin
     """
     # FIXME Avoid to use a current directory for jobs
-    filepath = os.getcwd()
+    # filepath = os.getcwd()
 
-    if streamlinemodel == "CALSIM3":
-        source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    else:
-        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+    # if streamlinemodel == "CALSIM3":
+    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    # else:
+    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
 
-    temp_df = pd.read_csv(source,parse_dates=[0],index_col=0,header=0)
+    temp_df = pd.read_csv(fn,parse_dates=[0],index_col=0,header=0)
 
     ts_year = temp_df[start_date_str:end_date_str]['Year'].T.to_numpy()
     ts_mon = temp_df[start_date_str:end_date_str]['Month'].T.to_numpy()
@@ -2671,16 +2674,16 @@ def read_landuse(streamlinemodel, iyears, water_years, n_areas, icroptype):
 
 def read_calendar(streamlinemodel, model_start_year,endyear,water_years, fn):
 
-    # FIXME Avoid to use a current directory for jobs
-    filepath = os.getcwd()
+    # # FIXME Avoid to use a current directory for jobs
+    # filepath = os.getcwd()
 
-    if streamlinemodel == "CALSIM3":
-        source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    else:
-        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+    # if streamlinemodel == "CALSIM3":
+    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    # else:
+    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
 
     tyr = len(water_years)
-    f0 = open(source)
+    f0 = open(fn)
     daysofyear = zeros((366, 4, tyr), int)
     isl = 0
     idays = 0
@@ -2718,15 +2721,15 @@ def read_et_correction_factors(streamlinemodel,perclocs,fn):
             Region: array
     """
     # FIXME Avoid to use a current directory for jobs
-    filepath = os.getcwd()
+    # filepath = os.getcwd()
 
-    if streamlinemodel == "CALSIM3":
-        source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    else:
-        source = os.path.join(filepath, 'Input', 'historical_study', fn)
+    # if streamlinemodel == "CALSIM3":
+    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
+    # else:
+    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
 
     # read data from the csv file
-    data = pd.read_csv(source,index_col=False)
+    data = pd.read_csv(fn,index_col=False)
     ts_per = data.loc[:,perclocs].T.to_numpy()
     ETo_corrector = data.loc[:,'ETo Corection Factor'].T.to_numpy()
     Region = data.loc[:,'REGION'].T.to_numpy()
@@ -2794,7 +2797,9 @@ def detaw(fname_main_yaml: str) -> None:
 
     #? FIXME why is ilands,isites, etc... hardwired ?#
     ilands = 168
-    isites = 7
+    tmp_df = pd.read_csv(fn_input_pcp,header=[0])
+    # subtract columns by 4 to ingnore year, month, day, doy
+    isites = tmp_df.shape[1]-4
     NumDay = numpy.array([0, 31, 28, 31, 30, 31, 30, 31,
                          31, 30, 31, 30, 31], dtype='i4')
     NI = numpy.array([31, 59, 90, 120, 151, 181, 212,
@@ -2823,7 +2828,7 @@ def detaw(fname_main_yaml: str) -> None:
     ts_LODI_tx = zeros((idates), float)
     ts_LODI_tn = zeros((idates), float)
 
-    ts_pcp = read_pcp(streamlinemodel,start_date_str,end_date_str,pcplocs,fn_input_pcp)
+    ts_pcp = read_pcp(start_date_str, end_date_str, fn_input_pcp)
 
     [ts_per,ETo_corrector,Region] = read_et_correction_factors(streamlinemodel, perclocs, fn_et_correction)
 
