@@ -2707,7 +2707,7 @@ def read_calendar(streamlinemodel, model_start_year,endyear,water_years, fn):
 
     return daysofyear
 
-def read_et_correction_factors(streamlinemodel,perclocs,fn):
+def read_et_correction_factors(fn):
     """ Read et correction factors
 
         Parameters
@@ -2730,6 +2730,9 @@ def read_et_correction_factors(streamlinemodel,perclocs,fn):
 
     # read data from the csv file
     data = pd.read_csv(fn,index_col=False)
+    column_names = sorted(data)
+    skip_cols =['SubArea','ETo Corection Factor','REGION','REGION.1']
+    perclocs = list((filter(lambda val: val not in skip_cols, column_names)))
     ts_per = data.loc[:,perclocs].T.to_numpy()
     ETo_corrector = data.loc[:,'ETo Corection Factor'].T.to_numpy()
     Region = data.loc[:,'REGION'].T.to_numpy()
@@ -2797,19 +2800,22 @@ def detaw(fname_main_yaml: str) -> None:
 
     #? FIXME why is ilands,isites, etc... hardwired ?#
     ilands = 168
+
+    # Reading the input pcp file to get the number of pcp stations (isites). Reading the pcp values is performed in read_pcp
     tmp_df = pd.read_csv(fn_input_pcp,header=[0])
-    # subtract columns by 4 to ingnore year, month, day, doy
+    # subtract columns by 4 to ingnore year, month, day, doy to get the number of pcp stations
     isites = tmp_df.shape[1]-4
+
     NumDay = numpy.array([0, 31, 28, 31, 30, 31, 30, 31,
                          31, 30, 31, 30, 31], dtype='i4')
     NI = numpy.array([31, 59, 90, 120, 151, 181, 212,
                      243, 273, 304, 334, 365], dtype='i4')
     NII = numpy.array([31, 60, 91, 121, 152, 182, 213,
                       244, 274, 305, 335, 366], dtype='i4')
-    pcplocs = ["Brentwood", "Davis", "Galt",
-               "Lodi", "RioVista", "Stockton", "Tracy"]
-    perclocs = ["Brentwood", "Davis", "Galt",
-                "Lodi", "Rio Vista", "Stockton", "Tracy_Carbona"]
+    # pcplocs = ["Brentwood", "Davis", "Galt",
+    #            "Lodi", "RioVista", "Stockton", "Tracy"]
+    # perclocs = ["Brentwood", "Davis", "Galt",
+    #             "Lodi", "Rio Vista", "Stockton", "Tracy_Carbona"]
     cropname = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
             "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
             "Vineyard", "Riparian Vegetation", "Native Vegetation",
@@ -2830,7 +2836,7 @@ def detaw(fname_main_yaml: str) -> None:
 
     ts_pcp = read_pcp(start_date_str, end_date_str, fn_input_pcp)
 
-    [ts_per,ETo_corrector,Region] = read_et_correction_factors(streamlinemodel, perclocs, fn_et_correction)
+    [ts_per,ETo_corrector,Region] = read_et_correction_factors(fn_et_correction)
 
     [ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn] = read_temperature(streamlinemodel, start_date_str,end_date_str, fn_input_temperature)
 
