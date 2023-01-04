@@ -44,6 +44,9 @@ detaw:
   et_correction: 'Input/historical_study/Percentage.csv'
   calendar: 'Input/historical_study/calendar.txt'
   # Model Output control
+  detaw_output: 'Output/detawoutput.nc'
+  precip_output: 'Output/precip.nc'
+  et_output: 'Output/ET0.nc'
   daily_output: 1
   monthly_output: 1
   yearly_output: 0

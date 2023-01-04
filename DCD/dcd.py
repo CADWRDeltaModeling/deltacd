@@ -597,12 +597,18 @@ def main() -> None:
 
     logging.info("Write the depletion to a file...")
     path_dcd = params.get("path_dcd_output")
+    head_tail = os.path.split(path_dcd)
+    if not os.path.exists(head_tail[0]):
+        os.mkdir(head_tail[0])
     ds_dcd.to_netcdf(path_dcd)
 
     ds_dcd_nodes = calculate_model_depletion(ds_dcd, params)
 
     logging.info("Write the depletion at nodes to a file...")
     path_dcd_nodes = params.get("path_dcd_node_output")
+    head_tail = os.path.split(path_dcd_nodes)
+    if not os.path.exists(head_tail[0]):
+        os.mkdir(head_tail[0])
     ds_dcd_nodes.to_netcdf(path_dcd_nodes)
 
     logging.info("Finished. Exiting.")

@@ -11,8 +11,8 @@ dcd:
   path_dsm2_drainage_rates: "NODCU/DRNFCTR_CS3_NorOMR.2020"
 
   # Output files
-  path_dcd_output: "dcd.nc"
-  path_dcd_node_output: "dcd_dsm2.nc"
+  path_dcd_output: "output/dcd.nc"
+  path_dcd_node_output: "output/dcd_dsm2.nc"
 
   # DCD parameters
   start_water_year: 1922

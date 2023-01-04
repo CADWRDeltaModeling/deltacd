@@ -82,7 +82,7 @@ def fill_zeros_with_last(arr):
     return arr[prev]
 
 
-def write_to_netcdf(detawoutput, model_start_year):
+def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
     ''' Write DETAW output array into a NetCDF
 
         This function writes out DETAW outputs in a numpy array into a NetCDF
@@ -96,6 +96,8 @@ def write_to_netcdf(detawoutput, model_start_year):
             (etvars, areas, crops, times).
         model_start_year: int
             start year in water year
+        fn_detaw_output: str
+            filename to write the output
 
         Returns
         -------
@@ -116,12 +118,15 @@ def write_to_netcdf(detawoutput, model_start_year):
                                          dims=dims,
                                          coords=coords, attrs={'units': 'Acre-feet'})
                      for i, etvar in enumerate(etvars)})
-    # FIXME Do not use a hardwired file name
-    ds.to_netcdf('Output/detawoutput.nc')
+
+    head_tail = os.path.split(fn_detaw_output)
+    if not os.path.exists(head_tail[0]):
+        os.mkdir(head_tail[0])
+    ds.to_netcdf(fn_detaw_output)
     return ds
 
 
-def weatheroutput_to_netcdf(pcp, ET0, model_start_year):
+def weatheroutput_to_netcdf(pcp, ET0, model_start_year, fn_precip_output, fn_et_output):
     '''
     write the precip and ET0 for all areas to netcdf4 format
     '''
@@ -137,11 +142,15 @@ def weatheroutput_to_netcdf(pcp, ET0, model_start_year):
                             str(model_start_year) + '-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='ET0')
-    # FIXME Remove hardwired file names
-    if not os.path.exists('Output'):
-        os.mkdir('Output')
-    dpcp.to_netcdf('Output/precip.nc')
-    det0.to_netcdf('Output/ET0.nc')
+
+    head_tail = os.path.split(fn_precip_output)
+    if not os.path.exists(head_tail[0]):
+        os.mkdir(head_tail[0])
+    head_tail = os.path.split(fn_et_output)
+    if not os.path.exists(head_tail[0]):
+        os.mkdir(head_tail[0])
+    dpcp.to_netcdf(fn_precip_output)
+    det0.to_netcdf(fn_et_output)
 
 
 def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
@@ -2771,6 +2780,9 @@ def detaw(fname_main_yaml: str) -> None:
     fn_landuse = detaw_params['landuse']
     fn_et_correction = detaw_params['et_correction']
     fn_calendar = detaw_params['calendar']
+    fn_detaw_output = detaw_params['detaw_output']
+    fn_precip_output = detaw_params['precip_output']
+    fn_et_output = detaw_params['et_output']
 
     # FIXME Avoid to use a current directory for jobs
     filepath = os.getcwd()
@@ -2853,7 +2865,7 @@ def detaw(fname_main_yaml: str) -> None:
         st = timeit.default_timer()
     (pcp, ET0) = weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, ts_LODI_tx,
                                ts_LODI_tn, ilands, idates, isites, ETo_corrector, filepath, start1)
-    weatheroutput_to_netcdf(pcp, ET0, model_start_year)
+    weatheroutput_to_netcdf(pcp, ET0, model_start_year, fn_precip_output, fn_et_output)
     if DEBUG_TIMING:
         print('weather output took', timeit.default_timer()-st, ' seconds')
     pcp = pcp.T
@@ -2870,7 +2882,7 @@ def detaw(fname_main_yaml: str) -> None:
               timeit.default_timer()-st, ' seconds')
     if DEBUG_TIMING:
         st = timeit.default_timer()
-    dx = write_to_netcdf(DETAWOUTPUT,model_start_year)
+    dx = write_to_netcdf(DETAWOUTPUT,model_start_year,fn_detaw_output)
     if DEBUG_TIMING:
         print('detaw output to netcdf4 took',
               timeit.default_timer()-st, ' seconds')
