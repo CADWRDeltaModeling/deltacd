@@ -1645,7 +1645,7 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
 
 def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, idates, isites, ts_year, ts_mon,
                    ts_days, start1, filepath, NI, NII, NumDaysPerMon, iyears, idayoutput, imonthoutput,
-                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,yearType,HAcre):
+                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,yearType,HAcre,icroptype):
     InpHSACrop = "  "
     SACropDaily = "  "
     HSACropDailyMean = "  "
@@ -1654,12 +1654,13 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     cpartt = "  "
     monthname = ["JAN", "FEB", "MAR", "APR", "MAY",
                  "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    #? why not read these from input file ?#
-    CropName = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
-                "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
-                "Vineyard", "Riparian Vegetation", "Native Vegetation",
-                "Non-irrig Grain", "Water Surface"]
-    icroptype = len(CropName)
+    # icroptype is now read in from read_landuse can delete this commented block
+    # #? why not read these from input file ?#
+    # CropName = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
+    #             "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
+    #             "Vineyard", "Riparian Vegetation", "Native Vegetation",
+    #             "Non-irrig Grain", "Water Surface"]
+    # icroptype = len(CropName)
     idays = 366
     imonths = 12
     pyhecdss.set_message_level(0)
@@ -2628,48 +2629,50 @@ def read_temperature(streamlinemodel, start_date_str,end_date_str,fn):
 
     return(ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn)
 
-def read_landuse(streamlinemodel, iyears, water_years, n_areas, icroptype):
+def read_landuse(fn_landuse, iyears, water_years, n_areas):
     """ Read landuse acreages
 
         Parameters
         ----------
-            streamlinemodel: str
-            water_years: str
+            fn_landuse: str
+            iyears: int
+            water_years: array
             n_areas: int
-                number of areas
-            icroptype: int
+                number of areas in the model
+
         Returns
         -------
             yearType: array
-            HAcre: array
+            Landuse Area: array
+            icroptype: int
     """
-    # FIXME Avoid to use a current directory for jobs
-    filepath = os.getcwd()
+    # # FIXME Avoid to use a current directory for jobs
+    # filepath = os.getcwd()
+
+    lu_comb_df = pd.read_csv(fn_landuse,  header=[0])
+    mask = lu_comb_df['DATE'].isin(water_years)
+    # clipped based on water years
+    sub_df = lu_comb_df.loc[mask, :]
+
+    column_names = list(lu_comb_df.columns)
+    skip_cols =['DATE','TYPE','area_id']
+    lucols = list((filter(lambda val: val not in skip_cols, column_names)))
+    icroptype = len(lucols)
 
     # FIXME year_type is set to iyears but should be water_years like
     year_type = numpy.empty(iyears+1, dtype='<U3')
-    HAcre = zeros((n_areas, iyears + 2, icroptype + 1), float)
+    landuse_area_hectare = zeros((n_areas, iyears + 2, icroptype + 1), float)
+
+    lu_hectare_lf = sub_df.loc[:,lucols].values
+    landuse_area_hectare[:, 1:iyears, 1:] = lu_hectare_lf.reshape((n_areas,len(water_years),icroptype))
+
+    # FIXME the padding  with AN on either end is carry forward from legacy code
     year_type[0]="AN"
-    if streamlinemodel == "CALSIM3":
-        hist_path = os.path.join(filepath, 'Input', 'planning_study', 'Landuse')  # ---08/02/2010
-    else:
-        hist_path = os.path.join(filepath, 'Input', 'historical_study', 'Landuse')
-    files = listdir(hist_path)
-    for area_i, file in enumerate(files):
-        if '.csv' in file:
-            source = os.path.join(hist_path, file)
-            df = pd.read_csv(source, header=[0], skiprows=[1])
-            mask = df['DATE'].isin(water_years)
-            sub_df = df.loc[mask, :]
-            # assign the landuse acreages to HAcre
-            HAcre[area_i, 1:iyears, 1:] = sub_df.iloc[:iyears, 2:]
-            # yearType is the same in all landuse files
-            year_type[1:len(sub_df.iloc[:,1].values)+1] = sub_df.iloc[:,1].values
-    # FIXME when year_type above is cor
+    year_type[1:len(water_years)+1] = sub_df.iloc[0:len(water_years),1].values
     year_type[-1] = "AN"
     year_type = year_type.astype(dtype='<U3')
 
-    return (year_type, HAcre)
+    return (year_type, landuse_area_hectare, icroptype)
 
 
 def read_calendar(streamlinemodel, model_start_year,endyear,water_years, fn):
@@ -2765,6 +2768,7 @@ def detaw(fname_main_yaml: str) -> None:
     end_water_year = detaw_params['end_water_year']
     fn_input_pcp = detaw_params['input_pcp']
     fn_input_temperature = detaw_params['input_temperature']
+    fn_landuse = detaw_params['landuse']
     fn_et_correction = detaw_params['et_correction']
     fn_calendar = detaw_params['calendar']
 
@@ -2798,8 +2802,9 @@ def detaw(fname_main_yaml: str) -> None:
     iyears = endyear-start1[0]+1
     print("iyears =", iyears)
 
-    #? FIXME why is ilands,isites, etc... hardwired ?#
-    ilands = 168
+    # Setting the value of ilands from the landuse file
+    tmp_landuse_df = pd.read_csv(fn_landuse,header=[0])
+    ilands = len(tmp_landuse_df['area_id'].unique())
 
     # Reading the input pcp file to get the number of pcp stations (isites). Reading the pcp values is performed in read_pcp
     tmp_df = pd.read_csv(fn_input_pcp,header=[0])
@@ -2816,11 +2821,11 @@ def detaw(fname_main_yaml: str) -> None:
     #            "Lodi", "RioVista", "Stockton", "Tracy"]
     # perclocs = ["Brentwood", "Davis", "Galt",
     #             "Lodi", "Rio Vista", "Stockton", "Tracy_Carbona"]
-    cropname = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
-            "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
-            "Vineyard", "Riparian Vegetation", "Native Vegetation",
-            "Non-irrig Grain", "Water Surface"]
-    icroptype = len(cropname)
+    # cropname = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
+    #         "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
+    #         "Vineyard", "Riparian Vegetation", "Native Vegetation",
+    #         "Non-irrig Grain", "Water Surface"]
+    # icroptype = len(cropname)
 
     # XXX Need to fix hardwired stations
     #? all the above are hardwired. why?#
@@ -2836,11 +2841,11 @@ def detaw(fname_main_yaml: str) -> None:
 
     ts_pcp = read_pcp(start_date_str, end_date_str, fn_input_pcp)
 
-    [ts_per,ETo_corrector,Region] = read_et_correction_factors(fn_et_correction)
+    [ts_per, ETo_corrector, Region] = read_et_correction_factors(fn_et_correction)
 
-    [ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn] = read_temperature(streamlinemodel, start_date_str,end_date_str, fn_input_temperature)
+    [ts_year, ts_mon, ts_days, ts_LODI_tx, ts_LODI_tn] = read_temperature(streamlinemodel, start_date_str, end_date_str, fn_input_temperature)
 
-    [yearType,HAcre] = read_landuse(streamlinemodel, iyears, water_years, ilands, icroptype)
+    [yearType, HAcre, icroptype] = read_landuse(fn_landuse, iyears, water_years, ilands)
 
     daysofyear = read_calendar(streamlinemodel, model_start_year, endyear, water_years, fn_calendar)
 
@@ -2859,7 +2864,7 @@ def detaw(fname_main_yaml: str) -> None:
     (DETAWOUTPUT) = historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, ts_LODI_tx, ts_LODI_tn,
                                    ilands, idates, isites, ts_year, ts_mon, ts_days, start1, filepath, NI, NII, NumDay, iyears,
                                    idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,
-                                   yearType,HAcre)
+                                   yearType,HAcre,icroptype)
     if DEBUG_TIMING:
         print('historical etaw calculations took ',
               timeit.default_timer()-st, ' seconds')

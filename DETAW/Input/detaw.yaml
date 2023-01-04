@@ -40,6 +40,7 @@ detaw:
   end_water_year: 2020
   input_pcp: 'Input/historical_study/mm_pcp.csv'
   input_temperature: 'Input/historical_study/LODI_PT.csv'
+  landuse : 'Input/historical_study/land_use_combined.csv'
   et_correction: 'Input/historical_study/Percentage.csv'
   calendar: 'Input/historical_study/calendar.txt'
   # Model Output control
