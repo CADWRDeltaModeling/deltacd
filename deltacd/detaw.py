@@ -104,10 +104,10 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
     etvars = ["et_c", "s_e", "precip", "et_aw", "d_sw", "e_r"]
     dims = ['area', 'crop', 'time']
     coords = {'area': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
-              'crop': ["Urban", "Irrig pasture", "Alfalfa", "All Field",
-                       "Sugar beets", "Irrig Grain", "Rice", "Truck Crops",
-                       "Tomato", "Orchard", "Vineyard", "Riparian Vegetation",
-                       "Native Vegetation", "Non-irrig Grain", "Water Surface"],
+              'crop': ["Urban", "Irrig pasture", "Alfalfa", "All field",
+                       "Sugar beets", "Irrig grain", "Rice", "Truck crops",
+                       "Tomato", "Orchard", "Vineyard", "Riparian vegetation",
+                       "Native vegetation", "Non-irrig grain", "Water surface"],
               'time': pd.date_range(str(model_start_year) + '-10-01',
                                     periods=detawoutput.shape[-1])}  # last dimension is time
 
