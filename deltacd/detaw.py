@@ -42,8 +42,6 @@ import numpy
 from os import listdir
 from math import cos, sin, tan, atan, sqrt, pi, pow
 
-# from for_DCD import timeseries_combine, forNODCU
-
 import timeit
 import numba
 import yaml
@@ -2568,6 +2566,7 @@ def create_argparser() -> argparse.ArgumentParser:
                          help="An input YAML file to provide parameters")
     return parser
 
+
 def read_pcp(start_date_str, end_date_str, fn):
     """ Read pcp input data
 
@@ -2601,6 +2600,7 @@ def read_pcp(start_date_str, end_date_str, fn):
     # subset the precip values and transpose before converting to array
     ts_pcp = pcp_df.loc[mask,pcplocs].T.to_numpy()
     return(ts_pcp)
+
 
 def read_temperature(streamlinemodel, start_date_str,end_date_str,fn):
     """ Read temperature input data
@@ -2636,6 +2636,7 @@ def read_temperature(streamlinemodel, start_date_str,end_date_str,fn):
     ts_LODI_tn = temp_df[start_date_str:end_date_str]['Tn(oC)'].T.to_numpy()
 
     return(ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn)
+
 
 def read_landuse(fn_landuse, iyears, water_years, n_areas):
     """ Read landuse acreages
@@ -2717,6 +2718,7 @@ def read_calendar(streamlinemodel, model_start_year,endyear,water_years, fn):
     f0.close()
 
     return daysofyear
+
 
 def read_et_correction_factors(fn):
     """ Read et correction factors
@@ -2828,7 +2830,6 @@ def detaw(fname_main_yaml: str) -> None:
     NII = numpy.array([31, 60, 91, 121, 152, 182, 213,
                       244, 274, 305, 335, 366], dtype='i4')
 
-
     # XXX Need to fix hardwired stations
     #? all the above are hardwired. why?#
     ts_pcp = zeros((isites, idates), float)
@@ -2881,43 +2882,6 @@ def detaw(fname_main_yaml: str) -> None:
         print('detaw output to netcdf4 took',
               timeit.default_timer()-st, ' seconds')
 
-    # run_for_dcd = False
-    # if run_for_dcd:
-    #    # output dimensioned by (var, island, time)
-    #    (DETAWISL168) = timeseries_combine(
-    #        DETAWOUTPUT, ilands, ilands, 15, idates-1, "")
-    #    forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "",daysofyear)
-    #    if streamlinemodel == "CALSIM3":
-    #        #print("in the double-counting process", idates)
-    #        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate1.txt"
-    #        (DETAWISL168) = timeseries_combine(
-    #            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-    #        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
-
-    #        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate2.txt"
-    #        (DETAWISL168) = timeseries_combine(
-    #            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-    #        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
-
-    #        tempfile = filepath+"/Input/planning_study/"+"CS3_DCD_rate3.txt"
-    #        (DETAWISL168) = timeseries_combine(
-    #            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-    #        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
-    #    else:
-    #        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate1.txt"
-    #        (DETAWISL168) = timeseries_combine(
-    #            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-    #        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex1",daysofyear)
-
-    #        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate2.txt"
-    #        (DETAWISL168) = timeseries_combine(
-    #            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-    #       forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex2",daysofyear)
-
-    #        tempfile = filepath+"/Input/historical_study/"+"CS3_DCD_rate3.txt"
-    #        (DETAWISL168) = timeseries_combine(
-    #            DETAWOUTPUT, ilands, ilands, 15, idates-1, tempfile)
-    #        forNODCU(DETAWISL168, streamlinemodel, model_start_year, endyear, ilands, "_ex3",daysofyear)
     print("done")
 
 
