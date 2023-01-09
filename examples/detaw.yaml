@@ -1,0 +1,57 @@
+#----------------------------------------------------------------------------
+#                                   DETAWv2.0
+#----------------------------------------------------------------------------
+# DETAW-DCD estimates the Sacramento-San Joaquin Delta hydrology, including
+# consumptive use, ground surface water balance, and channel depletion, given
+# the climate and land use data.
+#
+# It could support the historical, planning or forecasting studies related to
+# the Delta surface water quantity and quality. This version provides three
+# options to estimate the Delta channel depletions in the customized output
+# formats applied to three models: DSM2, SCHISM, and CALSIM. The model inputs
+# and outputs of these options could be taken as the basis for developing
+# various Delta water environmental studies.
+#
+#----------------------------------------------------------------------------
+#----------------------------------------------------------------------------
+
+# DETAW input parameters
+detaw:
+
+  #--------------------------------------------------------------------------
+  # OPTION 1 - DSM2
+  #            DCD estimates the daily historical channel depletions,
+  #            including diversions,drainages and seepage of DSM2 nodes.
+  # OPTION 2 - SCHISM
+  #            DCD estimates the daily historical channel depletions without
+  #            water surface evaporation. SCHISM itself can estimate the
+  #            water surface evaporation of SCHISM simulation region.
+  # OPTION 3 - CALSIM3
+  #            DCD estimates the monthly planning of channel depletions for
+  #            seven Delta nodes of CALSIM3, monthly island deep percolations,
+  #            and monthly island groundwater supplied to crop
+  #            evapotranspiration.
+  target_model: "DSM2"
+
+  #-------------------------------------------------
+  # Other model parameters
+  # FIXME Need more documentations here for parameters.
+  start_water_year: 1922
+  end_water_year: 2020
+  input_pcp: 'inputs/mm_pcp.csv'
+  input_temperature: 'inputs/LODI_PT.csv'
+  landuse : 'inputs/land_use_combined.csv'
+  et_correction: 'inputs/Percentage.csv'
+  critical: 'inputs/critical.csv'
+  noncritical: 'inputs/noncritical.csv'
+  calendar: 'inputs/calendar.txt'
+  # Model Output control
+  detaw_output: 'output/detawoutput.nc'
+  precip_output: 'output/precip.nc'
+  et_output: 'output/ET0.nc'
+  daily_output: 1
+  monthly_output: 1
+  yearly_output: 0
+  delta_output: 0
+  daily_output_unit: 1
+  for_dsm2_only: 1
