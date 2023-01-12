@@ -1,0 +1,7 @@
+area_id,target_area_id,zone,Urban,Irrig pasture,Alfalfa,All Field,Sugar beets,Irrig Grain,Rice,Truck Crops,Tomato,Orchard,Vineyard,Riparian Vegetation,Native Vegetation,Non-irrig Grain,Water Surface
+33,BBID,OMR,0.0,0.0,0.001,0.0,0,0.0,0,0.0,0.0,0.0,0.0,0,0,0,0
+34,BBID,OMR,0.0,0.0,0.105,0.0,0,0.967,0,0.0,0.0,0.0,0.0,0,0,0,0
+41,BBID,OMR,0.0,0.0,0.0,0.0,0,0.001,0,0.0,0.0,0.006,0.0,0,0,0,0
+103,BBID,OMR,0.0,0.0,0.0,0.0,0,1.0,0,0.0,0.0,0.008,0.0,0,0,0,0
+128,BBID,OMR,0.0,1.0,1.0,0.0,0,1.0,0,0.0,0.0,1.0,1.0,0,0,0,0
+130,BBID,SJR_WEST,0.0,0.568,0.826,0.232,0,0.79,0,0.126,0.379,0.415,0.625,0,0,0,0

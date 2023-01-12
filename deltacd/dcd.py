@@ -34,30 +34,6 @@ import xarray as xr
 logging.basicConfig(level=logging.INFO)
 
 
-def read_subarea_info_file(path_file: str) -> pd.DataFrame:
-    """ Read the subarea info text file and return it in a DataFrame
-
-        The file has fixed format and not have headers.
-
-        Parameters
-        ----------
-        path_file
-            file path to read
-
-        Returns
-        -------
-        pandas.DataFrame
-    """
-    colnames = ["area", "name", "uplow", "acreage", "docregion"]
-    colspecs = ((0, 3), (5, 56), (57, 58), (60, 75), (81, 90))
-
-    df = pd.read_fwf(path_file,
-                     colspecs=colspecs,
-                     skiprows=6,
-                     names=colnames)
-    return df
-
-
 def read_water_year_types(path_file: str) -> pd.DataFrame:
     """ Read water year type from the original text format
 
@@ -99,31 +75,32 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
             drained seepage per area
 
     """
-    # Hard-wired areas in the lowland without seepage
+    # FIXME Hard-wired areas in the lowland without seepage
     lowland_no_seepage = [133, 134, 135, 136, 137, 140, 141, 142]
 
     n_areas = len(df_subareas)
-    areas = df_subareas["area"].values
-    da_drnseep = xr.DataArray(data=np.zeros((n_areas)), dims=["area"],
-                              coords=dict(area=areas))
+    areas = df_subareas["area_id"].values
+    da_drnseep = xr.DataArray(data=np.zeros((n_areas)), dims=["area_id"],
+                              coords=dict(area_id=areas))
 
     areas_selected = df_subareas.query(
-        "uplow == 1 & docregion == 'Lower'")["area"]
+        "uplow == 1 & docregion == 'Lower'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.013 * \
         df_subareas.loc[areas_selected.index, "acreage"]
 
     areas_selected = df_subareas.query(
-        "uplow == 1 & docregion == 'Midrange'")["area"]
+        "uplow == 1 & docregion == 'Midrange'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.074 * \
         df_subareas.loc[areas_selected.index, "acreage"]
 
     areas_selected = df_subareas.query(
-        "uplow == 1 & docregion == 'High'")["area"]
+        "uplow == 1 & docregion == 'High'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.095 * \
         df_subareas.loc[areas_selected.index, "acreage"]
 
     da_drnseep.loc[lowland_no_seepage] = 0.
     return da_drnseep
+
 
 def calculate_groundwater_rates(df_gw_rates, dates):
     """ Calculates daily groundwater rates based on yearly values
@@ -142,11 +119,11 @@ def calculate_groundwater_rates(df_gw_rates, dates):
     """
     # Create an empty groundwater array
     n_dates = len(dates)
-    areas = np.linspace(1,df_gw_rates.shape[1],df_gw_rates.shape[1],dtype=int)
+    areas = np.linspace(1, df_gw_rates.shape[1], df_gw_rates.shape[1], dtype=int)
     n_areas = len(areas)
     da_gwrates = xr.DataArray(data=np.full((n_dates, n_areas), np.nan),
-                              dims=["time", "area"],
-                              coords=dict(time=dates, area=areas))
+                              dims=["time", "area_id"],
+                              coords=dict(time=dates, area_id=areas))
 
     for year in range(dates[0].year + 1, dates[-1].year + 1):
         da_gwrates.loc[f"{year - 1}-10-01":f"{year}-09-30",
@@ -182,7 +159,7 @@ def adjust_leach_water(da_lwa, da_lwd, da_ro):
     da_lwd_adj = da_lwd.copy(deep=True)
     dates = pd.date_range(da_lwa.time.values[0], da_lwa.time.values[-1])
     years = range(dates[0].year + 1, dates[-1].year + 1)
-    areas = da_lwa.area.values
+    areas = da_lwa.area_id.values
     n_areas = len(areas)
     for year in years:
         leach_saved = np.zeros((n_areas, ))
@@ -287,38 +264,31 @@ def read_distribution_rates(path_file):
     """
     # Read the file, and drop the last column that is filled by
     # read_csv automatically.
-    df = pd.read_csv(path_file, delim_whitespace=True, skiprows=2).iloc[:, :3]
-    df["I"] = df["I"]
-    df["N"] = df["N"]
-    # Convert percentage to decimal numbers.
-    colname_rate = df.columns[2]
-    df[colname_rate] = df[colname_rate] * 0.01
+    df = pd.read_csv(path_file)
     # Get the list of unique islands
-    islands = np.sort(df["I"].unique())
+    islands = np.sort(df["area_id"].unique())
     n_islands = len(islands)
     # Get the list of unique node numbers
-    nodes = np.sort(df["N"].unique())
+    nodes = np.sort(df["node"].unique())
     n_nodes = len(nodes)
     # Create an empty rate matrix
     rates = np.zeros((n_islands, n_nodes))
     # Loop through islands
     for island in islands:
-        mask = (df["I"] == island)
-        nodes_to_find = df[mask]["N"]
+        mask = (df["area_id"] == island)
+        nodes_to_find = df[mask]["node"]
         node_args = np.vectorize(
             lambda x: np.argwhere(nodes == x))(nodes_to_find)
-        rates[island - 1, node_args] = df[mask][colname_rate]
+        rates[island - 1, node_args] = df[mask]["factor"]
     # Create a xarray.DataArray.
-    da = xr.DataArray(data=rates, dims=["area", "node"],
-                      coords=dict(area=islands,
+    da = xr.DataArray(data=rates, dims=["area_id", "node"],
+                      coords=dict(area_id=islands,
                                   node=nodes))
     return da
 
 
 def island_to_nodes(ds_dcd, model_params):
     """ Distribute DCD results to model nodes
-
-        FIXME WIP. Needs to be polished up.
 
         Returns
         -------
@@ -366,7 +336,7 @@ def create_argparser() -> argparse.ArgumentParser:
 
         Returns
         -------
-        argepase.ArgumentParser
+        argparse.ArgumentParser
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("input_yaml", type=str,
@@ -391,7 +361,7 @@ def read_groundwater_rates(fpath, start_year, end_year) -> pd.DataFrame:
         pandas.DataFrame
             groundwater rates
     """
-    df_gw_rates = pd.read_csv(fpath,header=0, index_col=0, parse_dates=[0])
+    df_gw_rates = pd.read_csv(fpath, header=0, index_col=0, parse_dates=[0])
     df_gw_rates = df_gw_rates.query("year >= @start_year & year <= @end_year")
     return df_gw_rates
 
@@ -424,23 +394,20 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     # Create months in the modeling period
     months = pd.period_range(start=start_date, end=end_date, freq='M')
 
-    # Read a water year types
-    # path_wy_types = model_params.get("path_wateryear_types")
-    # df_wy_types = read_water_year_types(path_wy_types)
-
     # Read a subarea information file
     path_subareas = model_params.get("path_subarea_info")
-    df_subareas = read_subarea_info_file(path_subareas)
+    # df_subareas = read_subarea_info_file(path_subareas)
+    df_subareas = pd.read_csv(path_subareas)
     # Create an area array.
     # This will be an coordinates in many arrays.
-    areas = df_subareas["area"].values
+    areas = df_subareas["area_id"].values
     # n_areas = len(df_subareas)
 
     # Read irrigation efficiency, \eta
     path_eta = model_params.get("path_irrigation_efficiency")
-    df_eta = pd.read_csv(path_eta, header=None)
-    da_eta = xr.DataArray(data=df_eta[0].values, dims=[
-                          "area"], coords=dict(area=areas))
+    df_eta = pd.read_csv(path_eta)
+    da_eta = xr.DataArray(data=df_eta["irrigation_efficiency"].values,
+                          dims=["area_id"], coords=dict(area_id=areas))
 
     # Read groundwater rates
     param_name = "path_groundwater_rates"
@@ -454,18 +421,16 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
                                          start_water_year, end_water_year)
 
     # Read monthly applied leach water (LW_A) and drained leach water (LW_D)
-    path_lwam = model_params.get("path_leach_applied")
-    df_lwam = pd.read_csv(path_lwam, delim_whitespace=True,
-                          header=None).loc[:, 1:].transpose()
-    path_lwdm = model_params.get("path_leach_drained")
-    df_lwdm = pd.read_csv(path_lwdm, delim_whitespace=True,
-                          header=None).loc[:, 1:].transpose()
+    path_lwa = model_params.get("path_leach_applied")
+    df_lwa = pd.read_csv(path_lwa)
+    path_lwd = model_params.get("path_leach_drained")
+    df_lwd = pd.read_csv(path_lwd)
 
     # Read a DETAW NetCDF file
     path_detaw = model_params.get("path_detaw_output")
     ds_detaw = xr.open_dataset(path_detaw).sel(time=slice(start_date, end_date))
 
-    #--------------------------------------------------------
+    # --------------------------------------------------------
     # Preprocess DETAW outputs
     logging.info("Preprocessing DETAW output...")
     # Aggregating by areas
@@ -474,7 +439,7 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     da_runoff = (ds_detaw.precip - ds_detaw.e_r).sum(
         'crop').rolling(time=5, min_periods=1).mean()
     # da_depletion = ds_detaw.et_c.sum('crop')
-    cropname = 'Water Surface'
+    cropname = 'Water surface'
     da_waterbody = (ds_detaw.et_c.sel(
         crop=cropname) - ds_detaw.precip.sel(crop=cropname)).clip(0.)
 
@@ -485,25 +450,20 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
                                     dims=["time"],
                                     coords=dict(time=dates))
 
-    # Months in the ordering in a water year, which is from October
-    # to September, 10, 11, 12, 1, ..., 9
-    # wy_months = np.roll(np.arange(1, 13), 3)
-
     # Pre-processing the leach water data
     # FIXME Factor these out
-    df_lwam = pd.DataFrame(np.tile(df_lwam.values, (n_years, 1)), index=months)
-    df_lwam.rename(columns={i: i+1 for i in df_lwam.columns}, inplace=True)
-    df_lwa = df_lwam.resample('1D').ffill()
-    da_lwa = xr.DataArray(data=df_lwa.values, dims=["time", "area"],
-                          coords=dict(time=dates, area=areas))
+    df_lwa = pd.DataFrame(np.tile(df_lwa.set_index(
+        'area_id').values.transpose(), (n_years, 1)), index=months)
+    df_lwa = df_lwa.resample('1D').ffill()
+    da_lwa = xr.DataArray(data=df_lwa.values, dims=["time", "area_id"],
+                         coords=dict(time=dates, area_id=areas))
     da_lwa /= da_days_in_month
 
-    n_years = end_date.year - start_date.year
-    df_lwdm = pd.DataFrame(np.tile(df_lwdm.values, (n_years, 1)), index=months)
-    df_lwdm.rename(columns={i: i+1 for i in df_lwdm.columns}, inplace=True)
-    df_lwd = df_lwdm.resample('1D').ffill()
-    da_lwd = xr.DataArray(data=df_lwd.values, dims=["time", "area"],
-                          coords=dict(time=dates, area=areas))
+    df_lwd = pd.DataFrame(np.tile(df_lwd.set_index(
+        'area_id').values.transpose(), (n_years, 1)), index=months)
+    df_lwd = df_lwd.resample('1D').ffill()
+    da_lwd = xr.DataArray(data=df_lwd.values, dims=["time", "area_id"],
+                         coords=dict(time=dates, area_id=areas))
     da_lwd /= da_days_in_month
 
     # ---------------------------------------------------------------

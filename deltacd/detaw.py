@@ -102,8 +102,8 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
             DETAW output converted into xarray.Dataset.
     '''
     etvars = ["et_c", "s_e", "precip", "et_aw", "d_sw", "e_r"]
-    dims = ['area', 'crop', 'time']
-    coords = {'area': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
+    dims = ['area_id', 'crop', 'time']
+    coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All field",
                        "Sugar beets", "Irrig grain", "Rice", "Truck crops",
                        "Tomato", "Orchard", "Vineyard", "Riparian vegetation",
@@ -2670,6 +2670,7 @@ def read_landuse(fn_landuse, iyears, water_years, n_areas):
 
     # FIXME year_type is set to iyears but should be water_years like
     year_type = numpy.empty(iyears+1, dtype='<U3')
+    # FIXME Why do we need n_areas from the argument? Can it be inferred from the landuse?
     landuse_area_hectare = zeros((n_areas, iyears + 2, icroptype + 1), float)
 
     lu_hectare_lf = sub_df.loc[:,lucols].values
