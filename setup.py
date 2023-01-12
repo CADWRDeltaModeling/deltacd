@@ -14,9 +14,9 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description="Channel Depletions Model",
     license="MIT",
-    author="Seshadri Rajagopal",
+    author="California Department of Water Resources",
     author_email='seshadri.rajagopal@water.ca.gov',
-    url='https://github.com/SRajagopal/deltacd',
+    url='https://github.com/cadwrdeltamodeling/deltacd',
     packages=['deltacd'],
     entry_points={
         'console_scripts': [
