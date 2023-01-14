@@ -1,11 +1,14 @@
 ===============================
-deltacd
+DeltaCD
 ===============================
 
 Code repo for DETAW and Delta Channel Depletions Model.
 
 Installation
 ===============================
+
+Developer Installation
+----------------------
 
 First clone the deltacd package.
 
@@ -30,11 +33,10 @@ The deltacd package has two models, detaw and dcd. They can be accessed from the
 
 The detaw model is run first
 
-```detaw .\detaw.yaml```
+``detaw .\detaw_dsm2.yaml``
 
 Followed by dcd
 
-```dcd .\deltacd_dsm2.yaml```
+``dcd .\deltacd_dsm2.yaml``
 
-Example yaml and input files are provided in the *examples* directory in the deltacd package. While not required, it would be a good practice
-to make a copy of the *examples* directory to a project or working directory and rename it suitably.
+Example yaml and input files are provided in the *examples* directory in the deltacd package. While not required, it would be a good practice to make a copy of the *examples* directory to a project or working directory and rename it suitably.
