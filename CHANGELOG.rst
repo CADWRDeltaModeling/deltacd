@@ -6,7 +6,7 @@ Changelog
 =============================
 This release is the first pre-release of DeltaCD, renamed and reimplemented DETAW-DCD model. We now use a new name, DeltaCD and a new versioning to make it user-friendly by using more user inputs and by following the Pythonic ways. We adopted common file formats such as CSV, YAML, and NetCDF, and the DSS files are not used anymore. DeltaCD aims to clean and vectorized implementation so that we can accommodate future requirements easily while improving the run speed. This release improves the run speed about ten times.
 
-NOTE: There are known differences in between results from the DETAW-DCD and DeltaCD. The codes and the results are being reviewed though most of the differences are from improvements.
+NOTE: There are known differences between results from the DETAW-DCD and DeltaCD. The codes and the results are being reviewed though most of the differences are from improvements.
 
 Added
 ------
@@ -24,7 +24,7 @@ Removed
 -------
 * The option to choose a target model is dropped. Now the users need to provide model-corresponding input data sets.
 * The support for and the use of DSS files are removed.
-* The Fortran part of the previously DCD is all reimplemented in Python, and it is removed.
+* The Fortran module called externally in the older DCD is all reimplemented in Python, and it is removed.
 
 Others
 ------
