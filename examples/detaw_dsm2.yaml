@@ -37,7 +37,7 @@ detaw:
   # Other model parameters
   # FIXME Need more documentations here for parameters.
   start_water_year: 1922
-  end_water_year: 2020
+  end_water_year: 2023
   input_pcp: 'inputs/mm_pcp.csv'
   input_temperature: 'inputs/LODI_PT.csv'
   landuse : 'inputs/landuse_dsm2.csv'
