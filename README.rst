@@ -37,6 +37,6 @@ The detaw model is run first
 
 Followed by dcd
 
-``dcd .\deltacd_dsm2.yaml``
+``dcd .\dcd_dsm2.yaml``
 
 Example yaml and input files are provided in the *examples* directory in the deltacd package. While not required, it would be a good practice to make a copy of the *examples* directory to a project or working directory and rename it suitably.
