@@ -2,6 +2,20 @@
 Changelog
 =========
 
+0.8.1 - 2020-02-27
+=============================
+A bug fix version of v0.8
+
+NOTE: There are known differences between results from the DETAW-DCD and DeltaCD. The codes and the results are being reviewed though most of the differences are from improvements.
+
+Added
+-----
+*  The input precip and temperature files are updated till 01/31/2023, and the future is padded with 2020 water year climate.
+
+Fixed
+-----
+* The incorrect lowlands/uplands values in the codes are fixed.
+
 0.8.0 - 2020-01-17
 =============================
 This release is the first pre-release of DeltaCD, renamed and reimplemented DETAW-DCD model. We now use a new name, DeltaCD and a new versioning to make it user-friendly by using more user inputs and by following the Pythonic ways. We adopted common file formats such as CSV, YAML, and NetCDF, and the DSS files are not used anymore. DeltaCD aims to clean and vectorized implementation so that we can accommodate future requirements easily while improving the run speed. This release improves the run speed about ten times.

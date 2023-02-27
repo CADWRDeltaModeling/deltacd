@@ -84,17 +84,17 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
                               coords=dict(area_id=areas))
 
     areas_selected = df_subareas.query(
-        "uplow == 1 & docregion == 'Lower'")["area_id"]
+        "uplow == 'low' & docregion == 'Lower'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.013 * \
         df_subareas.loc[areas_selected.index, "acreage"]
 
     areas_selected = df_subareas.query(
-        "uplow == 1 & docregion == 'Midrange'")["area_id"]
+        "uplow == 'low' & docregion == 'Midrange'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.074 * \
         df_subareas.loc[areas_selected.index, "acreage"]
 
     areas_selected = df_subareas.query(
-        "uplow == 1 & docregion == 'High'")["area_id"]
+        "uplow == 'low' & docregion == 'High'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.095 * \
         df_subareas.loc[areas_selected.index, "acreage"]
 
