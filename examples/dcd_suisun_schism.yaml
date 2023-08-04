@@ -1,0 +1,25 @@
+dcd:
+  # Input files
+  # path_wateryear_types: "NODCU/WYTYPES"
+  path_subarea_info: "inputs/subarea_info_suisun.csv"
+  path_irrigation_efficiency: "inputs/irrigation_efficiencies_suisun.csv"
+  path_leach_applied: "inputs/leach_applied_suisun.csv"
+  path_leach_drained: "inputs/leach_drained_suisun.csv"
+  path_detaw_output: "output/detawoutput_suisun_schism.nc"
+  path_groundwater_rates: "inputs/gwrates_suisun.csv"
+  path_dsm2_diversion_rates: "inputs/diversion_factors_suisun.csv"
+  path_dsm2_drainage_rates: "inputs/drainage_factors_suisun.csv"
+
+  # Output files
+  path_dcd_output: "output/dcd_areas_suisun_schism.nc"
+  path_dcd_node_output: "output/dcd_suisun_schism.nc"
+
+  # DCD parameters
+  start_water_year: 1922
+  end_water_year: 2023
+  leach_scale: 1.0
+  runoff_rate: 0.75
+  deep_percolation_rate: 0.25
+  # For some models, e.g. DSM2, evaporation from waterbody may need to be
+  # handled as diversions. If so, use True for is_adding_waterbody_evaporation.
+  is_adding_waterbody_evaporation: False

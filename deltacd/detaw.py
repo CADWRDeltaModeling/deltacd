@@ -103,11 +103,20 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
     '''
     etvars = ["et_c", "s_e", "precip", "et_aw", "d_sw", "e_r"]
     dims = ['area_id', 'crop', 'time']
-    coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
+    if detawoutput.shape[2]-1 == 15: # The Delta has 15 landuse crop categories
+        coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All field",
                        "Sugar beets", "Irrig grain", "Rice", "Truck crops",
                        "Tomato", "Orchard", "Vineyard", "Riparian vegetation",
                        "Native vegetation", "Non-irrig grain", "Water surface"],
+              'time': pd.date_range(str(model_start_year) + '-10-01',
+                                    periods=detawoutput.shape[-1])}  # last dimension is time
+    elif detawoutput.shape[2]-1 == 16: # Suisun Marsh has one more landuse crop category than the Delta
+        coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
+              'crop': ["Urban", "Irrig pasture", "Alfalfa", "All field",
+                       "Sugar beets", "Irrig grain", "Rice", "Truck crops",
+                       "Tomato", "Orchard", "Vineyard", "Riparian vegetation",
+                       "Native vegetation", "Non-irrig grain", "Water surface","Duck Pond"],
               'time': pd.date_range(str(model_start_year) + '-10-01',
                                     periods=detawoutput.shape[-1])}  # last dimension is time
 
@@ -1956,22 +1965,22 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     #         filepath, 'Input', 'historical_study', 'critical.csv')
     ts_type = "rts"
     # crdf = read_and_clean_crop_info(source)
-    CCropType[1:icroptype+1] = crdf.iloc[2, 1:16].values
-    CBeginDate[1:icroptype+1] = crdf.iloc[5, 1:16].values
-    CEndDate[1:icroptype+1] = crdf.iloc[6, 1:16].values
-    Cf[1:icroptype+1] = crdf.iloc[7, 1:16].values
-    Ckc1[1:icroptype+1] = crdf.iloc[8, 1:16].values
-    Ckc2[1:icroptype+1] = crdf.iloc[9, 1:16].values
-    Ckc3[1:icroptype+1] = crdf.iloc[10, 1:16].values
-    CAB[1:icroptype+1] = crdf.iloc[11, 1:16].values
-    CAC[1:icroptype+1] = crdf.iloc[12, 1:16].values
-    CAD[1:icroptype+1] = crdf.iloc[13, 1:16].values
-    CSDx[1:icroptype+1] = crdf.iloc[14, 1:16].values
-    CRDxL[1:icroptype+1] = crdf.iloc[15, 1:16].values
-    CRDxU[1:icroptype+1] = crdf.iloc[16, 1:16].values
-    CawL[1:icroptype+1] = crdf.iloc[17, 1:16].values
-    CawU[1:icroptype+1] = crdf.iloc[18, 1:16].values
-    CADep[1:icroptype+1] = crdf.iloc[19, 1:16].values
+    CCropType[1:icroptype+1] = crdf.iloc[2, 1:].values
+    CBeginDate[1:icroptype+1] = crdf.iloc[5, 1:].values
+    CEndDate[1:icroptype+1] = crdf.iloc[6, 1:].values
+    Cf[1:icroptype+1] = crdf.iloc[7, 1:].values
+    Ckc1[1:icroptype+1] = crdf.iloc[8, 1:].values
+    Ckc2[1:icroptype+1] = crdf.iloc[9, 1:].values
+    Ckc3[1:icroptype+1] = crdf.iloc[10, 1:].values
+    CAB[1:icroptype+1] = crdf.iloc[11, 1:].values
+    CAC[1:icroptype+1] = crdf.iloc[12, 1:].values
+    CAD[1:icroptype+1] = crdf.iloc[13, 1:].values
+    CSDx[1:icroptype+1] = crdf.iloc[14, 1:].values
+    CRDxL[1:icroptype+1] = crdf.iloc[15, 1:].values
+    CRDxU[1:icroptype+1] = crdf.iloc[16, 1:].values
+    CawL[1:icroptype+1] = crdf.iloc[17, 1:].values
+    CawU[1:icroptype+1] = crdf.iloc[18, 1:].values
+    CADep[1:icroptype+1] = crdf.iloc[19, 1:].values
 
     # step4: read crop information for non-critical years
     # if streamlinemodel == "CALSIM3":
@@ -1981,22 +1990,22 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     #     source = os.path.join(
     #         filepath, 'Input', 'historical_study', 'noncritical.csv')
     # ncrdf = read_and_clean_crop_info(source)
-    NCCropType[1:icroptype+1] = ncrdf.iloc[2, 1:16].values
-    NCBeginDate[1:icroptype+1] = ncrdf.iloc[5, 1:16].values
-    NCEndDate[1:icroptype+1] = ncrdf.iloc[6, 1:16].values
-    NCf[1:icroptype+1] = ncrdf.iloc[7, 1:16].values
-    NCkc1[1:icroptype+1] = ncrdf.iloc[8, 1:16].values
-    NCkc2[1:icroptype+1] = ncrdf.iloc[9, 1:16].values
-    NCkc3[1:icroptype+1] = ncrdf.iloc[10, 1:16].values
-    NCAB[1:icroptype+1] = ncrdf.iloc[11, 1:16].values
-    NCAC[1:icroptype+1] = ncrdf.iloc[12, 1:16].values
-    NCAD[1:icroptype+1] = ncrdf.iloc[13, 1:16].values
-    NCSDx[1:icroptype+1] = ncrdf.iloc[14, 1:16].values
-    NCRDxL[1:icroptype+1] = ncrdf.iloc[15, 1:16].values
-    NCRDxU[1:icroptype+1] = ncrdf.iloc[16, 1:16].values
-    NCawL[1:icroptype+1] = ncrdf.iloc[17, 1:16].values
-    NCawU[1:icroptype+1] = ncrdf.iloc[18, 1:16].values
-    NCADep[1:icroptype+1] = ncrdf.iloc[19, 1:16].values
+    NCCropType[1:icroptype+1] = ncrdf.iloc[2, 1:].values
+    NCBeginDate[1:icroptype+1] = ncrdf.iloc[5, 1:].values
+    NCEndDate[1:icroptype+1] = ncrdf.iloc[6, 1:].values
+    NCf[1:icroptype+1] = ncrdf.iloc[7, 1:].values
+    NCkc1[1:icroptype+1] = ncrdf.iloc[8, 1:].values
+    NCkc2[1:icroptype+1] = ncrdf.iloc[9, 1:].values
+    NCkc3[1:icroptype+1] = ncrdf.iloc[10, 1:].values
+    NCAB[1:icroptype+1] = ncrdf.iloc[11, 1:].values
+    NCAC[1:icroptype+1] = ncrdf.iloc[12, 1:].values
+    NCAD[1:icroptype+1] = ncrdf.iloc[13, 1:].values
+    NCSDx[1:icroptype+1] = ncrdf.iloc[14, 1:].values
+    NCRDxL[1:icroptype+1] = ncrdf.iloc[15, 1:].values
+    NCRDxU[1:icroptype+1] = ncrdf.iloc[16, 1:].values
+    NCawL[1:icroptype+1] = ncrdf.iloc[17, 1:].values
+    NCawU[1:icroptype+1] = ncrdf.iloc[18, 1:].values
+    NCADep[1:icroptype+1] = ncrdf.iloc[19, 1:].values
 
     # step5: read land use from .\Landuse folder !!!!!!!Not checked 3/13/2009
     # get year type of each year
@@ -2745,10 +2754,10 @@ def read_et_correction_factors(fn):
     # read data from the csv file
     data = pd.read_csv(fn,index_col=False)
     column_names = sorted(data)
-    skip_cols =['SubArea','ETo Corection Factor','REGION','REGION.1']
+    skip_cols =['SubArea','ETo Correction Factor','REGION','REGION.1']
     perclocs = list((filter(lambda val: val not in skip_cols, column_names)))
     ts_per = data.loc[:,perclocs].T.to_numpy()
-    ETo_corrector = data.loc[:,'ETo Corection Factor'].T.to_numpy()
+    ETo_corrector = data.loc[:,'ETo Correction Factor'].T.to_numpy()
     Region = data.loc[:,'REGION'].T.to_numpy()
     return(ts_per,ETo_corrector,Region)
 
@@ -2873,6 +2882,7 @@ def detaw(fname_main_yaml: str) -> None:
                                    ilands, idates, isites, ts_year, ts_mon, ts_days, start1, filepath, NI, NII, NumDay, iyears,
                                    idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,
                                    yearType,HAcre,icroptype,crdf,ncrdf)
+
     if DEBUG_TIMING:
         print('historical etaw calculations took ',
               timeit.default_timer()-st, ' seconds')
