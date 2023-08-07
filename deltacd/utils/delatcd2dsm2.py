@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb  7 11:11:31 2023
 Postprocessing tools for deltacd
-@author: zzhang
 """
+from pathlib import Path
 import pandas as pd
 import xarray as xr
 import pyhecdss
@@ -27,9 +26,9 @@ def deltacd2dsm2(ncfn, dssfn, inpfn=None):
     None.
 
     """
-    deltacd = xr.open_dataset(ncfn)
+    deltacd = xr.open_dataset(str(ncfn))
 
-    dcd = pyhecdss.DSSFile(dssfn, create_new=True)
+    dcd = pyhecdss.DSSFile(str(dssfn), create_new=True)
     ptype = "PER-AVER"
     units = "CFS"
     A = "DELTACD-HIST+NODE"
@@ -208,10 +207,40 @@ def read_net_div(dcd_fn, nodes, start_time, end_time):
     return net_df
 
 
-if __name__ == "__main__":
-    ncfn = (  # deltacd output netcdf filename (input file)
-        r"D:\Workspace\src\deltacd\examples\Output\dcd_dsm2.nc"
+def create_argparser():
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Convert DeltaCD output to DSM2 DSS input files"
     )
-    dssfn = "dcd_dsm2_default.dss"  # dcd dss filename for dsm2 (output file)
-    inpfn = "deltacd_default.inp"  # dcd *.inp filename for dsm2 (output file)
-    deltacd2dsm2(ncfn, dssfn, inpfn)
+    parser.add_argument(
+        "--input",
+        dest="input",
+        type=Path,
+        required=True,
+        help="DeltaCD output netcdf filename (input file)",
+    )
+    parser.add_argument(
+        "--output_dss",
+        dest="output_dss",
+        type=Path,
+        required=True,
+        help="DSM2 DSS filename (output file)",
+    )
+    parser.add_argument(
+        "--output_inp",
+        dest="output_inp",
+        type=Path,
+        help="DCD *.inp filename for DSM2 (output file)",
+    )
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    args = create_argparser()
+    deltacd2dsm2(args.input, args.output_dss, args.output_inp)
+
+
+if __name__ == "__main__":
+    main()
