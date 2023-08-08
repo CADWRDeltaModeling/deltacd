@@ -21,7 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'dcd = deltacd.dcd:main',
-            'detaw = deltacd.detaw:main'
+            'detaw = deltacd.detaw:main',
+            'deltacd2dsm2 = deltacd.utils.deltacd2dsm2:main'
         ]
     },
     install_requires=requirements,
