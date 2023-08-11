@@ -97,8 +97,11 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
         "uplow == 'low' & docregion == 'High'")["area_id"]
     da_drnseep.loc[areas_selected.values] = 0.095 * \
         df_subareas.loc[areas_selected.index, "acreage"]
+    # FIXME Performing check so we only use for delta and not Suisun.
+    # This can be removed when lowland_no_seegage is not hardwired.
+    if n_areas > 15:
+        da_drnseep.loc[lowland_no_seepage] = 0.
 
-    da_drnseep.loc[lowland_no_seepage] = 0.
     return da_drnseep
 
 
