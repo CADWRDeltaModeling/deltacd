@@ -438,6 +438,8 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 # Spg=0.15/NumDaysPerMon[Mon+1]*erd
                 if j == 13 or j == 12:  # for native and riparian vegetation
                     Spg = 0.15/NumDaysPerMon[Mon+1]*erd  # 0.025 0.05 0.15
+                elif j == 16: # Duck pond
+                    Spg = 0.06 / NumDaysPerMon[Mon + 1] * erd
                 else:
                     Spg = 0.025/NumDaysPerMon[Mon+1]*erd  # 0.025 0.15
             if Region[k] == 1:
@@ -512,7 +514,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
             # print NA1[y],NA2[y],NA3[y],BeginDate1,BIYear[y],LIYear[y],EE
 
             # rice-water surface-Riparian
-            if j == 7 or j == 12 or j == 15:
+            if j == 7 or j == 12 or j == 15 or j == 16:
                 SWDx = osSWDx
             # off season
             if IKc1 == 0:
