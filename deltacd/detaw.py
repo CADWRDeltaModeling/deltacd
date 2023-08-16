@@ -2696,42 +2696,6 @@ def read_landuse(fn_landuse, iyears, water_years, n_areas):
     return (year_type, landuse_area_hectare, icroptype)
 
 
-def read_calendar(streamlinemodel, model_start_year,endyear,water_years, fn):
-
-    # # FIXME Avoid to use a current directory for jobs
-    # filepath = os.getcwd()
-
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    # else:
-    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
-
-    tyr = len(water_years)
-    f0 = open(fn)
-    daysofyear = zeros((366, 4, tyr), int)
-    isl = 0
-    idays = 0
-    iyr = 0
-    for line in f0:
-        if line:
-            if isl > 0:
-                ll = line.split()
-                if int(ll[0]) >= model_start_year and int(ll[0]) <= endyear:
-                    if int(ll[1]) == 10 and int(ll[2]) == 1:
-                        idays = 0
-                        iyr = int(ll[0])+1-water_years[0]
-                    if iyr < tyr:
-                        daysofyear[idays, 0, iyr] = int(ll[0])
-                        daysofyear[idays, 1, iyr] = int(ll[1])
-                        daysofyear[idays, 2, iyr] = int(ll[2])
-                        daysofyear[idays, 3, iyr] = int(ll[3])
-                    idays += 1
-            isl = isl + 1
-    f0.close()
-
-    return daysofyear
-
-
 def read_et_correction_factors(fn):
     """ Read et correction factors
 
@@ -2792,7 +2756,6 @@ def detaw(fname_main_yaml: str) -> None:
     fn_input_temperature = detaw_params['input_temperature']
     fn_landuse = detaw_params['landuse']
     fn_et_correction = detaw_params['et_correction']
-    fn_calendar = detaw_params['calendar']
     fn_detaw_output = detaw_params['detaw_output']
     fn_precip_output = detaw_params['precip_output']
     fn_et_output = detaw_params['et_output']
@@ -2865,8 +2828,6 @@ def detaw(fname_main_yaml: str) -> None:
     crdf = read_and_clean_crop_info(fn_critical)
 
     ncrdf = read_and_clean_crop_info(fn_noncritical)
-
-    daysofyear = read_calendar(streamlinemodel, model_start_year, endyear, water_years, fn_calendar)
 
     if DEBUG_TIMING:
         st = timeit.default_timer()
