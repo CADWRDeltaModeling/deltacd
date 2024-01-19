@@ -37,7 +37,7 @@ detaw:
   # Other model parameters
   # FIXME Need more documentations here for parameters.
   start_water_year: 1922
-  end_water_year: 2023
+  end_water_year: 2024
   input_pcp: 'inputs/mm_pcp_suisun.csv'
   input_temperature: 'inputs/Suisun_PT.csv'
   landuse : 'inputs/landuse_suisun_schism.csv'
