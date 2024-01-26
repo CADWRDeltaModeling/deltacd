@@ -46,9 +46,9 @@ detaw:
   noncritical: 'inputs/noncritical.csv'
   calendar: 'inputs/calendar.txt'
   # Model Output control
-  detaw_output: 'Output/detawoutput_schism.nc'
-  precip_output: 'Output/precip_schism.nc'
-  et_output: 'Output/ET0.nc'
+  detaw_output: 'output/detawoutput_schism.nc'
+  precip_output: 'output/precip_schism.nc'
+  et_output: 'output/ET0.nc'
   daily_output: 1
   monthly_output: 1
   yearly_output: 0
