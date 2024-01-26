@@ -26,6 +26,7 @@ import os
 import argparse
 import logging
 import yaml
+import json
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -236,13 +237,30 @@ def calculate_model_depletion(ds_dcd, model_params):
     logging.info("Calculate monthly depletions...")
     # Assuming 25% of the surface runoff goes to the deep percolation
     # See Annual Report 2017, Chapter 3.
-    dp_factor = model_params.get("deep_percolation_rate")
-    da_percolation = ds_dcd.runoff * dp_factor
-    da_percolation.attrs = ds_dcd.runoff.attrs
-    da_percolation.attrs["name"] = "DP_island"
-    da_percolation.attrs["part_c"] = "DP-FLOW"
+    # NOTE Comment out the unused part below.
+    # dp_factor = model_params.get("deep_percolation_rate")
+    # da_percolation = ds_dcd.runoff * dp_factor
+    # da_percolation.attrs = ds_dcd.runoff.attrs
+    # da_percolation.attrs["name"] = "DP_island"
+    # da_percolation.attrs["part_c"] = "DP-FLOW"
 
     ds_dcd_nodes = island_to_nodes(ds_dcd, model_params)
+    ds_dcd_nodes = set_dcd_node_global_attributes(ds_dcd_nodes, model_params)
+    return ds_dcd_nodes
+
+
+def set_dcd_node_global_attributes(ds_dcd_nodes, model_params):
+    """Set global attributes for the DCD node dataset
+
+    Parameters
+    ----------
+    dc_dcd_nodes: xarray.Dataset
+        dataset containing DCD node data
+    """
+    title = "DeltaCD outputs"
+    dcd_inputs = json.dumps(model_params)
+    ds_dcd_nodes = ds_dcd_nodes.assign_attrs(title=title,
+                                             dcd_inputs=dcd_inputs)
     return ds_dcd_nodes
 
 
@@ -297,7 +315,6 @@ def island_to_nodes(ds_dcd, model_params):
         -------
         xarray.Dataset
     """
-    # FIXME Some dead code can be removed.
     logging.info("Distribute depletion to nodes...")
     # Read the updated DCD
 
@@ -315,21 +332,27 @@ def island_to_nodes(ds_dcd, model_params):
 
     # Diversion
     da_div_nodes = ds_dcd.diversion.dot(ds_dist_rates.divrate)
+    da_div_nodes = da_div_nodes.assign_attrs(unit="cfs",
+                                             description="diversion flow at nodes")
 
     # Seepage
     da_spg_nodes = ds_dcd.seepage.dot(ds_dist_rates.divrate)
+    da_spg_nodes = da_spg_nodes.assign_attrs(unit="cfs",
+                                             description="seepage flow at nodes")
 
     # Drainage
     da_drn_nodes = ds_dcd.drainage.dot(ds_dist_rates.drnrate) + \
         ds_dcd.runoff.dot(ds_dist_rates.drnrate)
+    da_drn_nodes = da_drn_nodes.assign_attrs(unit="cfs",
+                                             description="drainage flow at nodes")
 
     # Create a xarray.Dataset.
     # NOTE We may come up with better names. For now, use the old name for
     # convenience.
     # FIXME Add attributes.
-    ds_dcd_nodes = da_div_nodes.to_dataset(name="DIV-FLOW")
-    ds_dcd_nodes["SEEP-FLOW"] = da_spg_nodes
-    ds_dcd_nodes["DRAIN-FLOW"] = da_drn_nodes
+    ds_dcd_nodes = da_div_nodes.to_dataset(name="diversion")
+    ds_dcd_nodes["seepage"] = da_spg_nodes
+    ds_dcd_nodes["drainage"] = da_drn_nodes
 
     return ds_dcd_nodes
 
