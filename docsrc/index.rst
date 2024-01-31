@@ -1,17 +1,22 @@
 .. DeltaCD documentation master file
 
 ===================================
-Welcome to DeltaCD's documentation!
+DeltaCD Documentation
 ===================================
+
+Welcome to DeltaCD documentation.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   readme_link
+   installation
+   usage
+   input_files
    changelog_link
 
-Indices and tables
+==================
+Code Indices
 ==================
 
 * :ref:`genindex`
