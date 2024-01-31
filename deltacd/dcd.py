@@ -566,13 +566,14 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
     return ds_dcd
 
 
-def main() -> None:
-    """ DCD v2 main function
-    """
-    parser = create_argparser()
-    args = parser.parse_args()
-    fname_main_yaml = args.input_yaml
+def dcd(fname_main_yaml: str) -> None:
+    """Run DCD with an input yaml file
 
+    Parameters
+    ----------
+    fname_main_yaml: str
+        path to the main yaml input file
+    """
     # Read the main yaml input file
     logging.info(f"Reading the main YAML input: {fname_main_yaml}")
     with open(fname_main_yaml, 'r') as file_in:
@@ -598,6 +599,16 @@ def main() -> None:
     ds_dcd_nodes.to_netcdf(path_dcd_nodes)
 
     logging.info("Finished. Exiting.")
+
+
+def main() -> None:
+    """ DCD v2 main function
+    """
+    parser = create_argparser()
+    args = parser.parse_args()
+    fname_main_yaml = args.input_yaml
+
+    dcd(fname_main_yaml)
 
 
 if __name__ == "__main__":
