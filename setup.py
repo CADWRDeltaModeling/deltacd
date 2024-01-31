@@ -10,6 +10,7 @@ requirements = [ "pandas",
 
 setup(
     name='deltacd',
+    python_requires='<3.12',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Channel Depletions Model",
