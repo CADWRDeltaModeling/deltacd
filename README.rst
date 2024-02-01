@@ -51,4 +51,4 @@ Getting Help
 
 Any questions and issues? We would like to help and improve the package.
 
-For any questions, please contact DeltaCD developers. Please report bugs and issues at `GitHub issues <https://github.com/CADWRDeltaModeling/deltacd/issues>`.
+For any questions, please contact DeltaCD developers. Please report bugs and issues at `GitHub issues <https://github.com/CADWRDeltaModeling/deltacd/issues>`_.
