@@ -8,18 +8,21 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
       - name: Install dependencies
         run: |
           pip install sphinx numpydoc versioneer
+
+          pip install --no-build-isolation --no-deps -e .
       - name: Sphinx build
         run: |
-          pip install --no-deps -e .
           sphinx-apidoc -o docsrc deltacd
           sphinx-build docsrc docs
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3.9.2
+        uses: peaceiris/actions-gh-pages@v3
         # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         with:
           publish_branch: gh-pages
