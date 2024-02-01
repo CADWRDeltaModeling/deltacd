@@ -15,8 +15,6 @@ jobs:
       - name: Install dependencies
         run: |
           pip install sphinx numpydoc versioneer
-
-          pip install --no-build-isolation --no-deps -e .
       - name: Sphinx build
         run: |
           sphinx-apidoc -o docsrc deltacd
