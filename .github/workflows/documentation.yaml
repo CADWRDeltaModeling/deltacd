@@ -14,7 +14,7 @@ jobs:
           python-version: 3.11
       - name: Install dependencies
         run: |
-          pip install sphinx numpydoc versioneer
+          pip install sphinx numpydoc versioneer pandas xarray pyyaml numba
       - name: Sphinx build
         run: |
           sphinx-apidoc -o docsrc deltacd
