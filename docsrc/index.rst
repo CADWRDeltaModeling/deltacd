@@ -12,7 +12,7 @@ Welcome to DeltaCD documentation.
 
    installation
    usage
-   input_files
+   detaw
    changelog_link
 
 ==================
