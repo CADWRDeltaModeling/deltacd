@@ -13,6 +13,8 @@ Welcome to DeltaCD documentation.
    installation
    usage
    detaw
+   dcd
+   postprocessing
    changelog_link
 
 ==================

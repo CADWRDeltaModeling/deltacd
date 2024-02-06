@@ -7,9 +7,17 @@ DeltaCD consists of two parts: `DETAW` and `DCD`. `DETAW` calculates the amount 
 DETAW
 -----
 
-To run DETAW, navigate into a directory with input files, and launch the model in a command line interface as the following.
+To run DETAW, navigate into a directory with input files, and launch the model in a command line interface similar to the following with your input file. This assumes that DeltaCD is installed to your Python environment and readily available in your command line interface.
 
 ..  code-block:: bash
 
     detaw detaw_dsm2.yaml
 
+DCD
+---
+
+To run DCD, navigate into a directory with input files, and launch the model in a command line interface similar to the following with your input file. This assumes that DeltaCD is installed to your Python environment and readily available in your command line interface.
+
+..  code-block:: bash
+
+    dcd dcd_dsm2.yaml
