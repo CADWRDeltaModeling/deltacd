@@ -110,7 +110,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the detaw_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: json
+..  code-block:: csv
     :caption: detaw
 
     netcdf detawoutput_dsm2 {

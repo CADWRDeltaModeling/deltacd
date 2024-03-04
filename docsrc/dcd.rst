@@ -6,9 +6,6 @@ Delta Channel Depletion (DCD) is an extension of DETAW to estimate daily channel
 
 This version of DCD is based on the previous version of DCD from DETAW-DCD, but it is totally rewritten in Python. The algorithms in and the calibration of the previous version DCD are described in an annual report chapter, `Calibrating and Validating Delta Channel Depletion Estimates <https://data.cnra.ca.gov/dataset/dcd/resource/24890484-11a6-4ada-a61a-3d1f7fdd948e>`_, and they are the same in the current version. The changes in the current DCD in DeltaCD are described in Chapter 3, Updating DETAW-DCD to DeltaCD, of `our 2023 annual report <https://data.cnra.ca.gov/dataset/methodology-for-flow-and-salinity-estimates-in-the-sacramento-san-joaquin-delta-and-suisun-marsh/resource/dcabdb20-e638-4cf5-b199-78e78f0d482f>`_.
 
-Input files
------------
-
 Main input file
 ~~~~~~~~~~~~~~~
 
@@ -57,6 +54,9 @@ The main input file starts with a `dcd` key. The `dcd` key contains the followin
 * is_adding_waterbody_evaporation: a flag to add evaporation from open water bodies.
 * path_dcd_output: DCD output file in the NetCDF format.
 * path_dcd_node_output: DCD nodes output file  in the NetCDF format.
+
+Input files
+-----------
 
 Output files
 ------------
