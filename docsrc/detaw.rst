@@ -57,7 +57,7 @@ Input files
 -----------
 Below are sample input file formats.
 
-- *Input precipitation sample format*
+- *input_pcp*: Input precipitation sample format
 
   CSV file containing station precipitation in mm.
 
@@ -72,7 +72,7 @@ Below are sample input file formats.
       2024,9,29,273,0.0,0.5,0.0,0.0,0.0,0.0,0.0
       2024,9,30,274,0.0,0.0,0.0,0.0,0.0,0.0,0.0
 
-- *Input temperature sample format*
+- *input_temperature*: Input temperature sample format
 
   CSV file containing station temperature in deg C.
 
@@ -87,7 +87,7 @@ Below are sample input file formats.
       9/29/2024,2024,9,273,0,20.9,6.5
       9/30/2024,2024,9,274,0,23.6,4
 
-- *Landuse sample format*
+- *landuse*: Landuse sample format
 
   CSV file containing landuse for each area_id for different years.
 
@@ -106,14 +106,14 @@ Below are sample input file formats.
 Output files
 ------------
 
-- *DETAW output format*
+- *detaw_output*: DETAW output format
 
   After successful detaw model run a netCDF file containing output is created whereever the detaw_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: csv
-    :caption: detaw
+..  code-block:: txt
+    :caption: detaw_output
 
-    netcdf detawoutput_dsm2 {
+    detawoutput_dsm2 {
       dimensions:
         area_id = 174 ;
         crop = 15 ;
@@ -144,12 +144,12 @@ Output files
                 e_r:units = "Acre-feet" ;
       }
 
-- *Precipitation output format*
+- *precip_output*: Precipitation output format
 
   After successful detaw model run a netCDF file containing output is created whereever the precip_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: json
-    :caption: precip
+..  code-block:: txt
+    :caption: precip_output
 
     netcdf precip_dsm2 {
       dimensions:
@@ -165,12 +165,12 @@ Output files
                 precip:units = "mm" ;
       }
 
-- *ET output format*
+- *et_output*: ET output format
 
   After successful detaw model run a netCDF file containing output is created whereever the et_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: json
-    :caption: ET0
+..  code-block:: txt
+    :caption: et_output
 
     netcdf ET0 {
       dimensions:
