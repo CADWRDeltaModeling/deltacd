@@ -258,8 +258,11 @@ def set_dcd_node_global_attributes(ds_dcd_nodes, model_params):
         dataset containing DCD node data
     """
     title = "DeltaCD outputs"
+    leach_factor = model_params.get("leach_scale")
+    water_surface_evaporation = model_params.get("is_adding_waterbody_evaporation")
     dcd_inputs = json.dumps(model_params)
-    ds_dcd_nodes = ds_dcd_nodes.assign_attrs(title=title,
+    ds_dcd_nodes = ds_dcd_nodes.assign_attrs(title=title,leach_factor=leach_factor,
+                                                water_surface_evaporation=str(water_surface_evaporation),
                                              dcd_inputs=dcd_inputs)
     return ds_dcd_nodes
 
