@@ -24,10 +24,6 @@ Once a new environment is created, activate it:
 
 ``conda activate deltacd``
 
-Install versioneer first:
-
-``pip install versioneer``
-
 Install DeltaCD with ``-e``, editable option:
 
 ``pip install -e .``
