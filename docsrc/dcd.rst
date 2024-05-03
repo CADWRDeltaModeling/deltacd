@@ -140,4 +140,36 @@ Below are sample input file formats. The input files can are in CSV or NetCDF fo
 Output files
 ------------
 
-Coming soon.
+The output files are in NetCDF format. Here is a sample output file header which shows the output variables and attributes. The attributes show the input parameters used in the model.
+
+..  code-block:: NetCDF
+    :caption: path_dcd_output
+
+      netcdf dcd_schism {
+      dimensions:
+        time = 37621 ;
+        node = 257 ;
+      variables:
+        int64 time(time) ;
+                time:units = "days since 1921-10-01" ;
+                time:calendar = "proleptic_gregorian" ;
+        string node(node) ;
+        double diversion(time, node) ;
+                diversion:_FillValue = NaN ;
+                diversion:unit = "cfs" ;
+                diversion:description = "diversion flow at nodes" ;
+        double seepage(time, node) ;
+                seepage:_FillValue = NaN ;
+                seepage:unit = "cfs" ;
+                seepage:description = "seepage flow at nodes" ;
+        double drainage(time, node) ;
+                drainage:_FillValue = NaN ;
+                drainage:unit = "cfs" ;
+                drainage:description = "drainage flow at nodes" ;
+
+      // global attributes:
+                :title = "DeltaCD outputs" ;
+                :leach_factor = 1. ;
+                :water_surface_evaporation = "False" ;
+                :dcd_inputs = "{\"path_subarea_info\": \"inputs/subarea_info_dsm2.csv\", \"path_irrigation_efficiency\": \"inputs/irrigation_efficiencies_dsm2.csv\", \"path_leach_applied\": \"inputs/leach_applied_dsm2.csv\", \"path_leach_drained\": \"inputs/leach_drained_dsm2.csv\", \"path_detaw_output\": \"output/detawoutput_schism.nc\", \"path_groundwater_rates\": \"inputs/gwrates_dsm2.csv\", \"path_dsm2_diversion_rates\": \"inputs/diversion_factors_dsm2.csv\", \"path_dsm2_drainage_rates\": \"inputs/drainage_factors_dsm2.csv\", \"path_dcd_output\": \"output/dcd_areas_schism.nc\", \"path_dcd_node_output\": \"output/dcd_schism.nc\", \"start_water_year\": 1922, \"end_water_year\": 2024, \"leach_scale\": 1.0, \"runoff_rate\": 0.75, \"deep_percolation_rate\": 0.25, \"is_adding_waterbody_evaporation\": false}" ;
+                              }
