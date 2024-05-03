@@ -14,4 +14,4 @@ where `INPUT` is the path to the NetCDF file and `OUTPUT` is the path to the dss
 
 .. code:: bash
 
-    $   deltacd2dsm2 --input .\dcd_dsm2.nc --output_dss dcd_dsm2.dss
+    $   deltacd2dsm2 --input dcd_dsm2.nc --output_dss dcd_dsm2.dss
