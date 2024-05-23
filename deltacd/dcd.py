@@ -481,15 +481,16 @@ def calculate_depletion(model_params: dict) -> xr.Dataset:
 
     # Pre-processing the leach water data
     # FIXME Factor these out
+    months_wateryear = [str((i + 9) % 12 + 1) for i in range(12)]
     df_lwa = pd.DataFrame(np.tile(df_lwa.set_index(
-        'area_id').values.transpose(), (n_years, 1)), index=months)
+        'area_id')[months_wateryear].to_numpy().transpose(), (n_years, 1)), index=months)
     df_lwa = df_lwa.resample('1D').ffill()
     da_lwa = xr.DataArray(data=df_lwa.values, dims=["time", "area_id"],
                          coords=dict(time=dates, area_id=areas))
     da_lwa /= da_days_in_month
 
     df_lwd = pd.DataFrame(np.tile(df_lwd.set_index(
-        'area_id').values.transpose(), (n_years, 1)), index=months)
+        'area_id')[months_wateryear].to_numpy().transpose(), (n_years, 1)), index=months)
     df_lwd = df_lwd.resample('1D').ffill()
     da_lwd = xr.DataArray(data=df_lwd.values, dims=["time", "area_id"],
                          coords=dict(time=dates, area_id=areas))
