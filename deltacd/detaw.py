@@ -2718,14 +2718,12 @@ def read_et_correction_factors(fn):
     #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
 
     # read data from the csv file
-    data = pd.read_csv(fn,index_col=False)
-    column_names = sorted(data)
-    skip_cols =['SubArea','ETo Correction Factor','REGION','REGION.1']
-    perclocs = list((filter(lambda val: val not in skip_cols, column_names)))
-    ts_per = data.loc[:,perclocs].T.to_numpy()
-    ETo_corrector = data.loc[:,'ETo Correction Factor'].T.to_numpy()
-    Region = data.loc[:,'REGION'].T.to_numpy()
-    return(ts_per,ETo_corrector,Region)
+    data = pd.read_csv(fn, index_col=False)
+    cols_to_read = ["Davis", "Stockton", "Lodi", "Tracy_Carbona" ,"Rio Vista" ,"Brentwood", "Galt"]
+    ts_per = data.loc[:, cols_to_read].T.to_numpy()
+    ETo_corrector = data.loc[:, 'ETo Correction Factor'].T.to_numpy()
+    Region = data.loc[:, 'REGION'].T.to_numpy()
+    return (ts_per, ETo_corrector, Region)
 
 
 def detaw(fname_main_yaml: str) -> None:
