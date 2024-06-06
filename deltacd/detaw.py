@@ -24,6 +24,7 @@
 #
 
 import sys
+from pathlib import Path
 
 if not sys.warnoptions:
     import warnings
@@ -2726,6 +2727,28 @@ def read_et_correction_factors(fn):
     return (ts_per, ETo_corrector, Region)
 
 
+def convert_to_absolute_path(filename, dir_input_base):
+    """Check if a file name is in an absolute path and convert it into one
+    by adding the base directory of the main input
+
+    Parameters
+    ----------
+    filename: str
+        the file name to be checked
+    dir_input_base: str
+        The base directory name to add
+
+    Returns
+    -------
+    pathlib.Path
+        An absolute path
+    """
+    path = Path(filename)
+    if not path.is_absolute():
+        path = dir_input_base / Path(path)
+    return str(path)
+
+
 def detaw(fname_main_yaml: str) -> None:
     """ Run DETAW and DCD with a YAML file
 
@@ -2737,6 +2760,7 @@ def detaw(fname_main_yaml: str) -> None:
     logging.info(f"Reading the main YAML input: {fname_main_yaml}")
     with open(fname_main_yaml, 'r') as file_in:
         model_params = yaml.safe_load(file_in)
+    dir_input_base = Path(fname_main_yaml).resolve().parent
 
     # FIXME For now, passing the yaml information to the current model
     #       parameters. They can be passed as a dict directly.
@@ -2750,15 +2774,15 @@ def detaw(fname_main_yaml: str) -> None:
     forDSM2_daily = detaw_params["for_dsm2_only"]
     start_water_year = detaw_params["start_water_year"]
     end_water_year = detaw_params['end_water_year']
-    fn_input_pcp = detaw_params['input_pcp']
-    fn_input_temperature = detaw_params['input_temperature']
-    fn_landuse = detaw_params['landuse']
-    fn_et_correction = detaw_params['et_correction']
-    fn_detaw_output = detaw_params['detaw_output']
-    fn_precip_output = detaw_params['precip_output']
-    fn_et_output = detaw_params['et_output']
-    fn_critical = detaw_params['critical']
-    fn_noncritical = detaw_params['noncritical']
+    fn_input_pcp = convert_to_absolute_path(detaw_params['input_pcp'], dir_input_base)
+    fn_input_temperature = convert_to_absolute_path(detaw_params['input_temperature'], dir_input_base)
+    fn_landuse = convert_to_absolute_path(detaw_params['landuse'], dir_input_base)
+    fn_et_correction = convert_to_absolute_path(detaw_params['et_correction'], dir_input_base)
+    fn_detaw_output = convert_to_absolute_path(detaw_params['detaw_output'], dir_input_base)
+    fn_precip_output = convert_to_absolute_path(detaw_params['precip_output'], dir_input_base)
+    fn_et_output = convert_to_absolute_path(detaw_params['et_output'], dir_input_base)
+    fn_critical = convert_to_absolute_path(detaw_params['critical'], dir_input_base)
+    fn_noncritical = convert_to_absolute_path(detaw_params['noncritical'], dir_input_base)
 
     # FIXME Avoid to use a current directory for jobs
     filepath = os.getcwd()

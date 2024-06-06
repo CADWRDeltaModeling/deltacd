@@ -30,6 +30,7 @@ import json
 import numpy as np
 import pandas as pd
 import xarray as xr
+from . import detaw
 
 # Set up a logger
 logging.basicConfig(level=logging.INFO)
@@ -261,8 +262,9 @@ def set_dcd_node_global_attributes(ds_dcd_nodes, model_params):
     leach_factor = model_params.get("leach_scale")
     water_surface_evaporation = model_params.get("is_adding_waterbody_evaporation")
     dcd_inputs = json.dumps(model_params)
-    ds_dcd_nodes = ds_dcd_nodes.assign_attrs(title=title,leach_factor=leach_factor,
-                                                water_surface_evaporation=str(water_surface_evaporation),
+    ds_dcd_nodes = ds_dcd_nodes.assign_attrs(title=title, leach_factor=leach_factor,
+                                                water_surface_evaporation=str(
+                                                    water_surface_evaporation),
                                              dcd_inputs=dcd_inputs)
     return ds_dcd_nodes
 
@@ -582,8 +584,16 @@ def dcd(fname_main_yaml: str) -> None:
     logging.info(f"Reading the main YAML input: {fname_main_yaml}")
     with open(fname_main_yaml, 'r') as file_in:
         model_params = yaml.safe_load(file_in)
+    dir_input_base = Path(fname_main_yaml).resolve().parent
 
     params = model_params.get("dcd")
+    params.update([("path_subarea_info", detaw.convert_to_absolute_path(params.get("path_subarea_info"), dir_input_base))])
+    params.update([("path_irrigation_efficiency", detaw.convert_to_absolute_path(params.get("path_irrigation_efficiency"), dir_input_base))])
+    params.update([("path_groundwater_rates", detaw.convert_to_absolute_path(params.get("path_groundwater_rates"), dir_input_base))])
+    params.update([("path_leach_drained", detaw.convert_to_absolute_path(params.get("path_leach_drained"), dir_input_base))])
+    params.update([("path_leach_applied", detaw.convert_to_absolute_path(params.get("path_leach_applied"), dir_input_base))])
+    params.update([("path_detaw_output", detaw.convert_to_absolute_path(params.get("path_detaw_output"), dir_input_base))])
+    params.update([("path_dcd_output", detaw.convert_to_absolute_path(params.get("path_dcd_output"), dir_input_base))])
     ds_dcd = calculate_depletion(params)
 
     logging.info("Write the depletion to a file...")
