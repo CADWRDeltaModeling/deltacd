@@ -521,7 +521,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
                 )
                 list_da.append(da_split)
             da_new = xr.concat(list_da, dim="area_id").assign_coords(
-                area_id=df_split_table["area_id"]
+                area_id=df_split_table["area_id"].to_numpy()
             )
             da_merged = xr.concat([da, da_new], dim="area_id")
             list_merged.append(da_merged)
