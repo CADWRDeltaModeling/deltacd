@@ -431,7 +431,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
         Mon = 0
         for ii in range(1, dpy+1):
             # initialize cumulative variable for the first day
-            if (year_i == n_years) and ((year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274)):
+            if (year_i == n_years) and ((dpy == 365 and ii > 273) or (dpy == 366 and ii > 274)):
                 break
             if (year_i == 1 and ii == 274) or (year_i == 1 and ii == 1):
                 SWD = 0
@@ -563,7 +563,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                 if (SWD+Dsw) >= SWD0:
                     Diff = SWD0-SWD
                 if (SWD+Dsw) < SWD0:
-                    if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    if (dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                         osCETc[year_i] = osCETc[year_i]+ETcDaily[year_i, ii] * \
                             HAcre[k, year_i, crop_i]*0.0081071
                     else:
@@ -571,14 +571,14 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                             HAcre[k, year_i-1, crop_i]*0.0081071
                     osMCETc[Mon] = osMCETc[Mon]+ETcDaily[year_i, ii]
                 else:
-                    if((year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274)):
+                    if((dpy == 365 and ii > 273) or (dpy == 366 and ii > 274)):
                         osCETc[year_i] = osCETc[year_i]+Diff*HAcre[k, year_i, crop_i]*0.0081071
                     else:
                         osCETc[year_i-1] = osCETc[year_i-1]+Diff * \
                             HAcre[k, year_i-1, crop_i]*0.0081071
                     osMCETc[Mon] = osMCETc[Mon]+Diff
             else:
-                if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                if (dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                     isCETc[year_i] = isCETc[year_i]+ETcDaily[year_i, ii] * \
                         HAcre[k, year_i, crop_i]*0.0081071
                 else:
@@ -588,7 +588,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
 
             # ISCERn and OsCERn are in and off-season cum effect rainfall
             if IKc1 == 0:
-                if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                if (dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                     osCERn[year_i] = osCERn[year_i]+ERn*HAcre[k, year_i, crop_i]*0.0081071
                     osCSpg[year_i] = osCSpg[year_i]+Spg*HAcre[k, year_i, crop_i]*0.0081071
                 else:
@@ -597,7 +597,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                 osMCERn[Mon] = osMCERn[Mon]+ERn
                 osMCSpg[Mon] = osMCSpg[Mon]+Spg
             else:
-                if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                if (dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                     isCERn[year_i] = isCERn[year_i]+ERn*HAcre[k, year_i, crop_i]*0.0081071
                     isPCP[year_i] = isPCP[year_i]+PCP*HAcre[k, year_i, crop_i]*0.0081071
                     isETaw[year_i] = isETaw[year_i]+NetApp*HAcre[k, year_i, crop_i]*0.0081071
@@ -624,7 +624,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
             # YTDD is for YTD in column
             YTDD = FC-SWDx
             # calculate yeartypeCal for oct to oct year
-            if (year_i % 4 != 0 and ii >= 274) or (year_i % 4 == 0 and ii >= 275):
+            if (dpy == 365 and ii >= 274) or (dpy == 366 and ii >= 275):
                 yearTypeCal = yearType[year_i]
             else:
                 yearTypeCal = yearType[year_i-1]
@@ -634,7 +634,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
             CESpg = CESpg+Espg
             # for water surface we use espg* hacre each crop
             if crop_i != 15:
-                if(year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                if(dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                     WSCESpg[year_i, ii] = WSCESpg[year_i, ii] + \
                         CESpg*HAcre[k, year_i, crop_i]*0.0081071
                     WSEspgMonthly[year_i, Mon] = WSEspgMonthly[year_i,
@@ -663,11 +663,11 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
             MonDswPos[Mon] = MonDsw[Mon]
             if MonDsw[Mon] < 0:
                 MonDswPos[Mon] = 0
-            if(year_i != 1 and year_i != n_years) or (year_i == 1 and ii > 273) or (year_i == n_years and ii < 274 and year_i % 4 != 0) or (year_i == n_years and ii < 275 and year_i % 4 == 0):
+            if(year_i != 1 and year_i != n_years) or (year_i == 1 and ii > 273) or (year_i == n_years and ii < 274 and dpy == 365) or (year_i == n_years and ii < 275 and dpy == 366):
                 if crop_i != 15:
                     if crop_i == 14:
                         NetApp = 0
-                    if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    if (dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                         HAcre_temp = HAcre[k, year_i, crop_i]*2.471
                     else:
                         HAcre_temp = HAcre[k, year_i-1, crop_i]*2.471
@@ -676,7 +676,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                     Spg = 0
                     Espg = 0
                     NetApp = 0
-                    if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    if (dpy == 365 and ii > 273) or (dpy == 366 and ii > 274):
                         HAcre_temp = HAcre[k, year_i, crop_i]*2.471
                     else:
                         HAcre_temp = HAcre[k, year_i-1, crop_i]*2.471
@@ -775,11 +775,11 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                         # do the calculation on the sept 30 of each year  and print
                         yy = yDaily[iq]
 
-                        dpy = 365
-                        if yy % 4 == 0:
-                            dpy = 366
+                        # dpy = 365
+                        # if yy % 4 == 0:
+                        #     dpy = 366
 
-                        if (yy % 4 != 0 and iq == 365) or (yy % 4 == 0 and iq == 366):
+                        if (dpy == 365 and iq == 365) or (dpy == 366 and iq == 366):
                             MonthlySWC = SumDelSWC/12.0
                             # convert etwawdaily to mon day
                             etMon = 10
@@ -894,7 +894,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                                           dpy] = (CETAWDaily*temp_vector)
                                 date_index = date_index+dpy
                                 SumDelSWC = 0
-                if (year_i % 4 != 0 and ii == 273) or (year_i % 4 == 0 and ii == 274):
+                if (dpy == 365 and ii == 273) or (dpy == 366 and ii == 274):
                     NetApp = 0
                     CPcp = 0
                     CERn = 0
@@ -902,7 +902,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                     DCETc = 0
                     CDsw = 0
 
-                if ii == dpy or (year_i == n_years and ii == 273 and year_i % 4 != 0) or (year_i == n_years and ii == 274 and year_i % 4 == 0):
+                if ii == dpy or (year_i == n_years and ii == 273 and dpy == 365) or (year_i == n_years and ii == 274 and dpy == 366):
                     for Mon in range(0, 12):
                         if(year_i != 1 and year_i != n_years) or (year_i == 1 and Mon >= 9) or (year_i == n_years and Mon < 9):
 
