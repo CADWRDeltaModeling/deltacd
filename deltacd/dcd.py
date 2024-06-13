@@ -653,6 +653,11 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     da_runoff *= taf2cfs
     ds_dcd["runoff"] = da_runoff
 
+    # Calculate deep percolation
+    factor_deep_percolation = model_params.get("deep_percolation_rate")
+    ds_deep_percolation = da_runoff * factor_deep_percolation
+    ds_dcd["deep_percolation"] = ds_deep_percolation
+
     da_diversion *= taf2cfs
     ds_dcd["diversion"] = da_diversion
 
