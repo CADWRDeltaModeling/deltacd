@@ -134,7 +134,10 @@ def calculate_groundwater_rates(df_gw_rates, dates):
     da_gwrates = xr.DataArray(
         data=df_gw_rates_daily.values,
         dims=["time", "area_id"],
-        coords=dict(time=df_gw_rates_daily.index, area_id=df_gw_rates_daily.columns),
+        coords=dict(
+            time=df_gw_rates_daily.index.to_timestamp(),
+            area_id=df_gw_rates_daily.columns,
+        ),
     )
     return da_gwrates.sel(time=dates)
 
@@ -293,10 +296,16 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
     df_ratios = pd.read_csv(path_file, dtype={"area_id": str})
     if df_split_table is not None:
         df_ratios = add_split_area_data(df_ratios, df_split_table)
-    # Rename target nodes if they are different
-    df_split_table_second = df_split_table.query("subregion_id not in @df_ratios.node")
-    df_ratios_to_rename = df_ratios.query("area_id in @df_split_table_second.area_id")
-    df_ratios.loc[df_ratios_to_rename.index, "node"] = df_split_table_second["subregion_id"].to_numpy()
+        # Rename target nodes if they are different
+        df_split_table_second = df_split_table.query(
+            "subregion_id not in @df_ratios.node"
+        )
+        df_ratios_to_rename = df_ratios.query(
+            "area_id in @df_split_table_second.area_id"
+        )
+        df_ratios.loc[df_ratios_to_rename.index, "node"] = df_split_table_second[
+            "subregion_id"
+        ].to_numpy()
 
     # Get the list of unique islands
     # NOTE Need to make sure that this sorted indices work.
@@ -397,7 +406,9 @@ def read_groundwater_rates(fpath: str) -> pd.DataFrame:
     pandas.DataFrame
         groundwater rates
     """
+    # The first column is the year.
     df_gw_rates = pd.read_csv(fpath, header=0, index_col=0, parse_dates=[0])
+    df_gw_rates.index = df_gw_rates.index.to_period("Y")
     return df_gw_rates
 
 
@@ -497,7 +508,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # df_split_table_first = df_split_table.query("area_id_from in @df_subareas.area_id")
     # df_split_table_second = df_split_table.query("area_id_from in @df_split_table.area_id_to")
 
-    da_detaw_original = ds_detaw.copy(deep=True)
+    ds_detaw_original = ds_detaw.copy(deep=True)
     if df_split_table is not None:
         df_landuse_split_ratios = input_data.get("landuse_split_ratios")
         col_ratios = df_landuse_split_ratios.columns[
@@ -517,7 +528,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
                     coords=dict(crop=crops[:n_crops]),
                 )
                 da_split = (
-                    da_detaw_original[varname].sel(area_id=area_id_from) * da_ratios
+                    ds_detaw_original[varname].sel(area_id=area_id_from) * da_ratios
                 )
                 list_da.append(da_split)
             da_new = xr.concat(list_da, dim="area_id").assign_coords(
@@ -526,6 +537,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
             da_merged = xr.concat([da, da_new], dim="area_id")
             list_merged.append(da_merged)
         ds_detaw_split = xr.merge(list_merged)
+    else:
+        ds_detaw_split = ds_detaw_original
 
     # Aggregating by areas
     # Need to omit the water surface components
