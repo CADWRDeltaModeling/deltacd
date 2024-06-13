@@ -278,7 +278,16 @@ def weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, Tmax, Tmin, ilands, idates, i
 
 
 @numba.jit(nopython=True, cache=True)
-def calc_soil_evap(k, Beta1, idates, idays, ts_year, ts_days, start1, dpyAll, ET0, pcp, PcpDaily, EToDaily, OKc):
+def calc_soil_evap(k, Beta1, idates, ts_year, ts_days, start1, dpyAll, ET0, pcp, PcpDaily, EToDaily, OKc):
+    """Calculate soil evaporation
+
+    Side effects: modifies dpyAll, EToDaily, PcpDaily, OKc
+
+    Parameters
+    ----------
+    dpyAll : numpy.ndarray
+    """
+
     PETo = 0.0
     CETo = 0.0
     METo = 0.0
@@ -286,22 +295,22 @@ def calc_soil_evap(k, Beta1, idates, idays, ts_year, ts_days, start1, dpyAll, ET
     CEs = 0.0
     DCT = 1
     dpyAll[0] = 365
-    for kk in range(0, idates):
-        iy = ts_year[kk] - start1[0] + 1
-        id = ts_days[kk]
+    for day_i in range(0, idates):
+        iy = ts_year[day_i] - start1[0] + 1
+        id = ts_days[day_i]
 
-        if (ET0[k, kk]*100-int(ET0[k, kk]*100)) > 0.5:
-            EToDaily[iy, id] = int(ET0[k, kk]*100+1)/100.
+        if (ET0[k, day_i]*100-int(ET0[k, day_i]*100)) > 0.5:
+            EToDaily[iy, id] = int(ET0[k, day_i]*100+1)/100.
         else:
-            EToDaily[iy, id] = int(ET0[k, kk]*100)/100.
+            EToDaily[iy, id] = int(ET0[k, day_i]*100)/100.
 
-        if (pcp[k, kk]*100-int(pcp[k, kk]*100)) > 0.5:
-            PcpDaily[iy, id] = int(pcp[k, kk]*100+1)/100.
+        if (pcp[k, day_i]*100-int(pcp[k, day_i]*100)) > 0.5:
+            PcpDaily[iy, id] = int(pcp[k, day_i]*100+1)/100.
         else:
-            PcpDaily[iy, id] = int(pcp[k, kk]*100)/100.
+            PcpDaily[iy, id] = int(pcp[k, day_i]*100)/100.
 
         dpy = 365
-        if ts_year[kk] % 4 == 0:
+        if ts_year[day_i] % 4 == 0:
             dpy = 366
         dpyAll[iy] = dpy
 
@@ -314,7 +323,6 @@ def calc_soil_evap(k, Beta1, idates, idays, ts_year, ts_days, start1, dpyAll, ET
         if PcpDaily[iy, id] > METo:
             CETo = EToDaily[iy, id]
             DCT = 1
-            PEs = 0
         METo = CETo/DCT
         kx = 1.22 - 0.04*METo
         CEx = kx*CETo
@@ -327,11 +335,10 @@ def calc_soil_evap(k, Beta1, idates, idays, ts_year, ts_days, start1, dpyAll, ET
         if EToDaily[iy, id] != 0:
             OKc[iy, id] = CEs/CETo
         PETo = EToDaily[iy, id]
-        PEs = CEs
 
 
 @numba.jit(nopython=True, cache=True)
-def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate,
+def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate,
                    NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1,
                    EToMonthly, ETcMonthly, PcpMonthly, ERnMonthly, SpgMonthly, EspgMonthly, MonNetApp, MonDsw, MonDswPos,
                    dpyAll, NumDaysPerMon, erd, Region, k, SWD, OKc, IKc, Kc, EToDaily, PcpDaily, ETcDaily,
@@ -349,33 +356,34 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                    data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year):
 
     nmonth = 0  # pointer for datamon* arrays
-    for y in range(1, iyears+1):
-        if j == 6 or j == 14:
-            yearTypeCal = yearType[y]
+    for year_i in range(1, n_years+1):
+        year = 1
+        if crop_i == 6 or crop_i == 14:
+            yearTypeCal = yearType[year_i]
         else:
-            yearTypeCal = yearType[y-1]
+            yearTypeCal = yearType[year_i-1]
 
         if yearTypeCal.upper() == "C" or yearTypeCal.upper() == "D":
-            BeginDate1 = CBeginDate[j]
-            EndDate1 = CEndDate[j]
-            kkc1 = Ckc1[j]
-            kkc2 = Ckc2[j]
-            kkc3 = Ckc3[j]
-            AB1 = CAB[j]
-            AC1 = CAC[j]
-            AD1 = CAD[j]
+            BeginDate1 = CBeginDate[crop_i]
+            EndDate1 = CEndDate[crop_i]
+            kkc1 = Ckc1[crop_i]
+            kkc2 = Ckc2[crop_i]
+            kkc3 = Ckc3[crop_i]
+            AB1 = CAB[crop_i]
+            AC1 = CAC[crop_i]
+            AD1 = CAD[crop_i]
             # end of critical years
         else:
-            BeginDate1 = NCBeginDate[j]
-            EndDate1 = NCEndDate[j]
-            kkc1 = NCkc1[j]
-            kkc2 = NCkc2[j]
-            kkc3 = NCkc3[j]
-            AB1 = NCAB[j]
-            AC1 = NCAC[j]
-            AD1 = NCAD[j]
+            BeginDate1 = NCBeginDate[crop_i]
+            EndDate1 = NCEndDate[crop_i]
+            kkc1 = NCkc1[crop_i]
+            kkc2 = NCkc2[crop_i]
+            kkc3 = NCkc3[crop_i]
+            AB1 = NCAB[crop_i]
+            AC1 = NCAC[crop_i]
+            AD1 = NCAD[crop_i]
             # end of noncritical years
-        if j == 7:
+        if crop_i == 7:
             RiceIrrigEndDate = EndDate1-20
         # Initial Kc values for dates B,C,D,E
         KcB = kkc1
@@ -418,14 +426,14 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
             MonNetApp[Mon] = 0
             MonDsw[Mon] = 0
             MonDswPos[Mon] = 0
-        dpy = dpyAll[y]
+        dpy = dpyAll[year_i]
         FinalIrrig = 0.0
         Mon = 0
         for ii in range(1, dpy+1):
             # initialize cumulative variable for the first day
-            if (y == iyears) and ((y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274)):
+            if (year_i == n_years) and ((year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274)):
                 break
-            if (y == 1 and ii == 274) or (y == 1 and ii == 1):
+            if (year_i == 1 and ii == 274) or (year_i == 1 and ii == 1):
                 SWD = 0
                 PSWD = 0
                 NetApp = 0
@@ -437,56 +445,56 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 DCETc = 0
             if Mon < 12:
                 # Spg=0.15/NumDaysPerMon[Mon+1]*erd
-                if j == 13 or j == 12:  # for native and riparian vegetation
+                if crop_i == 13 or crop_i == 12:  # for native and riparian vegetation
                     Spg = 0.15/NumDaysPerMon[Mon+1]*erd  # 0.025 0.05 0.15
-                elif j == 16: # Duck pond
+                elif crop_i == 16: # Duck pond
                     Spg = 0.06 / NumDaysPerMon[Mon + 1] * erd
                 else:
                     Spg = 0.025/NumDaysPerMon[Mon+1]*erd  # 0.025 0.15
             if Region[k] == 1:
                 Spg = 0.0
             PSWD = SWD
-            OKc1 = OKc[y, ii]
-            IKc1 = IKc[y, ii]
-            Kc11 = Kc[y, ii]
-            ETo = EToDaily[y, ii]
-            PCP = PcpDaily[y, ii]
+            OKc1 = OKc[year_i, ii]
+            IKc1 = IKc[year_i, ii]
+            Kc11 = Kc[year_i, ii]
+            ETo = EToDaily[year_i, ii]
+            PCP = PcpDaily[year_i, ii]
             # This will reduce the value for Spg when the seepage is greater than the Dsw
 
-            if (SWD+ETcDaily[y, ii]-Spg) >= 0:
+            if (SWD+ETcDaily[year_i, ii]-Spg) >= 0:
                 Espg = Spg
             else:
-                Espg = SWD+ETcDaily[y, ii]
+                Espg = SWD+ETcDaily[year_i, ii]
                 if Region[k] == 1:
                     Espg = 0
             # adjust for the rice
-            if j == 7 and IKc1 != 0:
+            if crop_i == 7 and IKc1 != 0:
                 Espg = 0
             # water surface and RV
             # water surface is now cropNum 15
             # if((j==12 or j==15)) Espg=ETcDaily[y,i]
-            if j == 12:
-                Espg = ETcDaily[y, ii]
+            if crop_i == 12:
+                Espg = ETcDaily[year_i, ii]
                 if Region[k] == 1:
                     Espg = 0
-            if j == 15:
+            if crop_i == 15:
                 Espg = 0
 
             # if y == 33  and ii>250 and j==1:
             # print y,ii,SWD,ETcDaily[y,ii],Espg,PCP
 
-            if (SWD+ETcDaily[y, ii]-Espg-PCP) >= 0:
+            if (SWD+ETcDaily[year_i, ii]-Espg-PCP) >= 0:
                 ERn = PCP
             else:
-                ERn = SWD + ETcDaily[y, ii]-Espg
+                ERn = SWD + ETcDaily[year_i, ii]-Espg
 
             # rice
-            if j == 7 and IKc1 != 0:
+            if crop_i == 7 and IKc1 != 0:
                 ERn = 0
             # if((j==12 or j==15)) ERn=0
-            if j == 12:
+            if crop_i == 12:
                 ERn = 0
-            if j == 15:
+            if crop_i == 15:
                 ERn = PCP
             # This calculates the Dsw adjusted for Espg and ERn
             # only for water surface dsw=+espg
@@ -494,28 +502,28 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
             # if (y == 34 or y ==35) and ii<120 and j==1:
             # print y,ii,ETcDaily[y,ii], ERn, Espg, ETcDaily[y,ii]-ERn+Espg
 
-            if j != 15:
-                Dsw = ETcDaily[y, ii]-ERn-Espg
+            if crop_i != 15:
+                Dsw = ETcDaily[year_i, ii]-ERn-Espg
             else:  # for water surface
-                Dsw = ETcDaily[y, ii]-ERn+Espg
+                Dsw = ETcDaily[year_i, ii]-ERn+Espg
             # Dswp=Dsw
 
             if ii >= BeginDate1:
-                SWDx = NA1[y]
+                SWDx = NA1[year_i]
 
-            if ii >= BIYear[y]:
-                SWDx = NA2[y]
-            if ii >= LIYear[y]:
-                SWDx = NA3[y]
+            if ii >= BIYear[year_i]:
+                SWDx = NA2[year_i]
+            if ii >= LIYear[year_i]:
+                SWDx = NA3[year_i]
             if ii == EE:
-                SWDx = NA3[y]
-            if EE < BeginDate1 and ii < BIYear[y]:
-                SWDx = NA2[y]
+                SWDx = NA3[year_i]
+            if EE < BeginDate1 and ii < BIYear[year_i]:
+                SWDx = NA2[year_i]
             # if j== 1 and k == 0 and (y==1 or y==2):
             # print NA1[y],NA2[y],NA3[y],BeginDate1,BIYear[y],LIYear[y],EE
 
             # rice-water surface-Riparian
-            if j == 7 or j == 12 or j == 15 or j == 16:
+            if crop_i == 7 or crop_i == 12 or crop_i == 15 or crop_i == 16:
                 SWDx = osSWDx
             # off season
             if IKc1 == 0:
@@ -526,12 +534,12 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 else:
                     NetApp = 0
                 # rice - every day we have irrigation except the last 20 days
-                if j == 7:
+                if crop_i == 7:
                     NetApp = SWD+Dsw
                     if ii > RiceIrrigEndDate:
                         NetApp = 0
                 # ***********add for Native Vegetation, not in the DETAW-UCD***************
-                if j == 13:
+                if crop_i == 13:
                     NetApp = 0
                 # *************************************************************
             # end of in-season
@@ -541,7 +549,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
             if SWD < 0:
                 SWD = 0
 
-            if dpyAll[y] == 366:
+            if dpyAll[year_i] == 366:
                 if ii > NII[Mon]:
                     Mon = Mon + 1
             else:
@@ -555,51 +563,51 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 if (SWD+Dsw) >= SWD0:
                     Diff = SWD0-SWD
                 if (SWD+Dsw) < SWD0:
-                    if (y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                        osCETc[y] = osCETc[y]+ETcDaily[y, ii] * \
-                            HAcre[k, y, j]*0.0081071
+                    if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                        osCETc[year_i] = osCETc[year_i]+ETcDaily[year_i, ii] * \
+                            HAcre[k, year_i, crop_i]*0.0081071
                     else:
-                        osCETc[y-1] = osCETc[y-1]+ETcDaily[y, ii] * \
-                            HAcre[k, y-1, j]*0.0081071
-                    osMCETc[Mon] = osMCETc[Mon]+ETcDaily[y, ii]
+                        osCETc[year_i-1] = osCETc[year_i-1]+ETcDaily[year_i, ii] * \
+                            HAcre[k, year_i-1, crop_i]*0.0081071
+                    osMCETc[Mon] = osMCETc[Mon]+ETcDaily[year_i, ii]
                 else:
-                    if((y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274)):
-                        osCETc[y] = osCETc[y]+Diff*HAcre[k, y, j]*0.0081071
+                    if((year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274)):
+                        osCETc[year_i] = osCETc[year_i]+Diff*HAcre[k, year_i, crop_i]*0.0081071
                     else:
-                        osCETc[y-1] = osCETc[y-1]+Diff * \
-                            HAcre[k, y-1, j]*0.0081071
+                        osCETc[year_i-1] = osCETc[year_i-1]+Diff * \
+                            HAcre[k, year_i-1, crop_i]*0.0081071
                     osMCETc[Mon] = osMCETc[Mon]+Diff
             else:
-                if (y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                    isCETc[y] = isCETc[y]+ETcDaily[y, ii] * \
-                        HAcre[k, y, j]*0.0081071
+                if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    isCETc[year_i] = isCETc[year_i]+ETcDaily[year_i, ii] * \
+                        HAcre[k, year_i, crop_i]*0.0081071
                 else:
-                    isCETc[y-1] = isCETc[y-1]+ETcDaily[y, ii] * \
-                        HAcre[k, y-1, j]*0.0081071
-                isMCETc[Mon] = isMCETc[Mon]+ETcDaily[y, ii]
+                    isCETc[year_i-1] = isCETc[year_i-1]+ETcDaily[year_i, ii] * \
+                        HAcre[k, year_i-1, crop_i]*0.0081071
+                isMCETc[Mon] = isMCETc[Mon]+ETcDaily[year_i, ii]
 
             # ISCERn and OsCERn are in and off-season cum effect rainfall
             if IKc1 == 0:
-                if (y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                    osCERn[y] = osCERn[y]+ERn*HAcre[k, y, j]*0.0081071
-                    osCSpg[y] = osCSpg[y]+Spg*HAcre[k, y, j]*0.0081071
+                if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    osCERn[year_i] = osCERn[year_i]+ERn*HAcre[k, year_i, crop_i]*0.0081071
+                    osCSpg[year_i] = osCSpg[year_i]+Spg*HAcre[k, year_i, crop_i]*0.0081071
                 else:
-                    osCERn[y-1] = osCERn[y-1]+ERn*HAcre[k, y-1, j]*0.0081071
-                    osCSpg[y-1] = osCSpg[y-1]+Spg*HAcre[k, y-1, j]*0.0081071
+                    osCERn[year_i-1] = osCERn[year_i-1]+ERn*HAcre[k, year_i-1, crop_i]*0.0081071
+                    osCSpg[year_i-1] = osCSpg[year_i-1]+Spg*HAcre[k, year_i-1, crop_i]*0.0081071
                 osMCERn[Mon] = osMCERn[Mon]+ERn
                 osMCSpg[Mon] = osMCSpg[Mon]+Spg
             else:
-                if (y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                    isCERn[y] = isCERn[y]+ERn*HAcre[k, y, j]*0.0081071
-                    isPCP[y] = isPCP[y]+PCP*HAcre[k, y, j]*0.0081071
-                    isETaw[y] = isETaw[y]+NetApp*HAcre[k, y, j]*0.0081071
+                if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    isCERn[year_i] = isCERn[year_i]+ERn*HAcre[k, year_i, crop_i]*0.0081071
+                    isPCP[year_i] = isPCP[year_i]+PCP*HAcre[k, year_i, crop_i]*0.0081071
+                    isETaw[year_i] = isETaw[year_i]+NetApp*HAcre[k, year_i, crop_i]*0.0081071
 
-                    isCSpg[y] = isCSpg[y]+Spg*HAcre[k, y, j]*0.0081071
+                    isCSpg[year_i] = isCSpg[year_i]+Spg*HAcre[k, year_i, crop_i]*0.0081071
                 else:
-                    isCERn[y-1] = isCERn[y-1]+ERn*HAcre[k, y-1, j]*0.0081071
-                    isPCP[y-1] = isPCP[y-1]+PCP*HAcre[k, y-1, j]*0.0081071
-                    isETaw[y-1] = isETaw[y-1]+NetApp*HAcre[k, y-1, j]*0.0081071
-                    isCSpg[y-1] = isCSpg[y-1]+Spg*HAcre[k, y-1, j]*0.0081071
+                    isCERn[year_i-1] = isCERn[year_i-1]+ERn*HAcre[k, year_i-1, crop_i]*0.0081071
+                    isPCP[year_i-1] = isPCP[year_i-1]+PCP*HAcre[k, year_i-1, crop_i]*0.0081071
+                    isETaw[year_i-1] = isETaw[year_i-1]+NetApp*HAcre[k, year_i-1, crop_i]*0.0081071
+                    isCSpg[year_i-1] = isCSpg[year_i-1]+Spg*HAcre[k, year_i-1, crop_i]*0.0081071
                 isMCERn[Mon] = isMCERn[Mon]+ERn
                 isMCSpg[Mon] = isMCSpg[Mon]+Spg
                 # end of Pcp
@@ -616,79 +624,79 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
             # YTDD is for YTD in column
             YTDD = FC-SWDx
             # calculate yeartypeCal for oct to oct year
-            if (y % 4 != 0 and ii >= 274) or (y % 4 == 0 and ii >= 275):
-                yearTypeCal = yearType[y]
+            if (year_i % 4 != 0 and ii >= 274) or (year_i % 4 == 0 and ii >= 275):
+                yearTypeCal = yearType[year_i]
             else:
-                yearTypeCal = yearType[y-1]
+                yearTypeCal = yearType[year_i-1]
             # for first year only print ftom oct 1(day274)
             CPcp = CPcp+PCP
             CERn = CERn+ERn
             CESpg = CESpg+Espg
             # for water surface we use espg* hacre each crop
-            if j != 15:
-                if(y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                    WSCESpg[y, ii] = WSCESpg[y, ii] + \
-                        CESpg*HAcre[k, y, j]*0.0081071
-                    WSEspgMonthly[y, Mon] = WSEspgMonthly[y,
-                                                          Mon]+Espg*HAcre[k, y, j]*0.0081071
+            if crop_i != 15:
+                if(year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                    WSCESpg[year_i, ii] = WSCESpg[year_i, ii] + \
+                        CESpg*HAcre[k, year_i, crop_i]*0.0081071
+                    WSEspgMonthly[year_i, Mon] = WSEspgMonthly[year_i,
+                                                          Mon]+Espg*HAcre[k, year_i, crop_i]*0.0081071
                 else:
-                    WSCESpg[y, ii] = WSCESpg[y, ii] + \
-                        CESpg*HAcre[k, y-1, j]*0.0081071
-                    WSEspgMonthly[y, Mon] = WSEspgMonthly[y,
-                                                          Mon]+Espg*HAcre[k, y-1, j]*0.0081071
+                    WSCESpg[year_i, ii] = WSCESpg[year_i, ii] + \
+                        CESpg*HAcre[k, year_i-1, crop_i]*0.0081071
+                    WSEspgMonthly[year_i, Mon] = WSEspgMonthly[year_i,
+                                                          Mon]+Espg*HAcre[k, year_i-1, crop_i]*0.0081071
                 # before oct 1
             # end of if crop is not water surface
-            DCETo = DCETo + EToDaily[y, ii]
-            DCETc = DCETc+ETcDaily[y, ii]
+            DCETo = DCETo + EToDaily[year_i, ii]
+            DCETc = DCETc+ETcDaily[year_i, ii]
             CDsw = CDsw+Dsw
 
-            EToMonthly[Mon] = EToMonthly[Mon]+EToDaily[y, ii]
-            ETcMonthly[Mon] = ETcMonthly[Mon] + ETcDaily[y, ii]
+            EToMonthly[Mon] = EToMonthly[Mon]+EToDaily[year_i, ii]
+            ETcMonthly[Mon] = ETcMonthly[Mon] + ETcDaily[year_i, ii]
             ERnMonthly[Mon] = ERnMonthly[Mon]+ERn
             SpgMonthly[Mon] = SpgMonthly[Mon]+Spg
             EspgMonthly[Mon] = EspgMonthly[Mon]+Espg
 
-            PcpMonthly[Mon] = PcpMonthly[Mon]+PcpDaily[y, ii]
+            PcpMonthly[Mon] = PcpMonthly[Mon]+PcpDaily[year_i, ii]
             MonNetApp[Mon] = MonNetApp[Mon]+NetApp
             MonDsw[Mon] = ETcMonthly[Mon] - (ERnMonthly[Mon]+EspgMonthly[Mon])
             # if(MonACETAW[Mon]<0) MonACETAW[Mon]=0
             MonDswPos[Mon] = MonDsw[Mon]
             if MonDsw[Mon] < 0:
                 MonDswPos[Mon] = 0
-            if(y != 1 and y != iyears) or (y == 1 and ii > 273) or (y == iyears and ii < 274 and y % 4 != 0) or (y == iyears and ii < 275 and y % 4 == 0):
-                if j != 15:
-                    if j == 14:
+            if(year_i != 1 and year_i != n_years) or (year_i == 1 and ii > 273) or (year_i == n_years and ii < 274 and year_i % 4 != 0) or (year_i == n_years and ii < 275 and year_i % 4 == 0):
+                if crop_i != 15:
+                    if crop_i == 14:
                         NetApp = 0
-                    if (y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                        HAcre_temp = HAcre[k, y, j]*2.471
+                    if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                        HAcre_temp = HAcre[k, year_i, crop_i]*2.471
                     else:
-                        HAcre_temp = HAcre[k, y-1, j]*2.471
+                        HAcre_temp = HAcre[k, year_i-1, crop_i]*2.471
                     # crop is not water surface
                 else:
                     Spg = 0
                     Espg = 0
                     NetApp = 0
-                    if (y % 4 != 0 and ii > 273) or (y % 4 == 0 and ii > 274):
-                        HAcre_temp = HAcre[k, y, j]*2.471
+                    if (year_i % 4 != 0 and ii > 273) or (year_i % 4 == 0 and ii > 274):
+                        HAcre_temp = HAcre[k, year_i, crop_i]*2.471
                     else:
-                        HAcre_temp = HAcre[k, y-1, j]*2.471
+                        HAcre_temp = HAcre[k, year_i-1, crop_i]*2.471
                 # crop is water surface
-                if y == 1 and ii == 274:
+                if year_i == 1 and ii == 274:
                     ik = 1
 
-                ytemp[ik] = y + model_start_year - 1
+                ytemp[ik] = year_i + model_start_year - 1
                 DOYtemp[ik] = ii
                 if DOYtemp[ik] == 1:
                     IrrigYear = IrrigYear + 1
 
                 HAcretemp[ik] = HAcre_temp
-                OKctemp[ik] = OKc[y, ii]
-                IKctemp[ik] = IKc[y, ii]
+                OKctemp[ik] = OKc[year_i, ii]
+                IKctemp[ik] = IKc[year_i, ii]
                 CCKctemp[ik] = CCKc[ii]
-                ETotemp[ik] = EToDaily[y, ii]
-                Kctemp[ik] = Kc[y, ii]
-                ETctemp[ik] = ETcDaily[y, ii]
-                Pcptemp[ik] = PcpDaily[y, ii]
+                ETotemp[ik] = EToDaily[year_i, ii]
+                Kctemp[ik] = Kc[year_i, ii]
+                ETctemp[ik] = ETcDaily[year_i, ii]
+                Pcptemp[ik] = PcpDaily[year_i, ii]
 
                 Ertemp[ik] = ERn
                 Spgtemp[ik] = Spg
@@ -704,7 +712,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
 
                 if NAtemp[ik] > 0.000001:
                     DOYLIrrig[IrrigYear] = DOYtemp[ik]
-                    if j == 6:
+                    if crop_i == 6:
                         if DOYtemp[ik] < 152:
                             DOYGrainLIrrig[IrrigYear] = DOYtemp[ik]
                 CPcptemp[ik] = CPcp
@@ -716,7 +724,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 if ik > dpy:
                     ik = 1
 
-                if y > 1 and ik == 1:
+                if year_i > 1 and ik == 1:
                     ic = slice(1, dpy+1)
                     HAcreDaily[ic] = HAcretemp[ic]
                     yDaily[ic] = ytemp[ic]
@@ -748,7 +756,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                 ########Combine OLDHSA and HSA together#################################################
 
                 # if y > 1 and ik==1:
-                if (y > 1 and ii == dpy) or (y == iyears and ik == 1):
+                if (year_i > 1 and ii == dpy) or (year_i == n_years and ik == 1):
                     for iq in range(1, dpy+1):  # add 04/29/09
                         # initialize cumulative for start of water year
 
@@ -795,7 +803,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                             CETAWDaily = 0
                             Mon = 10
                             CETAWDaily = calc_etaw_daily(
-                                dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year)
+                                dpy, Mon, yy, DOY, NII, NI, crop_i, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year)
                             # split loop
                             temp_vector = HAcreDaily[1:dpy+1]*0.00328084
                             if idayoutput == 1:
@@ -886,7 +894,7 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                                           dpy] = (CETAWDaily*temp_vector)
                                 date_index = date_index+dpy
                                 SumDelSWC = 0
-                if (y % 4 != 0 and ii == 273) or (y % 4 == 0 and ii == 274):
+                if (year_i % 4 != 0 and ii == 273) or (year_i % 4 == 0 and ii == 274):
                     NetApp = 0
                     CPcp = 0
                     CERn = 0
@@ -894,26 +902,26 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                     DCETc = 0
                     CDsw = 0
 
-                if ii == dpy or (y == iyears and ii == 273 and y % 4 != 0) or (y == iyears and ii == 274 and y % 4 == 0):
+                if ii == dpy or (year_i == n_years and ii == 273 and year_i % 4 != 0) or (year_i == n_years and ii == 274 and year_i % 4 == 0):
                     for Mon in range(0, 12):
-                        if(y != 1 and y != iyears) or (y == 1 and Mon >= 9) or (y == iyears and Mon < 9):
+                        if(year_i != 1 and year_i != n_years) or (year_i == 1 and Mon >= 9) or (year_i == n_years and Mon < 9):
 
-                            if j != 15:
+                            if crop_i != 15:
                                 # NetApp = 0 for non-irrig Grain
-                                if j == 14:
+                                if crop_i == 14:
                                     MonNetApp[Mon] = 0
                                 if Mon >= 9:
-                                    temp_scalar = HAcre[k, y, j]*0.0081071
+                                    temp_scalar = HAcre[k, year_i, crop_i]*0.0081071
                                 else:
-                                    temp_scalar = HAcre[k, y-1, j]*0.0081071
+                                    temp_scalar = HAcre[k, year_i-1, crop_i]*0.0081071
                             else:
                                 MonNetApp[Mon] = 0
                                 SpgMonthly[Mon] = 0
                                 EspgMonthly[Mon] = 0
                                 if Mon >= 9:
-                                    temp_scalar = HAcre[k, y, j]*0.0081071
+                                    temp_scalar = HAcre[k, year_i, crop_i]*0.0081071
                                 else:
-                                    temp_scalar = HAcre[k, y-1, j]*0.0081071
+                                    temp_scalar = HAcre[k, year_i-1, crop_i]*0.0081071
                             if imonthoutput == 1:
                                 nmonth = nmonth+1
                                 datamon[nmonth] = (ETcMonthly[Mon])
@@ -933,11 +941,11 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                                     PcpMonthly[Mon]*temp_scalar)
                                 data14mon[nmonth] = (
                                     ERnMonthly[Mon]*temp_scalar)
-                                if j != 15:
+                                if crop_i != 15:
                                     data15mon[nmonth] = (
                                         EspgMonthly[Mon]*temp_scalar)
                                 else:
-                                    data15mon[nmonth] = (WSEspgMonthly[y, Mon])
+                                    data15mon[nmonth] = (WSEspgMonthly[year_i, Mon])
                                 data16mon[nmonth] = (
                                     ETcMonthly[Mon]*temp_scalar)
                                 data17mon[nmonth] = (MonDsw[Mon]*temp_scalar)
@@ -948,15 +956,15 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                                 data21mon[nmonth] = (
                                     EToMonthly[Mon]*temp_scalar)
 
-                            if y > 1:
+                            if year_i > 1:
                                 if Mon == 0:
                                     for imtemp in range(10, 13):
                                         data10mon[nmonth] = (
-                                            MonETAW[y-1, imtemp])
+                                            MonETAW[year_i-1, imtemp])
                                         data19mon[nmonth] = (
-                                            MonETAW[y-1, imtemp]*temp_scalar)
+                                            MonETAW[year_i-1, imtemp]*temp_scalar)
                                         # 5/1/09 revised
-                                        MonETAWPos = MonETAW[y-1, imtemp]
+                                        MonETAWPos = MonETAW[year_i-1, imtemp]
                                         if MonETAWPos < 0:
                                             MonETAWPos = 0
                                         if imonthoutput == 1:
@@ -965,16 +973,16 @@ def main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
                                                 MonETAWPos*temp_scalar)
                                 if Mon < 9:
                                     # 5/1/09 revised
-                                    MonETAWPos = MonETAW[y, Mon+1]
+                                    MonETAWPos = MonETAW[year_i, Mon+1]
                                     if MonETAWPos < 0:
                                         MonETAWPos = 0
                                     if imonthoutput == 1:
-                                        if j == 15 and k == 0 and MonETAW[y, Mon+1] > 0.0:
-                                            print(y, Mon+1, " MonETAW=",
-                                                  MonETAW[y, Mon+1])
-                                        data10mon[nmonth] = (MonETAW[y, Mon+1])
+                                        if crop_i == 15 and k == 0 and MonETAW[year_i, Mon+1] > 0.0:
+                                            print(year_i, Mon+1, " MonETAW=",
+                                                  MonETAW[year_i, Mon+1])
+                                        data10mon[nmonth] = (MonETAW[year_i, Mon+1])
                                         data19mon[nmonth] = (
-                                            MonETAW[y, Mon+1]*temp_scalar)
+                                            MonETAW[year_i, Mon+1]*temp_scalar)
                                         data11mon[nmonth] = (MonETAWPos)
                                         data20mon[nmonth] = (
                                             MonETAWPos*temp_scalar)
@@ -1661,8 +1669,8 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
 # _______________________________________________________________________________
 
 
-def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, idates, isites, ts_year, ts_mon,
-                   ts_days, start1, filepath, NI, NII, NumDaysPerMon, iyears, idayoutput, imonthoutput,
+def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
+                   ts_days, start1, filepath, NI, NII, NumDaysPerMon, n_years, idayoutput, imonthoutput,
                    iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,yearType,HAcre,icroptype,crdf,ncrdf):
     InpHSACrop = "  "
     SACropDaily = "  "
@@ -1690,21 +1698,21 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     start2 = [model_start_year,10,1,23,0]
     startdate = str(start2[2])+monthname[start2[1]-1]+str(start2[0])
     starttime = str(start2[3])+"00"
-    dpyAll = zeros((iyears+2), int)
+    dpyAll = zeros((n_years+2), int)
     Beta1 = 2.6
-    IKc = zeros((iyears+2, idays+1), float)
-    Kc = zeros((iyears+2, idays+1), float)
+    IKc = zeros((n_years+2, idays+1), float)
+    Kc = zeros((n_years+2, idays+1), float)
 
-    OKc = zeros((iyears+2, idays+1), float)
-    EToDaily = zeros((iyears+2, idays+1), float)
-    PcpDaily = zeros((iyears+2, idays+1), float)
-    _OKc = zeros((iyears+2, idays+1), float)
-    _EToDaily = zeros((iyears+2, idays+1), float)
-    _PcpDaily = zeros((iyears+2, idays+1), float)
+    OKc = zeros((n_years+2, idays+1), float)
+    EToDaily = zeros((n_years+2, idays+1), float)
+    PcpDaily = zeros((n_years+2, idays+1), float)
+    _OKc = zeros((n_years+2, idays+1), float)
+    _EToDaily = zeros((n_years+2, idays+1), float)
+    _PcpDaily = zeros((n_years+2, idays+1), float)
 
-    ETcDaily = zeros((iyears+2, idays+1), float)
-    Date1Daily = "  "*(iyears+2)*(idays+1)
-    WSCESpg = zeros((iyears+2, idays+1), float)
+    ETcDaily = zeros((n_years+2, idays+1), float)
+    Date1Daily = "  "*(n_years+2)*(idays+1)
+    WSCESpg = zeros((n_years+2, idays+1), float)
 
     # HAcre = zeros((ilands+1, iyears+2, icroptype+1), float)
     Kc1 = zeros((icroptype+1), float)
@@ -1754,37 +1762,37 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     NCawU = zeros((icroptype+1), float)
     NCADep = zeros((icroptype+1), float)
 
-    BeginDateYear = zeros((iyears+2), int)
+    BeginDateYear = zeros((n_years+2), int)
 
-    osIkc = zeros((iyears+2), float)
-    isIkc = zeros((iyears+2), float)
-    IGETo = zeros((iyears+2), float)
-    osFkc = zeros((iyears+2), float)
+    osIkc = zeros((n_years+2), float)
+    isIkc = zeros((n_years+2), float)
+    IGETo = zeros((n_years+2), float)
+    osFkc = zeros((n_years+2), float)
 
-    KcByr = zeros((iyears+2), float)
-    KcCyr = zeros((iyears+2), float)
-    KcDyr = zeros((iyears+2), float)
-    KcEyr = zeros((iyears+2), float)
+    KcByr = zeros((n_years+2), float)
+    KcCyr = zeros((n_years+2), float)
+    KcDyr = zeros((n_years+2), float)
+    KcEyr = zeros((n_years+2), float)
 
     CCKc = zeros((idays+1), float)
-    LIYear = zeros((iyears+2), int)
-    BIYear = zeros((iyears+2), int)
-    NA1 = zeros((iyears+2), float)
-    NA2 = zeros((iyears+2), float)
-    NA3 = zeros((iyears+2), float)
-    isCETc = zeros((iyears+2), float)
-    osCETc = zeros((iyears+2), float)
-    isCERn = zeros((iyears+2), float)
-    osCERn = zeros((iyears+2), float)
-    isPCP = zeros((iyears+2), float)
-    isETaw = zeros((iyears+2), float)
+    LIYear = zeros((n_years+2), int)
+    BIYear = zeros((n_years+2), int)
+    NA1 = zeros((n_years+2), float)
+    NA2 = zeros((n_years+2), float)
+    NA3 = zeros((n_years+2), float)
+    isCETc = zeros((n_years+2), float)
+    osCETc = zeros((n_years+2), float)
+    isCERn = zeros((n_years+2), float)
+    osCERn = zeros((n_years+2), float)
+    isPCP = zeros((n_years+2), float)
+    isETaw = zeros((n_years+2), float)
 
     isMCETc = zeros((imonths+1), float)
     osMCETc = zeros((imonths+1), float)
     isMCERn = zeros((imonths+1), float)
     osMCERn = zeros((imonths+1), float)
-    isCSpg = zeros((iyears+2), float)
-    osCSpg = zeros((iyears+2), float)
+    isCSpg = zeros((n_years+2), float)
+    osCSpg = zeros((n_years+2), float)
     isMCSpg = zeros((imonths+1), float)
     osMCSpg = zeros((imonths+1), float)
     EToMonthly = zeros((imonths+1), float)
@@ -1793,7 +1801,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     ERnMonthly = zeros((imonths+1), float)
     SpgMonthly = zeros((imonths+1), float)
     EspgMonthly = zeros((imonths+1), float)
-    WSEspgMonthly = zeros((iyears+2, imonths+1), float)
+    WSEspgMonthly = zeros((n_years+2, imonths+1), float)
     MonDsw = zeros((imonths+1), float)
     MonDswPos = zeros((imonths+1), float)
     MonNetApp = zeros((imonths+1), float)
@@ -1875,10 +1883,10 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     ERnMonthly = zeros((imonths+1), float)
     SpgMonthly = zeros((imonths+1), float)
     EspgMonthly = zeros((imonths+1), float)
-    MonETAW = zeros((iyears+2, imonths+1), float)
+    MonETAW = zeros((n_years+2, imonths+1), float)
     ETAWMonDay = zeros((imonths+1, 32), float)
-    DOYLIrrig = zeros((iyears+2), float)
-    DOYGrainLIrrig = zeros((iyears+2), float)
+    DOYLIrrig = zeros((n_years+2), float)
+    DOYGrainLIrrig = zeros((n_years+2), float)
     DOYLIrrig[0] = 0
     DOYGrainLIrrig[0] = 0
     # for HSA****.csv  (not OLDHSA***.csv)
@@ -1928,25 +1936,25 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     ##yearType[0] = "AN"
     NetApp = 0.0
     CCKc[:idays+1] = 0
-    osIkc[:iyears+1] = 0
-    isIkc[:iyears+1] = 0
-    IGETo[:iyears+1] = 0
-    osFkc[:iyears+1] = 0
-    KcByr[:iyears+1] = 0
-    KcCyr[:iyears+1] = 0
-    KcDyr[:iyears+1] = 0
-    KcEyr[:iyears+1] = 0
-    dpyAll[:iyears+1] = 0
+    osIkc[:n_years+1] = 0
+    isIkc[:n_years+1] = 0
+    IGETo[:n_years+1] = 0
+    osFkc[:n_years+1] = 0
+    KcByr[:n_years+1] = 0
+    KcCyr[:n_years+1] = 0
+    KcDyr[:n_years+1] = 0
+    KcEyr[:n_years+1] = 0
+    dpyAll[:n_years+1] = 0
     # yrs[:iyears+1]=0
-    NA1[:iyears+1] = 0
-    NA2[:iyears+1] = 0
-    NA3[:iyears+1] = 0
-    EToDaily[:iyears+1, :idays+1] = 0
+    NA1[:n_years+1] = 0
+    NA2[:n_years+1] = 0
+    NA3[:n_years+1] = 0
+    EToDaily[:n_years+1, :idays+1] = 0
     # Date1Daily[:iyears+1,:idays+1]=0
-    PcpDaily[:iyears+1, :idays+1] = 0
-    OKc[:iyears+1, :idays+1] = 0
-    IKc[:iyears+1, :idays+1] = 0
-    Kc[:iyears+1, :idays+1] = 0
+    PcpDaily[:n_years+1, :idays+1] = 0
+    OKc[:n_years+1, :idays+1] = 0
+    IKc[:n_years+1, :idays+1] = 0
+    Kc[:n_years+1, :idays+1] = 0
 
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++
     ##
@@ -2057,9 +2065,9 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
     # Calculating ETAW for each crop in SA
     ##
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    for k in range(0, ilands):
-        print("island =", k+1)
-        calc_soil_evap(k, Beta1, idates, idays, ts_year, ts_days,
+    for land_i in range(0, ilands):
+        print("island =", land_i+1)
+        calc_soil_evap(land_i, Beta1, idates, ts_year, ts_days,
                        start1, dpyAll, ET0, pcp, PcpDaily, EToDaily, OKc)
         #import pytest
         #PcpDaily == pytest.approx(_PcpDaily,rel=1e-2)
@@ -2067,7 +2075,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
         #OKc == pytest.approx(_OKc,rel=1e-2)
         WSCESpg[:, :] = 0
         WSEspgMonthly[:, :] = 0
-        for j in range(1, icroptype+1):
+        for crop_i in range(1, icroptype+1):
             # for HSA*** (not for OLDHSA***)   +++++++++++++++++++++
             # initalize Monthly ETaw
             #print("island =",k+1, " croptype =",j)
@@ -2122,7 +2130,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             data12day_water = zeros(idates-1, float)
             data13day_water = zeros(idates-1, float)
 
-            nmonths = 12*(iyears-1)
+            nmonths = 12*(n_years-1)
             datamon = zeros(nmonths, float)
             data2mon = zeros(nmonths, float)
             data3mon = zeros(nmonths, float)
@@ -2145,20 +2153,20 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             data20mon = zeros(nmonths, float)
             data21mon = zeros(nmonths, float)
 
-            datayr = zeros(iyears-1, float)
-            data2yr = zeros(iyears-1, float)
-            data3yr = zeros(iyears-1, float)
-            data4yr = zeros(iyears-1, float)
-            data5yr = zeros(iyears-1, float)
-            data6yr = zeros(iyears-1, float)
-            data7yr = zeros(iyears-1, float)
-            data8yr = zeros(iyears-1, float)
-            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, CropType1, y, f1, YTD, osSWDx, erd, aw1, ADep1 = calc_kc_vals(iyears, yearType, CCropType, j, CBeginDate, CEndDate, Cf, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, CSDx, CRDxU, CRDxL, CawL, CawU, CADep, Region, k, NCCropType, NCBeginDate, NCEndDate, NCf, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, NCSDx, NCRDxU, NCRDxL, NCawL, NCawU, NCADep, osIkc, OKc, EToDaily, IGETo, osFkc, isIkc, Beta1)
+            datayr = zeros(n_years-1, float)
+            data2yr = zeros(n_years-1, float)
+            data3yr = zeros(n_years-1, float)
+            data4yr = zeros(n_years-1, float)
+            data5yr = zeros(n_years-1, float)
+            data6yr = zeros(n_years-1, float)
+            data7yr = zeros(n_years-1, float)
+            data8yr = zeros(n_years-1, float)
+            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, CropType1, y, f1, YTD, osSWDx, erd, aw1, ADep1 = calc_kc_vals(n_years, yearType, CCropType, crop_i, CBeginDate, CEndDate, Cf, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, CSDx, CRDxU, CRDxL, CawL, CawU, CADep, Region, land_i, NCCropType, NCBeginDate, NCEndDate, NCf, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, NCSDx, NCRDxU, NCRDxL, NCawL, NCawU, NCADep, osIkc, OKc, EToDaily, IGETo, osFkc, isIkc, Beta1)
             # end of for  y<iyears  ********************************
             # calculates values of osIkc, isIkc, osFkc and IGETo
             # Identify initial growth Kc(KcB) and final Kc(KcE)
-            LowIkc = min(2, numpy.amin(osIkc[1:iyears+1]))
-            LowFkc = min(2, numpy.amin(osFkc[1:iyears+1]))
+            LowIkc = min(2, numpy.amin(osIkc[1:n_years+1]))
+            LowFkc = min(2, numpy.amin(osFkc[1:n_years+1]))
             # ......... Print Kc value selection process
             # ......   Note that Kc's are not printed in final version
             # ........  Print rows were changed to remarks. however, the
@@ -2166,7 +2174,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             # ...........................................................
 
             # Loop through years to calculate daily Kc values
-            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, y = calc_kc_daily(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate,
+            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, y = calc_kc_daily(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate,
                                                                                      NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, CropType1, LowIkc, isIkc, KcByr, y, KcCyr, KcDyr, KcEyr)
             # end of for y<YCt
 
@@ -2181,7 +2189,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             # This loop determines daily IKc for each year and subscripts
             # the results by year and day(ends after 5020)
             #import pdb; pdb.set_trace()
-            calc_ikc_daily(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, kkc1, kkc2, kkc3,
+            calc_ikc_daily(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, kkc1, kkc2, kkc3,
                            EndDate1, BeginDate1, AB1, AC1, AD1, IKc, y, idays, dpyAll, BeginDateYear, IKc1, OKc, CropType1, CCKc, CC1, Kc, EToDaily, ETcDaily, f1, BIYear, NA1, YTD, LIYear, NA2, NA3)
             ##ii = EndDate1 + 1
             # to get out of loop i<=E
@@ -2189,14 +2197,14 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             # end of y<YCI
 
             #? eliminate loop ?#
-            isCERn[1:iyears+1] = 0
-            isPCP[1:iyears+1] = 0
-            isETaw[1:iyears+1] = 0
-            osCERn[1:iyears+1] = 0
-            isCSpg[1:iyears+1] = 0
-            osCSpg[1:iyears+1] = 0
-            isCETc[1:iyears+1] = 0
-            osCETc[1:iyears+1] = 0
+            isCERn[1:n_years+1] = 0
+            isPCP[1:n_years+1] = 0
+            isETaw[1:n_years+1] = 0
+            osCERn[1:n_years+1] = 0
+            isCSpg[1:n_years+1] = 0
+            osCSpg[1:n_years+1] = 0
+            isCETc[1:n_years+1] = 0
+            osCETc[1:n_years+1] = 0
             #? eliminate loop ?#
             Mon = slice(0, 12)
             isMCERn[Mon] = 0
@@ -2225,9 +2233,9 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             IrrigYear = 0
             #? The most costly loop below ~ 2.8s?#
             date_index = 0
-            main_calc_loop(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD,
+            main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD,
                            kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, EToMonthly, ETcMonthly, PcpMonthly, ERnMonthly, SpgMonthly, EspgMonthly, MonNetApp, MonDsw, MonDswPos,
-                           dpyAll, NumDaysPerMon, erd, Region, k, SWD, OKc, IKc, Kc, EToDaily, PcpDaily, ETcDaily, NA1, BIYear, NA2, LIYear, NA3, osSWDx, SWD0, Dsw, NetApp, NII, NI, osCETc,
+                           dpyAll, NumDaysPerMon, erd, Region, land_i, SWD, OKc, IKc, Kc, EToDaily, PcpDaily, ETcDaily, NA1, BIYear, NA2, LIYear, NA3, osSWDx, SWD0, Dsw, NetApp, NII, NI, osCETc,
                            HAcre, osMCETc, isCETc, isMCETc, osCERn, osCSpg, osMCERn, osMCSpg, isCERn, isPCP, isETaw, isCSpg, isMCERn, isMCSpg, aw1, ADep1, Espg, WSCESpg, WSEspgMonthly,
                            ytemp, DOYtemp, IrrigYear, HAcre_temp, HAcretemp, OKctemp, IKctemp, CCKc, CCKctemp, ETotemp, Kctemp, ETctemp, Pcptemp, Ertemp, Spgtemp, ESpgtemp, Dsw0temp,
                            SWDtemp, SWDxtemp, FC0temp, PWPtemp, SWC0temp, YTDtemp, NAtemp, DOYLIrrig, DOYGrainLIrrig, CPcptemp, CErtemp, CESpgtemp, CETctemp, CDswtemp, HAcreDaily,
@@ -2246,7 +2254,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             SOSCETC = 0
             SOSCERN = 0
             SOSCSpg = 0
-            for y in range(1, iyears+1):
+            for y in range(1, n_years+1):
                 SISCETC = SISCETC+isCETc[y]
                 SISCERN = SISCERN+isCERn[y]
                 SISCSpg = SISCSpg+isCSpg[y]
@@ -2266,15 +2274,15 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                     data7yr[y-1] = (osCERn[y])
                     data8yr[y-1] = (osCSpg[y])
             # calculate &print mean over years for CETc,CERn, ETAW
-            MACETC = SACETC/iyears
-            MACERN = SACERN/iyears
-            MACSpg = SACSpg/iyears
-            MISCETC = SISCETC/iyears
-            MISCERN = SISCERN/iyears
-            MISCSpg = SISCSpg/iyears
-            MOSCETC = SOSCETC/iyears
-            MOSCERN = SOSCERN/iyears
-            MOSCSpg = SOSCSpg/iyears
+            MACETC = SACETC/n_years
+            MACERN = SACERN/n_years
+            MACSpg = SACSpg/n_years
+            MISCETC = SISCETC/n_years
+            MISCERN = SISCERN/n_years
+            MISCSpg = SISCSpg/n_years
+            MOSCETC = SOSCETC/n_years
+            MOSCERN = SOSCERN/n_years
+            MOSCSpg = SOSCSpg/n_years
 
             ###-------------OUTPUT CODE BELOW HERE----------------###
             #start = start1+days(2)
@@ -2283,12 +2291,12 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
             dt = "1DAY"  # days(1)
             unit = ""
             if idayoutput == 1:
-                DETAWOUTPUT[0, k, j-1, :] = dataday[:]
-                DETAWOUTPUT[1, k, j-1, :] = data10day[:]
-                DETAWOUTPUT[2, k, j-1, :] = data2day[:]
-                DETAWOUTPUT[3, k, j-1, :] = data12day[:]
-                DETAWOUTPUT[4, k, j-1, :] = data11day[:]
-                DETAWOUTPUT[5, k, j-1, :] = data13day[:]
+                DETAWOUTPUT[0, land_i, crop_i-1, :] = dataday[:]
+                DETAWOUTPUT[1, land_i, crop_i-1, :] = data10day[:]
+                DETAWOUTPUT[2, land_i, crop_i-1, :] = data2day[:]
+                DETAWOUTPUT[3, land_i, crop_i-1, :] = data12day[:]
+                DETAWOUTPUT[4, land_i, crop_i-1, :] = data11day[:]
+                DETAWOUTPUT[5, land_i, crop_i-1, :] = data13day[:]
                 if forDSM2_daily == 1:
                     ddatalist = dataday, data10day, data2day, data12day, data11day, data13day
                     dcpartlist = "ETc", "ESpg", "PCP", "ETAW", "Dsw", "ER"
@@ -2313,20 +2321,20 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                             "mm", "mm", "mm", "mm", "mm",    \
                             "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft"
                 if itotaloutput == 1:
-                    if j == 1 and k == 0:
+                    if crop_i == 1 and land_i == 0:
                         data1day_14crops = dataday
                         data10day_14crops = data10day
                         data11day_14crops = data11day
                         data12day_14crops = data12day
                         data13day_14crops = data13day
-                    elif j < 15:
+                    elif crop_i < 15:
                         data1day_14crops = data1day_14crops + dataday
                         data10day_14crops = data10day_14crops + data10day
                         data11day_14crops = data11day_14crops + data11day
                         data12day_14crops = data12day_14crops + data12day
                         data13day_14crops = data13day_14crops + data13day
-                    if j == 15:
-                        if k == 0:
+                    if crop_i == 15:
+                        if land_i == 0:
                             data1day_water = dataday
                             data10day_water = data10day
                             data11day_water = data11day
@@ -2356,7 +2364,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                     "A-ft", "A-ft", "A-ft", "A-ft", "A-ft"
 
                 if itotaloutput != 1:
-                    if j == 2:
+                    if crop_i == 2:
                         data12mon_veg = data12mon
                         data13mon_veg = data13mon
                         data14mon_veg = data14mon
@@ -2367,7 +2375,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                         data19mon_veg = data19mon
                         data20mon_veg = data20mon
                         data21mon_veg = data21mon
-                    if j > 2 and j < 12:
+                    if crop_i > 2 and crop_i < 12:
                         data12mon_veg = add(data12mon_veg, data12mon)
                         data13mon_veg = add(data13mon_veg, data13mon)
                         data14mon_veg = add(data14mon_veg, data14mon)
@@ -2379,18 +2387,18 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                         data20mon_veg = add(data20mon_veg, data20mon)
                         data21mon_veg = add(data21mon_veg, data21mon)
                 if itotaloutput == 1:
-                    if j == 1 and k == 0:
+                    if crop_i == 1 and land_i == 0:
                         data14mon_total = data14mon
                         data15mon_total = data15mon
                         data16mon_total = data16mon
                         data20mon_total = data20mon
-                    elif j < 15:
+                    elif crop_i < 15:
                         data14mon_total = add(data14mon_total, data14mon)
                         data15mon_total = add(data15mon_total, data15mon)
                         data16mon_total = add(data16mon_total, data16mon)
                         data20mon_total = add(data20mon_total, data20mon)
-                    if j == 15:
-                        if k == 0:
+                    if crop_i == 15:
+                        if land_i == 0:
                             data14mon_water = data14mon
                             data15mon_water = data15mon
                             data16mon_water = data16mon
@@ -2407,21 +2415,21 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                 ycpartlist = "CETc", "CPcp", "CEr", "CSpg", "CETaw", "OCETc", "OCEr", "OCSpg"
 
             Apart = "DWRBDO-DETAW"
-            if (k+1) < 10:
-                Bpart = "HSA_000" + str((k+1))
-                Bveg = "HSA_000" + str((k+1)) + "_veg"
-            elif (k+1) < 100:
-                Bpart = "HSA_00" + str((k+1))
-                Bveg = "HSA_00" + str((k+1)) + "_veg"
+            if (land_i+1) < 10:
+                Bpart = "HSA_000" + str((land_i+1))
+                Bveg = "HSA_000" + str((land_i+1)) + "_veg"
+            elif (land_i+1) < 100:
+                Bpart = "HSA_00" + str((land_i+1))
+                Bveg = "HSA_00" + str((land_i+1)) + "_veg"
             else:
-                Bpart = "HSA_0" + str((k+1))
-                Bveg = "HSA_0" + str((k+1)) + "_veg"
+                Bpart = "HSA_0" + str((land_i+1))
+                Bveg = "HSA_0" + str((land_i+1)) + "_veg"
 
             Cpart = cpartt
             Epart = "1DAY"
-            Fpart = "Crop_"+str(j)
+            Fpart = "Crop_"+str(crop_i)
 
-            ktemp = int(k/10)
+            ktemp = int(land_i/10)
 
             if idayoutput == 1 and not NO_OUTPUT:
                 destination = os.path.join(
@@ -2434,7 +2442,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                     write_to_dss(
                         dssfh, ddatalist[ilist], path, startdate + " "+starttime, dunitlist[ilist], ctype)
                 if itotaloutput == 1:
-                    if j == 15 and k == (ilands-1):
+                    if crop_i == 15 and land_i == (ilands-1):
                         print("daily output")
                         path = "/"+Apart+"/"+Bpart+"/ETc//"+Epart+"/"+Fpart+"/"
                         listlen = len(data1day_14crops)
@@ -2489,7 +2497,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                                  " "+starttime, tempunit, ctype)
 
                 if itotaloutput == 1:
-                    if j == 15 and k == (ilands-1):
+                    if crop_i == 15 and land_i == (ilands-1):
                         print("monthly output")
                         listlen = len(data14mon_total)
                         path = "/"+Apart+"/total_no_w/Er//"+Epart+"/"+Fpart+"/"
@@ -2517,7 +2525,7 @@ def historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, tmax, tmin, ilands, 
                         write_to_dss(dssfh, data20mon_water, path,
                                      startdate + " "+starttime, "A-ft", ctype)
                 else:
-                    if j == 11:
+                    if crop_i == 11:
                         listlen = len(data12mon_veg)
                         path = "/"+Apart+"/veg/NA//"+Epart+"/"+Fpart+"/"
                         write_to_dss(dssfh, data12mon_veg, path,
@@ -2836,8 +2844,8 @@ def detaw(fname_main_yaml: str) -> None:
     ts_year = zeros((idates), int)
     ts_mon = zeros((idates), int)
     ts_days = zeros((idates), int)
-    ts_LODI_tx = zeros((idates), float)
     ts_LODI_tn = zeros((idates), float)
+    ts_LODI_tx = zeros((idates), float)
 
     ts_pcp = read_pcp(start_date_str, end_date_str, fn_input_pcp)
 
@@ -2863,8 +2871,8 @@ def detaw(fname_main_yaml: str) -> None:
     if DEBUG_TIMING:
         st = timeit.default_timer()
     # output dimensioned by (var, island,landuse,time)
-    (DETAWOUTPUT) = historicalETAW(ts_per, ETo_corrector, Region, pcp, ET0, ts_LODI_tx, ts_LODI_tn,
-                                   ilands, idates, isites, ts_year, ts_mon, ts_days, start1, filepath, NI, NII, NumDay, iyears,
+    (DETAWOUTPUT) = historicalETAW(Region, pcp, ET0,
+                                   ilands, idates, ts_year, ts_days, start1, filepath, NI, NII, NumDay, iyears,
                                    idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,
                                    yearType,HAcre,icroptype,crdf,ncrdf)
 
