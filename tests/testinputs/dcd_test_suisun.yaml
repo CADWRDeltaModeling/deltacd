@@ -15,8 +15,8 @@ dcd:
   path_dcd_node_output: "outputs/dcd_suisun_schism.nc"
 
   # DCD parameters
-  start_water_year: 2000
-  end_water_year: 2023
+  start_water_year: 1923
+  end_water_year: 1932
   leach_scale: 1.0
   runoff_rate: 0.75
   deep_percolation_rate: 0.25

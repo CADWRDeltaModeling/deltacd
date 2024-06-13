@@ -11,7 +11,7 @@ import deltacd.dcd
 def suisun_example():
     dirpath = Path(__file__).parent
     os.chdir(dirpath / "testinputs")
-    fname_main_yaml = "dcd_test.yaml"
+    fname_main_yaml = "dcd_test_suisun.yaml"
     deltacd.dcd.dcd(fname_main_yaml)
 
 

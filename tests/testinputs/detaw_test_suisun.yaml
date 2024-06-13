@@ -1,0 +1,21 @@
+detaw:
+  target_model: "SM"
+  start_water_year: 1923
+  end_water_year: 1932
+  input_pcp: 'inputs/mm_pcp_suisun.csv'
+  input_temperature: 'inputs/Suisun_PT.csv'
+  landuse : 'inputs/landuse_suisun_schism.csv'
+  et_correction: 'inputs/Percentage_suisun.csv'
+  critical: 'inputs/critical_suisun.csv'
+  noncritical: 'inputs/noncritical_suisun.csv'
+  calendar: 'inputs/calendar.txt'
+  # Model Output control
+  detaw_output: 'outputs/detawoutput_suisun_schism.nc'
+  precip_output: 'outputs/precip_suisun.nc'
+  et_output: 'outputs/ET0.nc'
+  daily_output: 1
+  monthly_output: 1
+  yearly_output: 0
+  delta_output: 0
+  daily_output_unit: 1
+  for_dsm2_only: 1

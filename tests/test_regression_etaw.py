@@ -11,7 +11,7 @@ import deltacd.detaw
 def suisun_example():
     dirpath = Path(__file__).parent
     os.chdir(dirpath / "testinputs")
-    fname_main_yaml = "detaw_test.yaml"
+    fname_main_yaml = "detaw_test_suisun.yaml"
     deltacd.detaw.detaw(fname_main_yaml)
 
 
