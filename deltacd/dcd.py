@@ -172,23 +172,18 @@ def adjust_leach_water(da_lwa, da_lwd, da_ro):
     areas = da_lwa.area_id.values
     n_areas = len(areas)
     for year in years:
-        leach_saved = np.zeros((n_areas, ))
+        leach_saved = np.zeros((n_areas,))
         lwa = da_lwa.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
         lwd = da_lwd.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
-        ro = da_ro.sel(time=slice(
-            f"{year - 1}-10-01", f"{year}-09-30")).values.T
+        ro = da_ro.sel(time=slice(f"{year - 1}-10-01", f"{year}-09-30")).values.T
         lwa_adj = np.full_like(lwa, np.nan)
         lwd_adj = np.full_like(lwd, np.nan)
         for r_i in range(lwa.shape[0]):
             month = dates[r_i].month
             n_days = dates[r_i].days_in_month
-            leach_saved, lwa_adj[r_i, :], lwd_adj[r_i, :] = \
-                np.vectorize(use_runoff_for_leach)(leach_saved,
-                                                   lwa[r_i, :],
-                                                   lwd[r_i, :],
-                                                   ro[r_i, :],
-                                                   month,
-                                                   n_days)
+            leach_saved, lwa_adj[r_i, :], lwd_adj[r_i, :] = np.vectorize(
+                use_runoff_for_leach
+            )(leach_saved, lwa[r_i, :], lwd[r_i, :], ro[r_i, :], month, n_days)
         da_lwa_adj.loc[f"{year - 1}-10-01":f"{year}-09-30", :] = lwa_adj
         da_lwd_adj.loc[f"{year - 1}-10-01":f"{year}-09-30", :] = lwd_adj
 
@@ -296,6 +291,12 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
     df_ratios = pd.read_csv(path_file, dtype={"area_id": str})
     if df_split_table is not None:
         df_ratios = add_split_area_data(df_ratios, df_split_table)
+        # Zero out double-counted split areas, which is in the divrate node already.
+        df_split_table_zero = df_split_table.query(  # noqa: F841
+            "subregion_id in @df_ratios.node"
+        )
+        df_ratios_zero = df_ratios.query("area_id in @df_split_table_zero.area_id")
+        df_ratios.loc[df_ratios_zero.index, "factor"] = 0.0
         # Rename target nodes if they are different
         df_split_table_second = df_split_table.query(
             "subregion_id not in @df_ratios.node"
@@ -306,6 +307,8 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
         df_ratios.loc[df_ratios_to_rename.index, "node"] = df_split_table_second[
             "subregion_id"
         ].to_numpy()
+        # These secondary split areas will be summed up to create a new node.
+        df_ratios.loc[df_ratios_to_rename.index, "factor"] = 1.0
 
     # Get the list of unique islands
     # NOTE Need to make sure that this sorted indices work.
@@ -686,9 +689,9 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         for _, row in df_split_table.iterrows():
             area_id_from = row["area_id_from"]
             area_id = row["area_id"]
-            ds_dcd_subtracted.loc[dict(area_id=area_id_from)] = ds_dcd.sel(
-                area_id=area_id_from
-            ) - ds_dcd.sel(area_id=area_id)
+            ds_dcd_subtracted.loc[dict(area_id=area_id_from)] -= ds_dcd.sel(
+                area_id=area_id
+            )
 
     return ds_dcd_subtracted
 
