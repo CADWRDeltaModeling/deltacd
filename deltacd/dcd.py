@@ -1,27 +1,13 @@
-# Delta Channel Depletion (DCD) model version 2.0.0
+# DeltaCD, Delta channel depletion model
+# version 0.9.0
 #
-# DCD calculates channel depletion time series based on outputs from
+# dcd.py
+# This module calculates channel depletion time series based on outputs from
 # Delta Evapotranspiration of Applied Water (DETAW).
+# The code is based on the previous DCD v1.3.
 #
-# <license>
-#    Copyright (C) State of California, Department of Water Resources.
-#
-#    DCD v2.0.0 is free software:
-#    you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    DCDv v2.0.0 is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with DCD v2.0.0.  If not, see <http://www.gnu.org/licenses>.
-# </license>
+# See the LICENSE file for the license of this software.
 
-from pathlib import Path
 import os
 import argparse
 import logging
@@ -225,7 +211,20 @@ def use_runoff_for_leach(
     return leach_saved, lwa_adj, lwd_adj
 
 
-def take_monthly_average(da):
+def take_monthly_average(da: xr.DataArray) -> xr.DataArray:
+    """Take monthly average of daily data
+
+    Parameters
+    ----------
+    da: xarray.DataArray
+        daily data
+
+    Returns
+    -------
+    xarray.DataArray
+        monthly average data
+    """
+    # FIXME Does not need to convert back and forth
     df = pd.DataFrame(data=da.values, index=da.date)
     df_mon = df.resample("ME").mean()
     da_mon = xr.DataArray(
@@ -246,12 +245,14 @@ def calculate_model_depletion(ds_dcd, model_params, input_data):
     return ds_dcd_nodes
 
 
-def set_dcd_node_global_attributes(ds_dcd_nodes, model_params):
+def set_dcd_node_global_attributes(
+    ds_dcd_nodes: xr.Dataset, model_params: dict
+) -> xr.Dataset:
     """Set global attributes for the DCD node dataset
 
     Parameters
     ----------
-    dc_dcd_nodes: xarray.Dataset
+    ds_dcd_nodes: xarray.Dataset
         dataset containing DCD node data
     """
     title = "DeltaCD outputs"
@@ -605,12 +606,15 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # Calculate channel depletion (DCD)
 
     # Calculate drained seepage (S_D) for each subarea
+    # Simply multiplying by the area with coffecients to get monthly values
+    # NOTE This can be improved by daily rates, not monthly rates.
+    # NOTE This can be set per subareas as well.
     da_drnseep = calculate_drained_seepage(df_subareas)
     # Divide it by days in months
     da_drnseep = da_drnseep / da_days_in_month
 
     # Update seepage (S) by adding drained seepage (S_D)
-    # Calculate daily seepage values by dividing by days in months
+    # S = S_E + S_D
     da_seepage += da_drnseep
 
     # Calculate daily groundwater rate per ar
@@ -627,11 +631,15 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     da_gw1 = da_gwrates * da_aw / da_eta
 
     # Calculate groundwater component 2
+    # How much of seepage goes to groundwater
+    # GW2 = GW_rate * S
     da_gw2 = da_gwrates * da_seepage
 
     # Calculate total groundwater
+    # How much of water goes to groundwater
     da_gwf = da_gw1 + da_gw2
 
+    # Apply leach water scale
     leach_scale = model_params.get("leach_scale")
     da_lwa *= leach_scale
 
@@ -639,7 +647,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # Update the runoff (RO) with the coefficient
     da_runoff *= runoff_rate
 
-    # Adjust leach water
+    # Adjust leach water with available runoff
     da_lwa, da_lwd = adjust_leach_water(da_lwa, da_lwd, da_runoff)
 
     # Calculate diversion without seepage
@@ -653,7 +661,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # Calculate drainage without seepage
     da_drainage = da_aw * (1.0 - da_eta) / da_eta + da_lwd + da_drnseep
 
-    # Calculate seepage
+    # Calculate seepage, reducing seepage by the amount of the groundwater
+    # S = S - GW2
     da_seepage -= da_gw2
 
     # -----------------------------------------
