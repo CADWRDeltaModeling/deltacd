@@ -8,6 +8,7 @@
 #
 # See the LICENSE file for the license of this software.
 
+from pathlib import Path
 import os
 import argparse
 import logging
@@ -289,27 +290,20 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
     """
     # Read the file, and drop the last column that is filled by
     # read_csv automatically.
-    df_ratios = pd.read_csv(path_file, dtype={"area_id": str})
+    df_ratios = pd.read_csv(path_file, dtype={"area_id": str, "node": str})
     if df_split_table is not None:
-        df_ratios = add_split_area_data(df_ratios, df_split_table)
-        # Zero out double-counted split areas, which is in the divrate node already.
-        df_split_table_zero = df_split_table.query(  # noqa: F841
-            "subregion_id in @df_ratios.node"
-        )
-        df_ratios_zero = df_ratios.query("area_id in @df_split_table_zero.area_id")
-        df_ratios.loc[df_ratios_zero.index, "factor"] = 0.0
-        # Rename target nodes if they are different
-        df_split_table_second = df_split_table.query(
+        df_split_table_to_one = df_split_table.query(
             "subregion_id not in @df_ratios.node"
         )
-        df_ratios_to_rename = df_ratios.query(
-            "area_id in @df_split_table_second.area_id"
-        )
-        df_ratios.loc[df_ratios_to_rename.index, "node"] = df_split_table_second[
-            "subregion_id"
-        ].to_numpy()
-        # These secondary split areas will be summed up to create a new node.
-        df_ratios.loc[df_ratios_to_rename.index, "factor"] = 1.0
+        if not df_split_table_to_one.empty:
+            df_ratios_w_one = pd.DataFrame(
+                {
+                    "area_id": df_split_table_to_one["area_id"],
+                    "node": df_split_table_to_one["subregion_id"],
+                    "factor": 1.0,
+                }
+            )
+            df_ratios = pd.concat([df_ratios, df_ratios_w_one], ignore_index=True)
 
     # Get the list of unique islands
     # NOTE Need to make sure that this sorted indices work.
