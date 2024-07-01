@@ -1,7 +1,10 @@
 # Copied from https://coderefinery.github.io/documentation/gh_workflow/ and
 # modified to use the GitHub Actions sphinx-build action
 name: docs
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches:
+      - master
 permissions:
     contents: write
 jobs:
@@ -14,11 +17,11 @@ jobs:
           python-version: 3.11
       - name: Install dependencies
         run: |
-          pip install sphinx numpydoc versioneer pandas xarray pyyaml numba
+          pip install sphinx sphinx-rtd-theme sphinx-versioned-docs numpydoc versioneer pandas xarray pyyaml numba
       - name: Sphinx build
         run: |
           sphinx-apidoc -o docsrc deltacd
-          sphinx-build docsrc docs
+          sphinx-versioned --output docs --local-conf docsrc/conf.py --main-branch master
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         # if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
