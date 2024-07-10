@@ -1671,7 +1671,7 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
 
 def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
                    ts_days, start1, filepath, NI, NII, NumDaysPerMon, n_years, idayoutput, imonthoutput,
-                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,yearType,HAcre,icroptype,crdf,ncrdf):
+                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, model_start_year,yearType,HAcre,icroptype,crdf,ncrdf):
     InpHSACrop = "  "
     SACropDaily = "  "
     HSACropDailyMean = "  "
@@ -2592,7 +2592,6 @@ def read_pcp(start_date_str, end_date_str, fn):
 
         Parameters
         ----------
-            streamlinemodel: str
             start_date_str: str
             end_date_str: str
             pcplocs: str
@@ -2622,12 +2621,11 @@ def read_pcp(start_date_str, end_date_str, fn):
     return(ts_pcp)
 
 
-def read_temperature(streamlinemodel, start_date_str,end_date_str,fn):
+def read_temperature(start_date_str,end_date_str,fn):
     """ Read temperature input data
 
         Parameters
         ----------
-            streamlinemodel: str
             start_date_str: str
             end_date_str: str
             fn: str
@@ -2710,7 +2708,6 @@ def read_et_correction_factors(fn):
 
         Parameters
         ----------
-            streamlinemodel: str
             fn: str
         Returns
         -------
@@ -2773,7 +2770,6 @@ def detaw(fname_main_yaml: str) -> None:
     # FIXME For now, passing the yaml information to the current model
     #       parameters. They can be passed as a dict directly.
     detaw_params = model_params["detaw"]
-    streamlinemodel = detaw_params["target_model"]
     idayoutput = detaw_params["daily_output"]
     imonthoutput = detaw_params["monthly_output"]
     iyearoutput = detaw_params["yearly_output"]
@@ -2851,7 +2847,7 @@ def detaw(fname_main_yaml: str) -> None:
 
     [ts_per, ETo_corrector, Region] = read_et_correction_factors(fn_et_correction)
 
-    [ts_year, ts_mon, ts_days, ts_LODI_tx, ts_LODI_tn] = read_temperature(streamlinemodel, start_date_str, end_date_str, fn_input_temperature)
+    [ts_year, ts_mon, ts_days, ts_LODI_tx, ts_LODI_tn] = read_temperature( start_date_str, end_date_str, fn_input_temperature)
 
     [yearType, HAcre, icroptype] = read_landuse(fn_landuse, iyears, water_years, ilands)
 
@@ -2873,7 +2869,7 @@ def detaw(fname_main_yaml: str) -> None:
     # output dimensioned by (var, island,landuse,time)
     (DETAWOUTPUT) = historicalETAW(Region, pcp, ET0,
                                    ilands, idates, ts_year, ts_days, start1, filepath, NI, NII, NumDay, iyears,
-                                   idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, streamlinemodel,model_start_year,
+                                   idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, model_start_year,
                                    yearType,HAcre,icroptype,crdf,ncrdf)
 
     if DEBUG_TIMING:
