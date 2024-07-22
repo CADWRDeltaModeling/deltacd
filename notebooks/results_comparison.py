@@ -35,6 +35,16 @@ def plot_diff(diff_desc_df, title, fig_fname=None):
     plt.savefig(fig_fname)
     plt.show()
 
+def plot_net_channel_dep(new_df, old_df, title, fig_fname=None):
+    plt.figure(figsize=(10,4))
+    plt.title(title)
+    plt.plot(old_df,label='old')
+    plt.plot(new_df,label = 'new')
+    plt.ylabel('cfs')
+    plt.legend()
+    plt.savefig(fig_fname)
+    plt.show()
+
 
 def compare_results(filenames):
 
@@ -158,6 +168,23 @@ def compare_results(filenames):
     title = 'SEEP-FLOW difference between deltaCD and dcdv1.3 outputs'
     fig_fname = outfile_prefix + '_seep_diff.png'
     plot_diff(diff_desc_df=diff_desc, title=title, fig_fname=fig_fname)
+
+    # Compute and plot net channel depletion
+    if outfile_prefix != 'calsim':
+        # compute new channel depletion
+        new_net_channel_depletion = new_div_df + new_seep_df - new_drain_df
+        new_net_channel_depletion_total = new_net_channel_depletion.sum(1)
+        print('New net channel depletion stats', new_net_channel_depletion_total.describe())
+        # compute old channel depletion
+        old_net_channel_depletion = old_div_df + old_seep_df - old_drain_df
+        old_net_channel_depletion_total = old_net_channel_depletion.sum(1)
+        print('Old net channel depletion stats', old_net_channel_depletion_total.describe())
+
+
+        # Plot old and new net channel depletion
+        title = 'Net Channel Depletion'
+        fig_fname = outfile_prefix + '_net_channel_depletion.png'
+        plot_net_channel_dep(new_net_channel_depletion_total, old_net_channel_depletion_total, title, fig_fname)
 
     ds.close()
 
