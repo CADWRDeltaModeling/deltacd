@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Usage &#8212; DeltaCD  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/_rst_properties.css" />
+    
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DETAW (Delta Evapotranspiration of Applied Water) Overview" href="detaw.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="detaw.html" title="DETAW (Delta Evapotranspiration of Applied Water) Overview"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">DeltaCD  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Usage</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h1>
+<p>DeltaCD consists of two parts: <cite>DETAW</cite> and <cite>DCD</cite>. <cite>DETAW</cite> calculates the amount of water demand from estimating evapotranspiration. <cite>DCD</cite> calculates the amount of water diversion based on the water demand from <cite>DETAW</cite>. Hence, <cite>DETAW</cite> is run first and <cite>DCD</cite> follows with the output from <cite>DETAW</cite> typically. This section describes how to use <cite>DETAW</cite> and <cite>DCD</cite>.</p>
+<section id="detaw">
+<h2>DETAW<a class="headerlink" href="#detaw" title="Link to this heading">¶</a></h2>
+<p>To run DETAW, navigate into a directory with input yaml files, and launch the model in a command line interface similar to the following with your input file. This assumes that DeltaCD is installed to your Python environment and readily available in your command line interface.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>detaw<span class="w"> </span>detaw_dsm2.yaml
+</pre></div>
+</div>
+</section>
+<section id="dcd">
+<h2>DCD<a class="headerlink" href="#dcd" title="Link to this heading">¶</a></h2>
+<p>To run DCD, navigate into a directory with input yaml files, and launch the model in a command line interface similar to the following with your input file. This assumes that DeltaCD is installed to your Python environment and readily available in your command line interface.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>dcd<span class="w"> </span>dcd_dsm2.yaml
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3>Versions</h3>
+<ul>
+  <div class="injected">
+    <p>Tags</p>
+    <div class="dropdown-content">
+      <div class="rtd-current-item">
+        <a href="../v0.9.0-alpha/index.html">v0.9.0-alpha</a>
+      </div>
+    </div>
+    <p>Branches</p>
+    <div class="dropdown-content">
+      <div class="">
+        <a href="../master/index.html">master</a>
+      </div>
+    </div>
+  </div>
+</ul>
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="detaw.html" title="DETAW (Delta Evapotranspiration of Applied Water) Overview"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">DeltaCD  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Usage</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023-2024, California Department of Water Resources.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+  </body>
+</html>
