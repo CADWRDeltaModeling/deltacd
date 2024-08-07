@@ -1,3 +1,8 @@
+# Dev directories/files
+docs/
+dev/
+.vscode/
+
 # jupyter notebooks temp dir
 **/.ipynb_checkpoints
 # tests data
@@ -7,7 +12,7 @@ tests/data
 # dask workspace
 **/dask-worker-space
 # python pickled data
-**/*.pkl 
+**/*.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
