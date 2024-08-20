@@ -671,6 +671,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
     ds_dcd["groundwater_to_applied_water"] = da_gw1 * taf2cfs
 
+    ds_dcd["applied_water"] = da_aw * taf2cfs
+
     da_runoff *= taf2cfs
     ds_dcd["runoff"] = da_runoff
 
