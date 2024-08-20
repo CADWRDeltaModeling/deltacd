@@ -625,12 +625,12 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     da_gw1 = da_gwrates * da_aw / da_eta
 
     # Calculate groundwater component 2
-    # How much of seepage goes to groundwater
+    # How much of seepage comes from groundwater
     # GW2 = GW_rate * S
     da_gw2 = da_gwrates * da_seepage
 
     # Calculate total groundwater
-    # How much of water goes to groundwater
+    # How much of water comes from groundwater
     da_gwf = da_gw1 + da_gw2
 
     # Apply leach water scale
@@ -668,6 +668,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # FIXME Add attributes
     da_gwf *= taf2cfs
     ds_dcd = da_gwf.to_dataset(name="groundwater")
+
+    ds_dcd["groundwater_to_applied_water"] = da_gw1 * taf2cfs
 
     da_runoff *= taf2cfs
     ds_dcd["runoff"] = da_runoff
