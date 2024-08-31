@@ -639,10 +639,10 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
     runoff_rate = model_params.get("runoff_rate")
     # Update the runoff (RO) with the coefficient
-    da_runoff *= runoff_rate
+    da_runoff_after_percolation = da_runoff * runoff_rate
 
     # Adjust leach water with available runoff
-    da_lwa, da_lwd = adjust_leach_water(da_lwa, da_lwd, da_runoff)
+    da_lwa, da_lwd = adjust_leach_water(da_lwa, da_lwd, da_runoff_after_percolation)
 
     # Calculate diversion without seepage
     # NOTE Routines to adjust runoff in leach water are not implemented.
@@ -671,10 +671,10 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
     ds_dcd["groundwater_to_applied_water"] = da_gw1 * taf2cfs
 
-    ds_dcd["applied_water"] = da_aw * taf2cfs
+    ds_dcd["applied_water"] = da_aw / da_eta * taf2cfs
 
     da_runoff *= taf2cfs
-    ds_dcd["runoff"] = da_runoff
+    ds_dcd["runoff"] = da_runoff_after_percolation
 
     # Calculate deep percolation
     factor_deep_percolation = model_params.get("deep_percolation_rate")
