@@ -102,7 +102,7 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
         xarray.Dataset
             DETAW output converted into xarray.Dataset.
     '''
-    etvars = ["et_c", "s_e", "precip", "et_aw", "d_sw", "e_r"]
+    etvars = ["et_c", "s_e", "precip", "et_aw", "d_sw", "e_r", "kc", "swc", "fc", "ytd", "na", "CEr", "CEspg", "CETc", "CDsw", "CETAW", "MondelSWC", "SWDDaily","ETAWoffseasDaily","ETAWreduceDaily"]
     dims = ['area_id', 'crop', 'time']
     if detawoutput.shape[2]-1 == 15: # The Delta has 15 landuse crop categories
         coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
@@ -350,10 +350,10 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                    HAcreDaily, yDaily, DOY, OKcDaily, IKcDaily, CCKcDaily, EToDaily2, KcDaily, ETcDaily2, PcpDaily2, ErDaily, SpgDaily,
                    ESpgDaily, DswDaily, SWDDaily, SWDxDaily, FCDaily, PWPDaily, SWCDaily, YTDDaily, NADaily, CPcpDaily, CErDaily, CESpgDaily, CETcDaily, CDswDaily,
                    ETAWMonDay, ETAWDaily, MonETAW, idayoutput, dailyunit, dataday, date_index, data2day, data6day, data7day, data8day,
-                   data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day, data17day, data18day, data26day,
+                   data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day, data17day, data18day, data19day, data20day, data21day, data26day,
                    data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput, datamon, data2mon, data3mon,
                    data4mon, data5mon, data6mon, data7mon, data8mon, data9mon, data12mon, data13mon, data14mon, data15mon, data16mon, data17mon,
-                   data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year):
+                   data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year,ETAWoffseasDaily, ETAW_reduce_MonDay, ETAWreduceDaily):
 
     nmonth = 0  # pointer for datamon* arrays
     for year_i in range(1, n_years+1):
@@ -791,19 +791,22 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                             # calculate aveage ETaw
                             SumNegETAW = 0.0
                             CountNegETAW = 0
+                            ETAW_reduce_MonDay[:,:] = 0
                             calc_etawavg(ETAWMonDay, SumNegETAW,
-                                         CountNegETAW, NumDaysPerMon)
+                                         CountNegETAW, NumDaysPerMon,ETAW_reduce_MonDay)
                             # convert etawdmon day to etaw daily
                             # ETAWDaily[1:dpy+1]=ETAWMonDay[(10:10+12)%12,(273+leap_year(yearCal):)]
                             etMon = 10
                             etDay = 1
+                            ETAWreduceDaily[:] = 0
                             calc_etaw_month(
-                                dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily)
+                                dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily,ETAW_reduce_MonDay,ETAWreduceDaily)
                             ##ii = 0
                             CETAWDaily = 0
                             Mon = 10
+                            ETAWoffseasDaily[:] = 0
                             CETAWDaily = calc_etaw_daily(
-                                dpy, Mon, yy, DOY, NII, NI, crop_i, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year)
+                                dpy, Mon, yy, DOY, NII, NI, crop_i, DOYLIrrig, yDaily, ETAWDaily,ETAWoffseasDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year)
                             # split loop
                             temp_vector = HAcreDaily[1:dpy+1]*0.00328084
                             if idayoutput == 1:
@@ -817,7 +820,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                                     data6day[date_index:date_index +
                                              dpy] = (EToDaily2[1:dpy+1]*temp_vector)
                                     data7day[date_index:date_index +
-                                             dpy] = (KcDaily[1:dpy+1]*temp_vector)
+                                             dpy] = (KcDaily[1:dpy+1])
                                     data8day[date_index:date_index +
                                              dpy] = (SWCDaily[1:dpy+1]*temp_vector)
                                     data9day[date_index:date_index +
@@ -840,6 +843,12 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                                               dpy] = (SWDDaily[1:dpy+1]*temp_vector)
                                     data18day[date_index:date_index +
                                               dpy] = (YTDDaily[1:dpy+1]*temp_vector)
+                                    data19day[date_index:date_index+
+                                              dpy] = (ETAWoffseasDaily[1:dpy+1]*temp_vector)
+                                    data20day[date_index:date_index+
+                                              dpy] = (MonthlySWC*temp_vector)
+                                    data21day[date_index:date_index+
+                                              dpy] = (ETAWreduceDaily[1:dpy+1]*temp_vector)
                                 else:
                                     dataday[date_index:date_index +
                                             dpy] = (ETcDaily2[1:dpy+1])
@@ -1581,9 +1590,15 @@ def calc_etdd(dpy, etMon, yy, NII, NI, DswDaily, MonthlySWC, ETAWMonDay, etDay, 
 
 
 @numba.jit(nopython=True, cache=True)
-def calc_etawavg(ETAWMonDay, SumNegETAW, CountNegETAW, NumDay):
+def calc_etawavg(ETAWMonDay, SumNegETAW, CountNegETAW, NumDay, ETAW_reduce_MonDay):
     for etMon in range(1, 13):
         flagETAW = "true"
+        monsum = 0
+        for etDay in range(1, NumDay[etMon]+1):
+            monsum = monsum + ETAWMonDay[etMon, etDay]
+        if monsum < 0:
+            ETAW_reduce_MonDay[etMon,:] = ETAWMonDay[etMon,:]
+            ETAWMonDay[etMon, :] = 0
         while flagETAW == "true":
             for etDay in range(1, NumDay[etMon]+1):
                 if ETAWMonDay[etMon, etDay] < 0:
@@ -1604,7 +1619,7 @@ def calc_etawavg(ETAWMonDay, SumNegETAW, CountNegETAW, NumDay):
 
 
 @numba.jit(nopython=True, cache=True)
-def calc_etaw_month(dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily):
+def calc_etaw_month(dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily, ETAW_reduce_MonDay,ETAWreduceDaily):
     for etdd in range(1, dpy+1):
         if etMon < 10:
             yearCal = yy
@@ -1625,6 +1640,7 @@ def calc_etaw_month(dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily)
                 etMon = etMon + 1
                 etDay = 1
         ETAWDaily[etdd] = ETAWMonDay[etMon, etDay]
+        ETAWreduceDaily[etdd] = ETAW_reduce_MonDay[etMon, etDay]
         etDay = etDay + 1
         if (yearCal % 4 != 0 and etDOY == 365) or (yearCal % 4 == 0 and etDOY == 366):
             etMon = 1
@@ -1632,7 +1648,7 @@ def calc_etaw_month(dpy, etMon, yy, NII, etdd, NI, ETAWMonDay, etDay, ETAWDaily)
 
 
 @numba.jit(nopython=True, cache=True)
-def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year):
+def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily, ETAWoffseasDaily, DOYGrainLIrrig, CETAWDaily, MonETAW,model_start_year):
     for dd in range(1, dpy+1):
         if Mon < 10:
             yearCal = yy
@@ -1650,13 +1666,16 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
             Mon = 1
         if(j != 6):
             if DOY[dd] >= DOYLIrrig[yDaily[dd]-model_start_year]:
+                ETAWoffseasDaily[dd] = ETAWDaily[dd]
                 ETAWDaily[dd] = 0
         else:
             if DOYLIrrig[yDaily[dd]-model_start_year] < 275:
                 if DOY[dd] >= DOYGrainLIrrig[yDaily[dd]-model_start_year] and DOY[dd] < 275:
+                    ETAWoffseasDaily[dd] = ETAWDaily[dd]
                     ETAWDaily[dd] = 0
             else:
                 if DOY[dd] >= DOYLIrrig[yDaily[dd]-model_start_year]:
+                    ETAWoffseasDaily[dd] = ETAWDaily[dd]
                     ETAWDaily[dd] = 0
         CETAWDaily = CETAWDaily + ETAWDaily[dd]
         # y is for sep 30 each year, so for previous oct-Dec we subtract y by 1
@@ -1846,7 +1865,9 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     CETcDaily = zeros((idays+1), float)
     CDswDaily = zeros((idays+1), float)
     ETAWDaily = zeros((idays+1), float)
-    DETAWOUTPUT = zeros((6, ilands+1, icroptype+1, idates-1), float)
+    ETAWreduceDaily = zeros((idays+1), float)
+    ETAWoffseasDaily = zeros((idays+1), float)
+    DETAWOUTPUT = zeros((20, ilands+1, icroptype+1, idates-1), float)
 
  # for irrigation and hydrology year convertion (((((
     ytemp = zeros((idays+1), int)
@@ -1885,6 +1906,7 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     EspgMonthly = zeros((imonths+1), float)
     MonETAW = zeros((n_years+2, imonths+1), float)
     ETAWMonDay = zeros((imonths+1, 32), float)
+    ETAW_reduce_MonDay = zeros((imonths+1, 32), float)
     DOYLIrrig = zeros((n_years+2), float)
     DOYGrainLIrrig = zeros((n_years+2), float)
     DOYLIrrig[0] = 0
@@ -2242,9 +2264,9 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
                            yDaily, DOY, OKcDaily, IKcDaily, CCKcDaily, EToDaily2, KcDaily, ETcDaily2, PcpDaily2, ErDaily, SpgDaily, ESpgDaily, DswDaily, SWDDaily, SWDxDaily, FCDaily,
                            PWPDaily, SWCDaily, YTDDaily, NADaily, CPcpDaily, CErDaily, CESpgDaily, CETcDaily, CDswDaily, ETAWMonDay, ETAWDaily, MonETAW, idayoutput, dailyunit,
                            dataday, date_index, data2day, data6day, data7day, data8day, data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day,
-                           data17day, data18day, data26day, data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput,
+                           data17day, data18day, data19day, data20day, data21day, data26day, data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput,
                            datamon, data2mon, data3mon, data4mon, data5mon, data6mon, data7mon, data8mon, data9mon, data12mon, data13mon, data14mon, data15mon,
-                           data16mon, data17mon, data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year)
+                           data16mon, data17mon, data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year,ETAWoffseasDaily, ETAW_reduce_MonDay, ETAWreduceDaily)
             SACETC = 0
             SACERN = 0
             SACSpg = 0
@@ -2294,9 +2316,23 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
                 DETAWOUTPUT[0, land_i, crop_i-1, :] = dataday[:]
                 DETAWOUTPUT[1, land_i, crop_i-1, :] = data10day[:]
                 DETAWOUTPUT[2, land_i, crop_i-1, :] = data2day[:]
-                DETAWOUTPUT[3, land_i, crop_i-1, :] = data12day[:]
+                DETAWOUTPUT[3, land_i, crop_i-1, :] = data12day[:] #ETAW
                 DETAWOUTPUT[4, land_i, crop_i-1, :] = data11day[:]
                 DETAWOUTPUT[5, land_i, crop_i-1, :] = data13day[:]
+                DETAWOUTPUT[6, land_i, crop_i-1, :] = data7day[:] #Kc
+                DETAWOUTPUT[7, land_i, crop_i-1, :] = data8day[:] #SWC
+                DETAWOUTPUT[8, land_i, crop_i-1, :] = data15day[:] #FCDaily
+                DETAWOUTPUT[9, land_i, crop_i-1, :] = data18day[:] #YTDDaily
+                DETAWOUTPUT[10, land_i, crop_i-1, :] = data26day[:] #NA
+                DETAWOUTPUT[11, land_i, crop_i-1, :] = data28day[:] #CEr
+                DETAWOUTPUT[12, land_i, crop_i-1, :] = data29day[:] #CEspg
+                DETAWOUTPUT[13, land_i, crop_i-1, :] = data30day[:] #CETc
+                DETAWOUTPUT[14, land_i, crop_i-1, :] = data31day[:] #CDsw
+                DETAWOUTPUT[15, land_i, crop_i-1, :] = data32day[:] #CETaw
+                DETAWOUTPUT[16, land_i, crop_i-1, :] = data20day[:] #Monthly del SWC
+                DETAWOUTPUT[17, land_i, crop_i-1, :] = data17day[:] #SWDDaily
+                DETAWOUTPUT[18, land_i, crop_i-1, :] = data19day[:] #ETAWoffseasDaily
+                DETAWOUTPUT[19, land_i, crop_i-1, :] = data21day[:] #ETAWreduceDaily
                 if forDSM2_daily == 1:
                     ddatalist = dataday, data10day, data2day, data12day, data11day, data13day
                     dcpartlist = "ETc", "ESpg", "PCP", "ETAW", "Dsw", "ER"

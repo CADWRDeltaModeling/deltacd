@@ -546,7 +546,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         (ds_detaw_split.precip - ds_detaw_split.e_r)
         .clip(0.0)
         .sum("crop")
-        .rolling(time=5, min_periods=1)
+        .rolling(time=1, min_periods=1)
         .mean()
     )
     cropname = "Water surface"
@@ -622,6 +622,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         dims=["area_id"],
         coords=dict(area_id=areas),
     )
+    da_gwrates *= 0.0
     da_gw1 = da_gwrates * da_aw / da_eta
 
     # Calculate groundwater component 2
@@ -643,6 +644,10 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
     # Adjust leach water with available runoff
     da_lwa, da_lwd = adjust_leach_water(da_lwa, da_lwd, da_runoff)
+
+    # Zero out the leach water
+    da_lwa *= 0.0
+    da_lwd *= 0.0
 
     # Calculate diversion without seepage
     # NOTE Routines to adjust runoff in leach water are not implemented.
@@ -671,7 +676,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
     ds_dcd["groundwater_to_applied_water"] = da_gw1 * taf2cfs
 
-    ds_dcd["applied_water"] = da_aw * taf2cfs
+    ds_dcd["applied_water"] = (da_aw / da_eta) * taf2cfs
 
     da_runoff *= taf2cfs
     ds_dcd["runoff"] = da_runoff
