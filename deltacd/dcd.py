@@ -555,6 +555,11 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         - ds_detaw_split.precip.sel(crop=cropname)
     ).clip(0.0)
 
+    da_excess_precip_ws = (
+       ds_detaw_split.precip.sel(crop=cropname) - ds_detaw_split.et_c.sel(crop=cropname)
+    ).clip(0.0).drop_vars("crop")
+
+
     # Create an array of days in each month for later use
     days_in_month = dates.days_in_month
     da_days_in_month = xr.DataArray(
@@ -622,7 +627,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         dims=["area_id"],
         coords=dict(area_id=areas),
     )
-    da_gwrates *= 0.0
+    # da_gwrates *= 0.0
     da_gw1 = da_gwrates * da_aw / da_eta
 
     # Calculate groundwater component 2
@@ -646,8 +651,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     da_lwa, da_lwd = adjust_leach_water(da_lwa, da_lwd, da_runoff)
 
     # Zero out the leach water
-    da_lwa *= 0.0
-    da_lwd *= 0.0
+    # da_lwa *= 0.0
+    # da_lwd *= 0.0
 
     # Calculate diversion without seepage
     # NOTE Routines to adjust runoff in leach water are not implemented.
@@ -673,6 +678,15 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # FIXME Add attributes
     da_gwf *= taf2cfs
     ds_dcd = da_gwf.to_dataset(name="groundwater")
+
+    da_lwa *= taf2cfs
+    ds_dcd["lw_applied"] = da_lwa
+
+    da_lwd *= taf2cfs
+    ds_dcd["lw_drained"] = da_lwd
+
+    da_excess_precip_ws *= taf2cfs
+    ds_dcd["excess_precip_ws"] = da_excess_precip_ws
 
     ds_dcd["groundwater_to_applied_water"] = da_gw1 * taf2cfs
 
