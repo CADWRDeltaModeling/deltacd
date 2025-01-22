@@ -673,7 +673,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
     ds_dcd["applied_water"] = da_aw / da_eta * taf2cfs
 
-    da_runoff *= taf2cfs
+    da_runoff_after_percolation *= taf2cfs
     ds_dcd["runoff"] = da_runoff_after_percolation
 
     # Calculate deep percolation
