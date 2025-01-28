@@ -2,6 +2,7 @@
 """
 Postprocessing tools for deltacd
 """
+import os
 from pathlib import Path
 import pandas as pd
 import xarray as xr
@@ -27,11 +28,18 @@ def deltacd2dsm2(ncfn, dssfn, inpfn=None):
 
     """
     deltacd = xr.open_dataset(str(ncfn))
-
+    
+    # rename varaibles to match DSM2 input style
+    deltacd = deltacd.rename({"diversion": "DIV-FLOW",
+                              "drainage":"DRAIN-FLOW",
+                              "seepage":"SEEP-FLOW"})   
+    
+    if os.path.exists(dssfn):
+        os.remove(dssfn)
     dcd = pyhecdss.DSSFile(str(dssfn), create_new=True)
     ptype = "PER-AVER"
     units = "CFS"
-    A = "DELTACD-HIST+NODE"
+    A = "DELTACD"
     E = "1DAY"
     F = "DWR-BDO"
 
@@ -50,7 +58,7 @@ def deltacd2dsm2(ncfn, dssfn, inpfn=None):
     for n in deltacd.node.values:
         for v in list(deltacd.keys()):
             B = n
-            C = v
+            C = v.upper()
             outpath = "/%s/%s/%s//%s/%s/" % (A, B, C, E, F)
             ts = deltacd[v].sel(node=n).to_series()
             if (ts == 0).all():  # ignoring the node that has zero flow values.
@@ -63,10 +71,10 @@ def deltacd2dsm2(ncfn, dssfn, inpfn=None):
 
             if inpfn is not None:
                 NAME = "dicu_%s_%s" % (v.split("-")[0].lower(), n)
-                NAME = NAME.ljust(16)
+                NAME = NAME.ljust(20)
                 NODE = n.rjust(3)
                 SIGN = -1
-                if v == "DRAIN-FLOW":
+                if v.upper() == "DRAIN-FLOW":
                     SIGN = 1
                 if n == "BBID":  # this is reservoir
                     newline = "\n%s%s%5s%5s%14s %s" % (
