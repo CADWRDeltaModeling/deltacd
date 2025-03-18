@@ -2762,7 +2762,7 @@ def read_et_correction_factors(fn):
     # read data from the csv file
     data = pd.read_csv(fn, index_col=False)
     skip_cols = ['area_id', 'SubArea', 'extension', 'ETo Correction Factor', 'REGION', 'REGION.1']
-    ts_per = data[data.columns[~data.columns.isin(skip_cols)]].T.to_numpy()
+    ts_per = data[sorted(data.columns[~data.columns.isin(skip_cols)])].T.to_numpy()
     ETo_corrector = data.loc[:, 'ETo Correction Factor'].T.to_numpy()
     Region = data.loc[:, 'REGION'].T.to_numpy()
     return (ts_per, ETo_corrector, Region)
