@@ -11,8 +11,8 @@ detaw:
   calendar: 'inputs/calendar.txt'
   # Model Output control
   detaw_output: 'outputs/detawoutput_suisun_schism.nc'
-  precip_output: 'outputs/precip_suisun.nc'
-  et_output: 'outputs/ET0.nc'
+  precip_output: 'outputs/precip_suisun_schism.nc'
+  et_output: 'outputs/et0_suisun_schism.nc'
   daily_output: 1
   monthly_output: 1
   yearly_output: 0

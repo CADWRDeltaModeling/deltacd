@@ -1,0 +1,28 @@
+detaw:
+  #-------------------------------------------------
+  # Other model parameters
+  # The model start and end year in water year.
+  start_water_year: 1922
+  end_water_year: 1932
+  # The input precipitation CSV file. Station precipitation in mm.
+  input_pcp: 'inputs/mm_pcp.csv'
+  # The input temperature CSV file. Station temperature in deg C.
+  input_temperature: 'inputs/LODI_PT.csv'
+  # The land use CSV file. Yearly landuse in Hectares.
+  landuse : 'inputs/landuse_dsm2.csv'
+  # The ET correction CSV file
+  et_correction: 'inputs/et_correction_dsm2.csv'
+  # The critical years and non-critical years crop CSV files
+  critical: 'inputs/crop_info_critical.csv'
+  noncritical: 'inputs/crop_info_noncritical.csv'
+
+  # Model Output control
+  detaw_output: 'outputs/detawoutput_delta_dsm2.nc'
+  precip_output: 'outputs/precip_delta_dsm2.nc'
+  et_output: 'outputs/et0_delta_dsm2.nc'
+  daily_output: 1
+  monthly_output: 1
+  yearly_output: 0
+  delta_output: 0
+  daily_output_unit: 1
+  for_dsm2_only: 1
