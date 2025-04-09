@@ -410,7 +410,7 @@ def read_groundwater_rates(fpath: str) -> pd.DataFrame:
     return df_gw_rates
 
 
-def add_split_area_data(df_data, df_split_table):
+def add_split_area_data(df_data, df_split_table, use_zeros=False):
     """Add data for split areas by copying data from the source areas
 
     Parameters
@@ -419,6 +419,9 @@ def add_split_area_data(df_data, df_split_table):
         data to split
     df_split_table: pandas.DataFrame
         split table
+    use_zeros: bool, optional
+        if True, set the values of the split areas to zero
+        (default: False)
 
     Returns
     -------
@@ -432,6 +435,8 @@ def add_split_area_data(df_data, df_split_table):
     df_data_to_add = (
         df_data_updated.set_index("area_id").loc[areas_to_add].reset_index().copy()
     )
+    if use_zeros:
+        df_data_to_add.loc[:, df_data.columns[1:]] = 0.0
     df_data_to_add["area_id"] = df_split_table["area_id"]
     df_data_updated = pd.concat([df_data_updated, df_data_to_add], ignore_index=True)
 
@@ -833,13 +838,13 @@ def read_dcd_input_data(params: dict) -> dict:
     path_lwa = params.get("path_leach_applied")
     df_lwa = pd.read_csv(path_lwa, dtype={"area_id": str})
     if df_split_table is not None:
-        df_lwa = add_split_area_data(df_lwa, df_split_table)
+        df_lwa = add_split_area_data(df_lwa, df_split_table, use_zeros=True)
     input_data["lwa"] = df_lwa
 
     path_lwd = params.get("path_leach_drained")
     df_lwd = pd.read_csv(path_lwd, dtype={"area_id": str})
     if df_split_table is not None:
-        df_lwd = add_split_area_data(df_lwd, df_split_table)
+        df_lwd = add_split_area_data(df_lwd, df_split_table, use_zeros=True)
     input_data["lwd"] = df_lwd
 
     # Read distribution rates
