@@ -2617,7 +2617,7 @@ def read_pcp(start_date_str, end_date_str, fn):
     skip_cols =['year','month','day','DOY','file_dates']
     pcplocs = list((filter(lambda val: val not in skip_cols, column_names)))
     # subset the precip values and transpose before converting to array
-    ts_pcp = pcp_df.loc[mask,pcplocs].T.to_numpy()
+    ts_pcp = pcp_df.loc[mask, sorted(pcplocs)].T.to_numpy()
     return(ts_pcp)
 
 
