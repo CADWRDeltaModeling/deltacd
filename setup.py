@@ -23,7 +23,8 @@ setup(
         'console_scripts': [
             'dcd = deltacd.dcd:main',
             'detaw = deltacd.detaw:main',
-            'deltacd2dsm2 = deltacd.utils.deltacd2dsm2:main'
+            'deltacd2dsm2 = deltacd.utils.deltacd2dsm2:main',
+            'daily2mon = deltacd.utils.daily2mon:main'
         ]
     },
     install_requires=requirements,
