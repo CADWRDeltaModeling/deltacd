@@ -108,10 +108,10 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
                   {"long_name": "evapotranspiration of applied water", "units": "acre-foot day-1"},
                   {"long_name": "change in soil water content", "units": "acre-foot day-1"},
                   {"long_name": "effective rainfall", "units": "acre-foot day-1"}]
-    dims = ['area_id', 'crop', 'time']
+    dims = ['subarea', 'crop', 'time']
     # FIXME Crop categories are hardcoded. They can be read from data.
     if detawoutput.shape[2]-1 == 15: # The Delta has 15 landuse crop categories
-        coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
+        coords = {'subarea': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All field",
                        "Sugar beets", "Irrig grain", "Rice", "Truck crops",
                        "Tomato", "Orchard", "Vineyard", "Riparian vegetation",
@@ -119,7 +119,7 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
               'time': pd.date_range(str(model_start_year) + '-10-01',
                                     periods=detawoutput.shape[-1])}  # last dimension is time
     elif detawoutput.shape[2]-1 == 16: # Suisun Marsh has one more landuse crop category than the Delta
-        coords = {'area_id': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
+        coords = {'subarea': numpy.arange(detawoutput.shape[1]-1, dtype='i4')+1,
               'crop': ["Urban", "Irrig pasture", "Alfalfa", "All field",
                        "Sugar beets", "Irrig grain", "Rice", "Truck crops",
                        "Tomato", "Orchard", "Vineyard", "Riparian vegetation",
@@ -131,7 +131,7 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
                                          dims=dims,
                                          coords=coords, attrs=attributes[i])
                      for i, etvar in enumerate(etvars)})
-    ds.coords["area_id"].attrs = {"description": "subarea id"}
+    ds.coords["subarea"].attrs = {"description": "subarea id"}
     ds.coords["crop"].attrs = {"description": "land-use category"}
 
     ds.attrs['title'] = "Output from Delta Evapotranspiration of Applied Water (DETAW) module of DeltaCD"
@@ -142,6 +142,7 @@ def write_to_netcdf(detawoutput, model_start_year, fn_detaw_output):
     head_tail = os.path.split(fn_detaw_output)
     if not os.path.exists(head_tail[0]):
         os.mkdir(head_tail[0])
+    ds = ds.transpose("time", "subarea", "crop")
     ds.to_netcdf(fn_detaw_output)
     return ds
 

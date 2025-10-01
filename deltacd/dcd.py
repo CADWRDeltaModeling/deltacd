@@ -70,7 +70,7 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
     n_areas = len(df_subareas)
     areas = df_subareas["area_id"].values
     da_drnseep = xr.DataArray(
-        data=np.zeros((n_areas)), dims=["area_id"], coords=dict(area_id=areas)
+        data=np.zeros((n_areas)), dims=["subarea"], coords=dict(subarea=areas)
     )
 
     areas_selected = df_subareas.query("uplow == 'low' & docregion == 'Lower'")[
@@ -121,10 +121,10 @@ def calculate_groundwater_rates(df_gw_rates, dates):
     df_gw_rates_daily.index.rename("time", inplace=True)
     da_gwrates = xr.DataArray(
         data=df_gw_rates_daily.values,
-        dims=["time", "area_id"],
+        dims=["time", "subarea"],
         coords=dict(
             time=df_gw_rates_daily.index.to_timestamp(),
-            area_id=df_gw_rates_daily.columns,
+            subarea=df_gw_rates_daily.columns,
         ),
     )
     return da_gwrates.sel(time=dates)
@@ -157,13 +157,13 @@ def adjust_leach_water(da_lwa, da_lwd, da_ro):
     da_lwd_adj = da_lwd.copy(deep=True)
     dates = pd.date_range(da_lwa.time.values[0], da_lwa.time.values[-1])
     years = range(dates[0].year + 1, dates[-1].year + 1)
-    areas = da_lwa.area_id.values
+    areas = da_lwa.subarea.values
     n_areas = len(areas)
     for year in years:
         leach_saved = np.zeros((n_areas,))
         lwa = da_lwa.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
         lwd = da_lwd.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
-        ro = da_ro.sel(time=slice(f"{year - 1}-10-01", f"{year}-09-30")).values.T
+        ro = da_ro.sel(time=slice(f"{year - 1}-10-01", f"{year}-09-30")).values
         lwa_adj = np.full_like(lwa, np.nan)
         lwd_adj = np.full_like(lwd, np.nan)
         for r_i in range(lwa.shape[0]):
@@ -330,7 +330,7 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
         rates[ind, node_args] = df_ratios[mask]["factor"]
     # Create a xarray.DataArray.
     da = xr.DataArray(
-        data=rates, dims=["area_id", "node"], coords=dict(area_id=area_ids, node=nodes)
+        data=rates, dims=["subarea", "node"], coords=dict(subarea=area_ids, node=nodes)
     )
     return da
 
@@ -489,7 +489,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     path_detaw = model_params.get("path_detaw_output")
     ds_detaw = xr.open_dataset(path_detaw).sel(time=slice(start_date, end_date))
     # Change the data type of the area coordinates
-    ds_detaw = ds_detaw.assign_coords(area_id=ds_detaw.area_id.astype(str))
+    ds_detaw = ds_detaw.assign_coords(subarea=ds_detaw.subarea.astype(str))
     ds_detaw["et_aw"] = ds_detaw["et_aw"].clip(0.0)
 
     # --------------------------------------------------------
@@ -540,13 +540,13 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
                     coords=dict(crop=crops[:n_crops]),
                 )
                 da_split = (
-                    ds_detaw_original[varname].sel(area_id=area_id_from) * da_ratios
+                    ds_detaw_original[varname].sel(subarea=area_id_from) * da_ratios
                 )
                 list_da.append(da_split)
-            da_new = xr.concat(list_da, dim="area_id").assign_coords(
-                area_id=df_split_table["area_id"].to_numpy()
+            da_new = xr.concat(list_da, dim="subarea").assign_coords(
+                subarea=df_split_table["area_id"].to_numpy()
             )
-            da_merged = xr.concat([da, da_new], dim="area_id")
+            da_merged = xr.concat([da, da_new], dim="subarea")
             list_merged.append(da_merged)
         ds_detaw_split = xr.merge(list_merged)
     else:
@@ -589,8 +589,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     df_lwa = df_lwa.resample("1D").ffill()
     da_lwa = xr.DataArray(
         data=df_lwa.values,
-        dims=["time", "area_id"],
-        coords=dict(time=dates, area_id=areas),
+        dims=["time", "subarea"],
+        coords=dict(time=dates, subarea=areas),
     )
     da_lwa /= da_days_in_month
 
@@ -605,8 +605,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     df_lwd = df_lwd.resample("1D").ffill()
     da_lwd = xr.DataArray(
         data=df_lwd.values,
-        dims=["time", "area_id"],
-        coords=dict(time=dates, area_id=areas),
+        dims=["time", "subarea"],
+        coords=dict(time=dates, subarea=areas),
     )
     da_lwd /= da_days_in_month
 
@@ -633,8 +633,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     df_eta = input_data.get("eta")
     da_eta = xr.DataArray(
         data=df_eta["irrigation_efficiency"].values,
-        dims=["area_id"],
-        coords=dict(area_id=areas),
+        dims=["subarea"],
+        coords=dict(subarea=areas),
     )
     da_gw1 = da_gwrates * da_aw / da_eta
 
@@ -742,8 +742,8 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         for _, row in df_split_table.iterrows():
             area_id_from = row["area_id_from"]
             area_id = row["area_id"]
-            ds_dcd_subtracted.loc[dict(area_id=area_id_from)] -= ds_dcd.sel(
-                area_id=area_id
+            ds_dcd_subtracted.loc[dict(subarea=area_id_from)] -= ds_dcd.sel(
+                subarea=area_id
             )
 
     created_at = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
