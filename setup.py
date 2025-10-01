@@ -10,7 +10,7 @@ requirements = [ "pandas",
 
 setup(
     name='deltacd',
-    python_requires='<3.12',
+    python_requires='<3.13',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="Channel Depletions Model",
@@ -30,7 +30,9 @@ setup(
     install_requires=requirements,
     keywords='deltacd',
     classifiers=[
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ]
 )
