@@ -1,5 +1,4 @@
 # DeltaCD, Delta channel depletion model
-# version 0.9.0
 #
 # dcd.py
 # This module calculates channel depletion time series based on outputs from
