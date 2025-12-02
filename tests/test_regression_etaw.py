@@ -98,7 +98,7 @@ def test_regression_etaw(example_etawoutput, ndarrays_regression):  # noqa: F811
             "S_e": data.s_e.values,
             "precip": data.precip.values,
             "time": data.time.values,
-            "area_id": data.area_id.values,
+            "subarea": data.subarea.values,
         },
         basename=f"test_regression_etaw_{name}",
     )
