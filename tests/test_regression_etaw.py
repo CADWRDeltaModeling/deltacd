@@ -66,8 +66,8 @@ def test_regression_et0(example_et0, ndarrays_regression):  # noqa: F811
     name, data = example_et0
     ndarrays_regression.check(
         {
-            "ET0": data.ET0.values,
             "time": data.time.values,
+            "ET0": data.ET0.values,
         },
         basename=f"test_regression_et0_{name}",
     )
@@ -78,9 +78,9 @@ def test_regression_precip(example_precip, ndarrays_regression):  # noqa: F811
     name, data = example_precip
     ndarrays_regression.check(
         {
-            "area": data.area.values,
-            "precip": data.precip.values,
             "time": data.time.values,
+            "subarea": data.subarea.values,
+            "precip": data.precip.values,
         },
         basename=f"test_regression_precip_{name}",
     )

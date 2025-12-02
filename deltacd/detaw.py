@@ -152,15 +152,15 @@ def weatheroutput_to_netcdf(pcp, ET0, model_start_year, fn_precip_output, fn_et_
     write the precip and ET0 for all areas to netcdf4 format
     '''
     dpcp = xr.DataArray(pcp,
-                        dims=['time', 'area'],
+                        dims=['time', 'subarea'],
                         coords={'time': pd.date_range(
-                            str(model_start_year) + '-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
+                            str(model_start_year) + '-10-01', periods=pcp.shape[0], freq='D'), 'subarea': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='precip')
     det0 = xr.DataArray(ET0,
-                        dims=['time', 'area'],
+                        dims=['time', 'subarea'],
                         coords={'time': pd.date_range(
-                            str(model_start_year) + '-10-01', periods=pcp.shape[0], freq='D'), 'area': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
+                            str(model_start_year) + '-10-01', periods=pcp.shape[0], freq='D'), 'subarea': numpy.arange(pcp.shape[-1], dtype='i4')+1, },
                         attrs={'units': 'mm'},
                         name='ET0')
 

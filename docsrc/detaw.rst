@@ -115,33 +115,41 @@ Output files
 
     detawoutput_dsm2 {
       dimensions:
-        area_id = 174 ;
+        subarea = 168 ;
         crop = 15 ;
         time = 37621 ;
       variables:
-        int area_id(area_id) ;
+        int subarea(subarea) ;
+                subarea:description = "subarea id" ;
         string crop(crop) ;
+                crop:description = "land-use category" ;
         int64 time(time) ;
                 time:units = "days since 1921-10-01 00:00:00" ;
                 time:calendar = "proleptic_gregorian" ;
-        double et_c(area_id, crop, time) ;
+        double et_c(time, subarea, crop) ;
                 et_c:_FillValue = NaN ;
-                et_c:units = "Acre-feet" ;
-        double s_e(area_id, crop, time) ;
+                et_c:long_name = "crop evapotranspiration" ;
+                et_c:units = "acre-foot day-1" ;
+        double s_e(time, subarea, crop) ;
                 s_e:_FillValue = NaN ;
-                s_e:units = "Acre-feet" ;
-        double precip(area_id, crop, time) ;
+                s_e:long_name = "Effective seepage" ;
+                s_e:units = "acre-foot day-1" ;
+        double precip(time, subarea, crop) ;
                 precip:_FillValue = NaN ;
-                precip:units = "Acre-feet" ;
-        double et_aw(area_id, crop, time) ;
+                precip:long_name = "precipitation" ;
+                precip:units = "acre-foot day-1" ;
+        double et_aw(time, subarea, crop) ;
                 et_aw:_FillValue = NaN ;
-                et_aw:units = "Acre-feet" ;
-        double d_sw(area_id, crop, time) ;
+                et_aw:long_name = "evapotranspiration of applied water" ;
+                et_aw:units = "acre-foot day-1" ;
+        double d_sw(time, subarea, crop) ;
                 d_sw:_FillValue = NaN ;
-                d_sw:units = "Acre-feet" ;
-        double e_r(area_id, crop, time) ;
+                d_sw:long_name = "change in soil water content" ;
+                d_sw:units = "acre-foot day-1" ;
+        double e_r(time, subarea, crop) ;
                 e_r:_FillValue = NaN ;
-                e_r:units = "Acre-feet" ;
+                e_r:long_name = "effective rainfall" ;
+                e_r:units = "acre-foot day-1" ;
       }
 
 - *precip_output*: Precipitation output format
@@ -153,14 +161,14 @@ Output files
 
     netcdf precip_dsm2 {
       dimensions:
-        area_id = 174 ;
+        area_id = 168 ;
         time = 37621 ;
       variables:
-        int area_id(area_id) ;
         int64 time(time) ;
                 time:units = "days since 1921-10-01 00:00:00" ;
                 time:calendar = "proleptic_gregorian" ;
-        double precip(area_id, time) ;
+        int subarea(subarea) ;
+        double precip(time, subarea) ;
                 precip:_FillValue = NaN ;
                 precip:units = "mm" ;
       }
@@ -174,14 +182,14 @@ Output files
 
     netcdf ET0 {
       dimensions:
-        area_id = 174 ;
         time = 37621 ;
+        subarea = 168 ;
       variables:
-        int area_id(area_id) ;
         int64 time(time) ;
                 time:units = "days since 1921-10-01 00:00:00" ;
                 time:calendar = "proleptic_gregorian" ;
-        double ET0(area_id, time) ;
+        int subarea(subarea) ;
+        double ET0(subarea, time) ;
                 ET0:_FillValue = NaN ;
                 ET0:units = "mm" ;
       }
