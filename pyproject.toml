@@ -9,16 +9,20 @@ authors = [
     { name = "California Department of Water Resources", email = "kijin.nam@water.ca.gov" }
 ]
 license = "MIT"
-readme = ""
+readme = { file = "README.rst", content-type = "text/x-rst" }
 requires-python = ">=3.9,<3.13"
-keywords = ["deltacd"]
+keywords = ["deltacd", "hydrology"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12"
+    "Programming Language :: Python :: 3.12",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Environment :: Console"
 ]
 dependencies = [
     "pandas",
@@ -32,6 +36,9 @@ dynamic = ["version"]
 
 [project.urls]
 Homepage = "https://github.com/cadwrdeltamodeling/deltacd"
+Source = "https://github.com/cadwrdeltamodeling/deltacd"
+"Bug Tracker" = "https://github.com/cadwrdeltamodeling/deltacd/issues"
+Documentation = "https://github.com/cadwrdeltamodeling/deltacd#readme"
 
 [project.scripts]
 dcd = "deltacd.dcd:main"
@@ -39,9 +46,11 @@ detaw = "deltacd.detaw:main"
 deltacd2dsm2 = "deltacd.utils.deltacd2dsm2:main"
 daily2mon = "deltacd.utils.daily2mon:main"
 
-[tool.setuptools]
-packages = ["deltacd"]
-
 [tool.setuptools_scm]
 version_scheme = "guess-next-dev"
 local_scheme = "node-and-date"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["deltacd*"]
+exclude = ["tests*", "docs*"]
