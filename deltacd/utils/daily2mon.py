@@ -45,7 +45,6 @@ def daily_to_monthly(daily_netcdf, monthly_dss):
             df_daily_node = df_daily[df_daily["node"] == node].drop(columns=["node"])
             df_daily_node.set_index("time", inplace=True)
             df_monthly_node = df_daily_node.resample('ME').mean().to_period('M')
-            df_monthly_node.to_csv(f"monthly_node_{node}.csv")  # For debugging purposes
             for var in df_monthly_node.columns:
                 path = f"/{A}/{node}/{var}//{E}/{F}/"
                 dcddss.write_rts(path, df_monthly_node, units, ptype)
