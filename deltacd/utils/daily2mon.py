@@ -1,5 +1,7 @@
 import xarray as xr
 import argparse
+import pandas as pd
+import pyhecdss
 
 def create_argparser():
     """ Create an argument parser.
@@ -16,7 +18,7 @@ def create_argparser():
 
     return parser
 
-def daily_to_monthly(daily_netcdf, monthly_netcdf):
+def daily_to_monthly(daily_netcdf, monthly_dss):
     """ Convert daily netCDF data to monthly netCDF data.
 
         Parameters
@@ -28,12 +30,26 @@ def daily_to_monthly(daily_netcdf, monthly_netcdf):
     """
     # Open the daily netCDF file
     ds_daily = xr.open_dataset(daily_netcdf)
+    df_daily=ds_daily.to_dataframe().reset_index()
+    df_daily = df_daily.rename({"DIVERSION": "DIV-FLOW",
+                              "DRAINAGE":"DRAIN-FLOW",
+                              "SEEPAGE":"SEEP-FLOW"})
+    with pyhecdss.DSSFile(str(monthly_dss), create_new=True) as dcddss:
+        ptype = "PER-AVER"
+        units = "CFS"
+        A = "DELTACD"
+        E = "1MON"
+        F = "DWR-BDO"
 
-    # Resample the data to monthly frequency
-    ds_monthly = ds_daily.resample(time="ME").mean()
-
-    # Save the monthly netCDF file
-    ds_monthly.to_netcdf(monthly_netcdf)
+        for node in df_daily["node"].unique():
+            df_daily_node = df_daily[df_daily["node"] == node].drop(columns=["node"])
+            df_daily_node.set_index("time", inplace=True)
+            df_monthly_node = df_daily_node.resample('ME').mean().to_period('M')
+            df_monthly_node.to_csv(f"monthly_node_{node}.csv")  # For debugging purposes
+            for var in df_monthly_node.columns:
+                path = f"/{A}/{node}/{var}//{E}/{F}/"
+                dcddss.write_rts(path, df_monthly_node, units, ptype)
+    ds_daily.close()
 
 def main():
     parser = create_argparser()
