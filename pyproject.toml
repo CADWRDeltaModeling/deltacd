@@ -10,7 +10,7 @@ authors = [
 ]
 license = "MIT"
 readme = { file = "README.rst", content-type = "text/x-rst" }
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.14"
 keywords = ["deltacd", "hydrology"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -44,7 +44,7 @@ Documentation = "https://github.com/cadwrdeltamodeling/deltacd#readme"
 dcd = "deltacd.dcd:main"
 detaw = "deltacd.detaw:main"
 deltacd2dsm2 = "deltacd.utils.deltacd2dsm2:main"
-daily2mon = "deltacd.utils.daily2mon:main"
+deltacd2calsim3 = "deltacd.utils.deltacd2calsim3:main"
 
 [tool.setuptools_scm]
 version_scheme = "guess-next-dev"
