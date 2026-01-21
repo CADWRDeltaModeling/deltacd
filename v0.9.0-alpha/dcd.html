@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>DCD (Delta Channel Depletion) &#8212; DeltaCD  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Post-processing" href="postprocessing.html" />
+    <link rel="prev" title="DETAW (Delta Evapotranspiration of Applied Water) Overview" href="detaw.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="postprocessing.html" title="Post-processing"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="detaw.html" title="DETAW (Delta Evapotranspiration of Applied Water) Overview"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">DeltaCD  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DCD (Delta Channel Depletion)</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="dcd-delta-channel-depletion">
+<h1>DCD (Delta Channel Depletion)<a class="headerlink" href="#dcd-delta-channel-depletion" title="Link to this heading">¶</a></h1>
+<p>Delta Channel Depletion (DCD) is an extension of DETAW to estimate daily channel depletions, including diversions, drainages, and seepages of the Delta islands. DCD also distributes these estimates for other model inputs such as DSM2, SCHISM, and CalSIM.</p>
+<p>This version of DCD is based on the previous version of DCD from DETAW-DCD, but it is totally rewritten in Python. The algorithms in and the calibration of the previous version DCD are described in an annual report chapter, <a class="reference external" href="https://data.cnra.ca.gov/dataset/dcd/resource/24890484-11a6-4ada-a61a-3d1f7fdd948e">Calibrating and Validating Delta Channel Depletion Estimates</a>, and they are the same in the current version. The changes in the current DCD in DeltaCD are described in Chapter 3, Updating DETAW-DCD to DeltaCD, of <a class="reference external" href="https://data.cnra.ca.gov/dataset/methodology-for-flow-and-salinity-estimates-in-the-sacramento-san-joaquin-delta-and-suisun-marsh/resource/dcabdb20-e638-4cf5-b199-78e78f0d482f">our 2023 annual report</a>.</p>
+<section id="main-input-file">
+<h2>Main input file<a class="headerlink" href="#main-input-file" title="Link to this heading">¶</a></h2>
+<p>The main input file of DCD follows YAML format, just like DETAW. The following is an example of the DCD main input file. Currently, the parameters in the main input file keep the names from the previous DETAW-DCD. Note that some of the options are not well maintained, and they are subject to change.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">dcd_dsm2.yaml</span><a class="headerlink" href="#id1" title="Link to this code">¶</a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">dcd</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">path_subarea_info</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/subarea_info_dsm2.csv&quot;</span>
+<span class="w">  </span><span class="nt">path_irrigation_efficiency</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/irrigation_efficiencies_dsm2.csv&quot;</span>
+<span class="w">  </span><span class="nt">path_leach_applied</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/leach_applied_dsm2.csv&quot;</span>
+<span class="w">  </span><span class="nt">path_leach_drained</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/leach_drained_dsm2.csv&quot;</span>
+<span class="w">  </span><span class="nt">path_detaw_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;output/detawoutput_dsm2.nc&quot;</span>
+<span class="w">  </span><span class="nt">path_groundwater_rates</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/gwrates_dsm2.csv&quot;</span>
+<span class="w">  </span><span class="nt">path_dsm2_diversion_rates</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/diversion_factors_dsm2.csv&quot;</span>
+<span class="w">  </span><span class="nt">path_dsm2_drainage_rates</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;inputs/drainage_factors_dsm2.csv&quot;</span>
+
+<span class="w">  </span><span class="c1"># Output files</span>
+<span class="w">  </span><span class="nt">path_dcd_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;output/dcd_areas_dsm2.nc&quot;</span>
+<span class="w">  </span><span class="nt">path_dcd_node_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;output/dcd_dsm2.nc&quot;</span>
+
+<span class="w">  </span><span class="c1"># DCD parameters</span>
+<span class="w">  </span><span class="nt">start_water_year</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1922</span>
+<span class="w">  </span><span class="nt">end_water_year</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2024</span>
+<span class="w">  </span><span class="nt">leach_scale</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5.0</span>
+<span class="w">  </span><span class="nt">runoff_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.75</span>
+<span class="w">  </span><span class="nt">deep_percolation_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
+<span class="w">  </span><span class="nt">is_adding_waterbody_evaporation</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+</div>
+<p>The main input file starts with a <cite>dcd</cite> key. The <cite>dcd</cite> key contains the following. File paths in the input file are based on the current working directory where a user runs the model:</p>
+<ul class="simple">
+<li><p>path_subarea_info: subarea (or island) information file.</p></li>
+<li><p>path_irrigation_efficiency: irrigation efficiency file.</p></li>
+<li><p>path_leach_applied: applied leach water file.</p></li>
+<li><p>path_leach_drained: drained leach water file.</p></li>
+<li><p>path_groundwater_rates: groundwater rates file.</p></li>
+<li><p>path_detaw_output: DETAW output file as an input for DCD.</p></li>
+<li><p>path_dsm2_diversion_rates: DSM2 diversion rates file for DSM2 nodes.</p></li>
+<li><p>path_dsm2_drainage_rates: DSM2 drainage rates file for DSM2 nodes.</p></li>
+<li><p>start_water_year: start water year.</p></li>
+<li><p>end_water_year: end water year.</p></li>
+<li><p>leach_scale: leach scale.</p></li>
+<li><p>runoff_rate: runoff rate.</p></li>
+<li><p>deep_percolation_rate: deep percolation late.</p></li>
+<li><p>is_adding_waterbody_evaporation: a flag to add evaporation from open water bodies.</p></li>
+<li><p>path_dcd_output: DCD output file in the NetCDF format.</p></li>
+<li><p>path_dcd_node_output: DCD nodes output file  in the NetCDF format.</p></li>
+</ul>
+<section id="input-files">
+<h3>Input files<a class="headerlink" href="#input-files" title="Link to this heading">¶</a></h3>
+<p>Below are sample input file formats. The input files can are in CSV or NetCDF format. Sample files can be found in the ‘examples/inputs’ directory.</p>
+<ul>
+<li><p><em>path_subarea_info</em>: Input subarea information sample format</p>
+<p>CSV file containing subarea information.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">path_subarea_info</span><a class="headerlink" href="#id2" title="Link to this code">¶</a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  area_id,name,uplow,acreage,docregion
+  1,UNION ISLAND  (EAST),low,11853.0,Lower
+  2,UNION ISLAND  (WEST),low,13711.0,Lower
+  ...
+  ...
+  173,BBID in UNDESIGNATED AREA,up,13901.142857142857,Lower
+  174,BBID in UNDESIGNATED AREA,up,34512.15126249121,Lower
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>path_irrigation_efficiency</em>: Input irrigation efficiency sample format</p>
+<p>CSV file containing irrigation efficiency information.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">path_irrigation_efficiency</span><a class="headerlink" href="#id3" title="Link to this code">¶</a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  area_id,irrigation_efficiency
+  1,0.85
+  2,0.85
+  ...
+  ...
+  173,0.85
+  174,0.85
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>path_leach_applied</em>: Input leach applied sample format</p>
+<p>CSV file containing leach applied information.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">path_leach_applied</span><a class="headerlink" href="#id4" title="Link to this code">¶</a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  area_id,10,11,12,1,2,3,4,5,6,7,8,9
+  1,0.0,464.0,464.0,464.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+  2,0.0,529.0,529.0,529.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+  ...
+  ...
+  173,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+  174,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>path_leach_drained</em>: Input leach drained sample format</p>
+<p>CSV file containing leach drained information.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">path_leach_drained</span><a class="headerlink" href="#id5" title="Link to this code">¶</a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  area_id,10,11,12,1,2,3,4,5,6,7,8,9
+  1,0.0,0.0,0.0,0.0,779.0,597.0,16.0,0.0,0.0,0.0,0.0,0.0
+  2,0.0,0.0,0.0,0.0,889.0,681.0,18.0,0.0,0.0,0.0,0.0,0.0
+  ...
+  ...
+  173,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+  174,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>path_groundwater_rates</em>: Input groundwater rates sample format</p>
+<p>CSV file containing groundwater rates information.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">path_groundwater_rates</span><a class="headerlink" href="#id6" title="Link to this code">¶</a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  year,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174
+  1921,0.35,0.35,0.3,0.0,0.35,0.35,0.3,0.25,0.3,0.35,0.3,0.3,0.3,0.3,0.3,0.25,0.0,0.3,0.25,0.3,0.3,0.3,0.3,0.35,0.3,0.35,0.3,0.3,0.25,0.35,0.35,0.25,0.25,0.25,0.3,0.0,0.25,0.35,0.35,0.3,0.0,0.25,0.25,0.0,0.0,0.3,0.3,0.25,0.25,0.25,0.25,0.3,0.3,0.25,0.3,0.3,0.25,0.25,0.3,0.3,0.3,0.3,0.25,0.25,0.35,0.0,0.25,0.25,0.35,0.0,0.25,0.25,0.0,0.3,0.25,0.0,0.0,0.25,0.0,0.3,0.0,0.35,0.3,0.0,0.0,0.0,0.3,0.0,0.0,0.35,0.0,0.35,0.0,0.3,0.0,0.3,0.3,0.25,0.3,0.3,0.0,0.25,0.0,0.25,0.25,0.0,0.3,0.25,0.3,0.3,0.3,0.25,0.3,0.25,0.25,0.25,0.25,0.3,0.25,0.25,0.25,0.0,0.25,0.3,0.35,0.0,0.3,0.0,0.25,0.0,0.25,0.35,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.0,0.0,0.0,0.35,0.0,0.0,0.25,0.25,0.25,0.25,0.0,0.0,0.0,0.0,0.0,0.25,0.0,0.0,0.0,0.0,0.0,0.0,0.25,0.25,0.25,0.0,0.25,0.25,0.0,0.0,0.0,0.0
+  1922,0.35,0.35,0.3,0.0,0.35,0.35,0.3,0.25,0.3,0.35,0.3,0.3,0.3,0.3,0.3,0.25,0.0,0.3,0.25,0.3,0.3,0.3,0.3,0.35,0.3,0.35,0.3,0.3,0.25,0.35,0.35,0.25,0.25,0.25,0.3,0.0,0.25,0.35,0.35,0.3,0.0,0.25,0.25,0.0,0.0,0.3,0.3,0.25,0.25,0.25,0.25,0.3,0.3,0.25,0.3,0.3,0.25,0.25,0.3,0.3,0.3,0.3,0.25,0.25,0.35,0.0,0.25,0.25,0.35,0.0,0.25,0.25,0.0,0.3,0.25,0.0,0.0,0.25,0.0,0.3,0.0,0.35,0.3,0.0,0.0,0.0,0.3,0.0,0.0,0.35,0.0,0.35,0.0,0.3,0.0,0.3,0.3,0.25,0.3,0.3,0.0,0.25,0.0,0.25,0.25,0.0,0.3,0.25,0.3,0.3,0.3,0.25,0.3,0.25,0.25,0.25,0.25,0.3,0.25,0.25,0.25,0.0,0.25,0.3,0.35,0.0,0.3,0.0,0.25,0.0,0.25,0.35,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.0,0.0,0.0,0.35,0.0,0.0,0.25,0.25,0.25,0.25,0.0,0.0,0.0,0.0,0.0,0.25,0.0,0.0,0.0,0.0,0.0,0.0,0.25,0.25,0.25,0.0,0.25,0.25,0.0,0.0,0.0,0.0
+  ...
+  ...
+  2023,0.35,0.35,0.3,0.4,0.35,0.35,0.3,0.25,0.3,0.35,0.3,0.3,0.3,0.3,0.3,0.25,0.4,0.3,0.25,0.3,0.3,0.3,0.3,0.35,0.3,0.35,0.3,0.3,0.25,0.35,0.35,0.25,0.25,0.25,0.3,0.4,0.25,0.35,0.35,0.3,0.4,0.25,0.25,0.4,0.4,0.3,0.3,0.25,0.25,0.25,0.25,0.3,0.3,0.25,0.3,0.3,0.25,0.25,0.3,0.3,0.3,0.3,0.25,0.25,0.35,0.4,0.25,0.25,0.35,0.4,0.25,0.25,0.4,0.3,0.25,0.4,0.4,0.25,0.4,0.3,0.4,0.35,0.3,0.4,0.4,0.4,0.3,0.4,0.4,0.35,0.4,0.35,0.4,0.3,0.4,0.3,0.3,0.25,0.3,0.3,0.4,0.25,0.4,0.25,0.25,0.4,0.3,0.25,0.3,0.3,0.3,0.25,0.3,0.25,0.25,0.25,0.25,0.3,0.25,0.25,0.25,0.4,0.25,0.3,0.35,0.4,0.3,0.4,0.25,0.4,0.25,0.35,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.4,0.4,0.4,0.35,0.4,0.4,0.25,0.25,0.25,0.25,0.4,0.4,0.4,0.4,0.4,0.25,0.4,0.4,0.4,0.4,0.4,0.4,0.25,0.25,0.25,0.4,0.25,0.25,0.4,0.4,0.4,0.4
+  2024,0.35,0.35,0.3,0.4,0.35,0.35,0.3,0.25,0.3,0.35,0.3,0.3,0.3,0.3,0.3,0.25,0.4,0.3,0.25,0.3,0.3,0.3,0.3,0.35,0.3,0.35,0.3,0.3,0.25,0.35,0.35,0.25,0.25,0.25,0.3,0.4,0.25,0.35,0.35,0.3,0.4,0.25,0.25,0.4,0.4,0.3,0.3,0.25,0.25,0.25,0.25,0.3,0.3,0.25,0.3,0.3,0.25,0.25,0.3,0.3,0.3,0.3,0.25,0.25,0.35,0.4,0.25,0.25,0.35,0.4,0.25,0.25,0.4,0.3,0.25,0.4,0.4,0.25,0.4,0.3,0.4,0.35,0.3,0.4,0.4,0.4,0.3,0.4,0.4,0.35,0.4,0.35,0.4,0.3,0.4,0.3,0.3,0.25,0.3,0.3,0.4,0.25,0.4,0.25,0.25,0.4,0.3,0.25,0.3,0.3,0.3,0.25,0.3,0.25,0.25,0.25,0.25,0.3,0.25,0.25,0.25,0.4,0.25,0.3,0.35,0.4,0.3,0.4,0.25,0.4,0.25,0.35,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.4,0.4,0.4,0.35,0.4,0.4,0.25,0.25,0.25,0.25,0.4,0.4,0.4,0.4,0.4,0.25,0.4,0.4,0.4,0.4,0.4,0.4,0.25,0.25,0.25,0.4,0.25,0.25,0.4,0.4,0.4,0.4
+</pre></div>
+</div>
+</div>
+</section>
+<section id="output-files">
+<h3>Output files<a class="headerlink" href="#output-files" title="Link to this heading">¶</a></h3>
+<p>The output files are in NetCDF format. Here is a sample output file header which shows the output variables and attributes. The attributes show the input parameters used in the model.</p>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">path_dcd_output</span><a class="headerlink" href="#id7" title="Link to this code">¶</a></div>
+<div class="highlight-NetCDF notranslate"><div class="highlight"><pre><span></span>  netcdf dcd_schism {
+  dimensions:
+    time = 37621 ;
+    node = 257 ;
+  variables:
+    int64 time(time) ;
+            time:units = &quot;days since 1921-10-01&quot; ;
+            time:calendar = &quot;proleptic_gregorian&quot; ;
+    string node(node) ;
+    double diversion(time, node) ;
+            diversion:_FillValue = NaN ;
+            diversion:unit = &quot;cfs&quot; ;
+            diversion:description = &quot;diversion flow at nodes&quot; ;
+    double seepage(time, node) ;
+            seepage:_FillValue = NaN ;
+            seepage:unit = &quot;cfs&quot; ;
+            seepage:description = &quot;seepage flow at nodes&quot; ;
+    double drainage(time, node) ;
+            drainage:_FillValue = NaN ;
+            drainage:unit = &quot;cfs&quot; ;
+            drainage:description = &quot;drainage flow at nodes&quot; ;
+
+  // global attributes:
+            :title = &quot;DeltaCD outputs&quot; ;
+            :leach_factor = 1. ;
+            :water_surface_evaporation = &quot;False&quot; ;
+            :dcd_inputs = &quot;{\&quot;path_subarea_info\&quot;: \&quot;inputs/subarea_info_dsm2.csv\&quot;, \&quot;path_irrigation_efficiency\&quot;: \&quot;inputs/irrigation_efficiencies_dsm2.csv\&quot;, \&quot;path_leach_applied\&quot;: \&quot;inputs/leach_applied_dsm2.csv\&quot;, \&quot;path_leach_drained\&quot;: \&quot;inputs/leach_drained_dsm2.csv\&quot;, \&quot;path_detaw_output\&quot;: \&quot;output/detawoutput_schism.nc\&quot;, \&quot;path_groundwater_rates\&quot;: \&quot;inputs/gwrates_dsm2.csv\&quot;, \&quot;path_dsm2_diversion_rates\&quot;: \&quot;inputs/diversion_factors_dsm2.csv\&quot;, \&quot;path_dsm2_drainage_rates\&quot;: \&quot;inputs/drainage_factors_dsm2.csv\&quot;, \&quot;path_dcd_output\&quot;: \&quot;output/dcd_areas_schism.nc\&quot;, \&quot;path_dcd_node_output\&quot;: \&quot;output/dcd_schism.nc\&quot;, \&quot;start_water_year\&quot;: 1922, \&quot;end_water_year\&quot;: 2024, \&quot;leach_scale\&quot;: 1.0, \&quot;runoff_rate\&quot;: 0.75, \&quot;deep_percolation_rate\&quot;: 0.25, \&quot;is_adding_waterbody_evaporation\&quot;: false}&quot; ;
+                          }
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">DCD (Delta Channel Depletion)</a><ul>
+<li><a class="reference internal" href="#main-input-file">Main input file</a><ul>
+<li><a class="reference internal" href="#input-files">Input files</a></li>
+<li><a class="reference internal" href="#output-files">Output files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="detaw.html"
+                          title="previous chapter">DETAW (Delta Evapotranspiration of Applied Water) Overview</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="postprocessing.html"
+                          title="next chapter">Post-processing</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dcd.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="postprocessing.html" title="Post-processing"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="detaw.html" title="DETAW (Delta Evapotranspiration of Applied Water) Overview"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">DeltaCD  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DCD (Delta Channel Depletion)</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023-2024, California Department of Water Resources.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    </div>
+  </body>
+</html>
