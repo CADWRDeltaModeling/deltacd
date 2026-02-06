@@ -65,6 +65,8 @@ def test_regression_dcd_area_output(
             "diversion": data.diversion.values,
             "drainage": data.drainage.values,
             "seepage": data.seepage.values,
+            "deep_percolation": data.deep_percolation.values,
+            "depletion_from_waterbody": data.depletion_from_waterbody.values,
         },
         basename=f"test_regression_dcd_areas_{name}.nc",
     )
@@ -78,6 +80,7 @@ def test_regression_dcd_output(example_dcd_output, ndarrays_regression):  # noqa
             "diversion": data.diversion.values,
             "seepage": data.seepage.values,
             "drainage": data.drainage.values,
+            "depletion_from_waterbody": data.depletion_from_waterbody.values,
         },
         basename=f"test_regression_dcd_{name}.nc",
     )
