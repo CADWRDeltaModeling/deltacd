@@ -63,12 +63,12 @@ def daily_to_monthly(daily_netcdf, monthly_dss, config):
                     if var in df_monthly_node.columns:
                         path = f"/{A}/{node}/{var}//{E}/{F}/"
                         dcddss.write_rts(path, df_monthly_node[[var]], units, ptype)
-        elif 'area_id' in ds_dims:
-            for area_id in df_daily["area_id"].unique():
+        elif 'subarea' in ds_dims:
+            for area_id in df_daily["subarea"].unique():
                 # Skip area_ids that contain underscore
                 if '_' in str(area_id):
                     continue
-                df_daily_area = df_daily[df_daily["area_id"] == area_id].drop(columns=["area_id"])
+                df_daily_area = df_daily[df_daily["subarea"] == area_id].drop(columns=["subarea"])
                 df_daily_area.set_index("time", inplace=True)
                 df_monthly_area = df_daily_area.resample('ME').mean().to_period('M')
                 for var in rename_vars:
