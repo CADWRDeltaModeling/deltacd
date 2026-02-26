@@ -34,6 +34,11 @@ dependencies = [
 
 dynamic = ["version"]
 
+[project.optional-dependencies]
+dss = [
+    "pyhecdss",
+]
+
 [project.urls]
 Homepage = "https://github.com/cadwrdeltamodeling/deltacd"
 Source = "https://github.com/cadwrdeltamodeling/deltacd"
