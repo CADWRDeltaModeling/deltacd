@@ -28,12 +28,20 @@ def deltacd2dsm2(ncfn, dssfn, inpfn=None):
 
     """
     deltacd = xr.open_dataset(str(ncfn))
-    
-    # rename varaibles to match DSM2 input style
+
+    # only keep the three core flow variables produced by DeltaCD
+    # users frequently only need diversion, drainage and seepage, so drop
+    # everything else before performing any further processing.
+    keep_vars = ["diversion", "drainage", "seepage"]
+    available = [v for v in keep_vars if v in deltacd.data_vars]
+    if available:
+        deltacd = deltacd[available]
+
+    # rename variables to match DSM2 input style
     deltacd = deltacd.rename({"diversion": "DIV-FLOW",
-                              "drainage":"DRAIN-FLOW",
-                              "seepage":"SEEP-FLOW"})   
-    
+                              "drainage": "DRAIN-FLOW",
+                              "seepage": "SEEP-FLOW"})
+
     if os.path.exists(dssfn):
         os.remove(dssfn)
     dcd = pyhecdss.DSSFile(str(dssfn), create_new=True)
