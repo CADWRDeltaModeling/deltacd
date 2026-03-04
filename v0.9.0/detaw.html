@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DETAW (Delta Evapotranspiration of Applied Water) Overview &mdash; DeltaCD  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DCD (Delta Channel Depletion)" href="dcd.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DeltaCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DETAW (Delta Evapotranspiration of Applied Water) Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#main-input-file">Main input file</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#input-files">Input files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#output-files">Output files</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dcd.html">DCD (Delta Channel Depletion)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="postprocessing.html">Post-processing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog_link.html">Changelog</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DeltaCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">DETAW (Delta Evapotranspiration of Applied Water) Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/detaw.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="detaw-delta-evapotranspiration-of-applied-water-overview">
+<h1>DETAW (Delta Evapotranspiration of Applied Water) Overview<a class="headerlink" href="#detaw-delta-evapotranspiration-of-applied-water-overview" title="Link to this heading"></a></h1>
+<p>Delta Evapotranspiration of Applied Water (DETAW) is designed to simulate the daily evapotranspiration(ET) and root zone water balance in subareas of the Sacramento-San Joaquin River Delta. The current version of DETAW in DeltaCD, is roughly the same as DETAW v2.1 from the previous DETAW-DCD. Hence, though the formats of many input files change slightly, <a class="reference external" href="https://github.com/CADWRDeltaModeling/DETAW-DCD/blob/master/DETAW/Documents/DETAW%20v2.1_user's%20manual.pdf">DETAW v2.1 user manual</a> is a good reference to use. The algorithms and the theories behind of DETAW are described in <a class="reference external" href="https://og-production-open-data-cnra-892364687672.s3.amazonaws.com/resources/6539f894-325d-4092-b34a-3139fd35c5b1/08detaw.pdf?Content-Type=application%2Fpdf&amp;X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAJJIENTAPKHZMIPXQ%2F20240206%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20240206T180739Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=38bcbf3f4cf3de7b97e5b9c8ee0e1b5fb9443a4d911e4d7a041802191e977678">DETAW v1.0 report</a> and annual report chapters, <a class="reference external" href="https://og-production-open-data-cnra-892364687672.s3.amazonaws.com/resources/61bf1927-14a9-44ae-96ef-00fc8af9b725/method_2017_chapter3.pdf?Content-Type=application%2Fpdf&amp;X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAJJIENTAPKHZMIPXQ%2F20240206%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20240206T180930Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=d2139c9152f4b8b7817ff7185513d142631deaa3efe7e3b21b52d6eb4e26f00e">Implementing DETAW in Modeling Hydrodynamics and Water Quality in the Sacramento-San Joaquin Delta</a> and <a class="reference external" href="https://og-production-open-data-cnra-892364687672.s3.amazonaws.com/resources/91c46590-7383-41fd-8446-db60dae5e874/2006ch7.pdf?Content-Type=application%2Fpdf&amp;X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAJJIENTAPKHZMIPXQ%2F20240206%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20240206T180924Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=3bb64bc65a2b348dd2b442b60c6f03730154ae7b36f258e9dc2bc84cc3f1f39a">Estimates for Consumptive Water Demands in the Delta using DETAW</a>.</p>
+<section id="main-input-file">
+<h2>Main input file<a class="headerlink" href="#main-input-file" title="Link to this heading"></a></h2>
+<p>The main input file of DETAW follows YAML format. YAML is a human-readable data language format, common for configuration files (<a class="reference external" href="https://en.wikipedia.org/wiki/YAML">Wikipedia YAML page</a>). The following is an example of the DETAW main input file. Currently, the parameters in the main input file keep the names from the previous DETAW-DCD. Note that some of the options are not well maintained, and they are subject to change.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">detaw_dsm2.yaml</span><a class="headerlink" href="#id1" title="Link to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">detaw</span><span class="p">:</span>
+<span class="w">  </span><span class="c1"># Model inputs</span>
+<span class="w">  </span><span class="nt">start_water_year</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1922</span>
+<span class="w">  </span><span class="nt">end_water_year</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2024</span>
+<span class="w">  </span><span class="nt">input_pcp</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;inputs/mm_pcp.csv&#39;</span>
+<span class="w">  </span><span class="nt">input_temperature</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;inputs/LODI_PT.csv&#39;</span>
+<span class="w">  </span><span class="nt">landuse </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;inputs/landuse_dsm2.csv&#39;</span>
+<span class="w">  </span><span class="nt">et_correction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;inputs/Percentage.csv&#39;</span>
+<span class="w">  </span><span class="nt">critical</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;inputs/critical.csv&#39;</span>
+<span class="w">  </span><span class="nt">noncritical</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;inputs/noncritical.csv&#39;</span>
+<span class="w">  </span><span class="c1"># Model output control</span>
+<span class="w">  </span><span class="nt">detaw_output</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output/detawoutput_dsm2.nc&#39;</span>
+<span class="w">  </span><span class="nt">precip_output</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output/precip_dsm2.nc&#39;</span>
+<span class="w">  </span><span class="nt">et_output</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output/ET0.nc&#39;</span>
+<span class="w">  </span><span class="nt">daily_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">monthly_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">yearly_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">  </span><span class="nt">delta_output</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">  </span><span class="nt">daily_output_unit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">  </span><span class="nt">for_dsm2_only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</div>
+</div>
+<p>The main input file starts with a <cite>detaw</cite> key. The <cite>detaw</cite> key contains the following item-value pairs. The item and values they represent are described below. File paths in the input file are based on the current working directory where a user runs the model:</p>
+<ul class="simple">
+<li><p><cite>start_water_year</cite>: The model start year in water year. The water year starts from October 1st and ends on September 30th of the following year.</p></li>
+<li><p><cite>end_water_year</cite>: The model end year in water year.</p></li>
+<li><p><cite>input_pcp</cite>: The precipitation CSV file.</p></li>
+<li><p><cite>input_temperature</cite>: The temperature CSV file.</p></li>
+<li><p><cite>landuse</cite>: The land use CSV file.</p></li>
+<li><p><cite>et_correction</cite>: The ET correction CSV file.</p></li>
+<li><p><cite>critical</cite>: The crop coefficient CSV file for critical (dry, below average) water years.</p></li>
+<li><p><cite>noncritical</cite>: The crop coefficient CSV file for non-critical water years.</p></li>
+<li><p><cite>detaw_output</cite>: The DETAW netCDF output filename.</p></li>
+<li><p><cite>precip_output`</cite>: The precipitation netCDF output filename.</p></li>
+<li><p><cite>et_output</cite>: The ET netCDF output filename.</p></li>
+<li><p><cite>daily_output</cite>: The flag to output daily data. If 1, the model outputs daily data. If 0, the model does not output daily data.</p></li>
+<li><p><cite>monthly_output</cite>: The flag to output monthly data. If 1, the model outputs monthly data. If 0, the model does not output monthly data.</p></li>
+<li><p><cite>yearly_output</cite>: The flag to output yearly data. If 1, the model outputs yearly data. If 0, the model does not output yearly data.</p></li>
+<li><p><cite>delta_output</cite>: The flag to output delta data. If 1, the model outputs total of the values. If 0, the model does not output it.</p></li>
+<li><p><cite>daily_output_unit</cite>: The unit of daily output. If 1, the unit is in ft. If 0, the unit is in mm. Not actively maintained.</p></li>
+<li><p><cite>for_dsm2_only</cite>: The flag to output data for DSM2. If 1, the model outputs data only relevant to DSM2. If 0, the outputs are written as they are.</p></li>
+</ul>
+<section id="input-files">
+<h3>Input files<a class="headerlink" href="#input-files" title="Link to this heading"></a></h3>
+<p>Below are sample input file formats.</p>
+<ul>
+<li><p><em>input_pcp</em>: Input precipitation sample format</p>
+<p>CSV file containing station precipitation in mm.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">input_pcp</span><a class="headerlink" href="#id2" title="Link to this code"></a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  year,month,day,DOY,Brentwood,Davis,Galt,Lodi,RioVista,Stockton,Tracy
+  1921,9,30,273,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+  1921,10,1,274,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+  ....
+  ....
+  2024,9,29,273,0.0,0.5,0.0,0.0,0.0,0.0,0.0
+  2024,9,30,274,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>input_temperature</em>: Input temperature sample format</p>
+<p>CSV file containing station temperature in deg C.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">input_temperature</span><a class="headerlink" href="#id3" title="Link to this code"></a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  Date,Year,Month,DOY,Pcp(mm),Tx(oC),Tn(oC)
+  9/30/1921,1921,9,273,0,27.8,9.4
+  10/1/1921,1921,10,274,0,27.8,9.4
+  ....
+  ....
+  9/29/2024,2024,9,273,0,20.9,6.5
+  9/30/2024,2024,9,274,0,23.6,4
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>landuse</em>: Landuse sample format</p>
+<p>CSV file containing landuse for each area_id for different years.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">landuse</span><a class="headerlink" href="#id4" title="Link to this code"></a></div>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>  DATE,TYPE,UR,PA,AL,FI,SB,GR,RI,TR,TO,OR,VI,RV,NV,DGR,WS,area_id
+  1922,AN,13.0,75.0,387.0,1070.0,147,879.0,0,1642.0,0.0,227.0,0.0,36,178,0,141,1
+  1923,BN,13.0,90.0,385.0,1082.0,160,825.0,0,1459.0,0.0,236.0,0.0,49,302,0,195,1
+  ....
+  ....
+  2023,BN,0.0,113.032,28.91,194.648,0,7.11,0,63.0,470.718,389.27,271.25,0,0,0,0,174
+  2024,W,0.0,113.032,28.91,194.648,0,7.11,0,63.0,470.718,389.27,271.25,0,0,0,0,174
+</pre></div>
+</div>
+</div>
+</section>
+<section id="output-files">
+<h3>Output files<a class="headerlink" href="#output-files" title="Link to this heading"></a></h3>
+<ul>
+<li><p><em>detaw_output</em>: DETAW output format</p>
+<p>After successful detaw model run a netCDF file containing output is created whereever the detaw_output points. Below is a sample of the what the output netCDF header might look like.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">detaw_output</span><a class="headerlink" href="#id5" title="Link to this code"></a></div>
+<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>detawoutput_dsm2 {
+  dimensions:
+    area_id = 174 ;
+    crop = 15 ;
+    time = 37621 ;
+  variables:
+    int area_id(area_id) ;
+    string crop(crop) ;
+    int64 time(time) ;
+            time:units = &quot;days since 1921-10-01 00:00:00&quot; ;
+            time:calendar = &quot;proleptic_gregorian&quot; ;
+    double et_c(area_id, crop, time) ;
+            et_c:_FillValue = NaN ;
+            et_c:units = &quot;Acre-feet&quot; ;
+    double s_e(area_id, crop, time) ;
+            s_e:_FillValue = NaN ;
+            s_e:units = &quot;Acre-feet&quot; ;
+    double precip(area_id, crop, time) ;
+            precip:_FillValue = NaN ;
+            precip:units = &quot;Acre-feet&quot; ;
+    double et_aw(area_id, crop, time) ;
+            et_aw:_FillValue = NaN ;
+            et_aw:units = &quot;Acre-feet&quot; ;
+    double d_sw(area_id, crop, time) ;
+            d_sw:_FillValue = NaN ;
+            d_sw:units = &quot;Acre-feet&quot; ;
+    double e_r(area_id, crop, time) ;
+            e_r:_FillValue = NaN ;
+            e_r:units = &quot;Acre-feet&quot; ;
+  }
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>precip_output</em>: Precipitation output format</p>
+<p>After successful detaw model run a netCDF file containing output is created whereever the precip_output points. Below is a sample of the what the output netCDF header might look like.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">precip_output</span><a class="headerlink" href="#id6" title="Link to this code"></a></div>
+<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>netcdf precip_dsm2 {
+  dimensions:
+    area_id = 174 ;
+    time = 37621 ;
+  variables:
+    int area_id(area_id) ;
+    int64 time(time) ;
+            time:units = &quot;days since 1921-10-01 00:00:00&quot; ;
+            time:calendar = &quot;proleptic_gregorian&quot; ;
+    double precip(area_id, time) ;
+            precip:_FillValue = NaN ;
+            precip:units = &quot;mm&quot; ;
+  }
+</pre></div>
+</div>
+</div>
+<ul>
+<li><p><em>et_output</em>: ET output format</p>
+<p>After successful detaw model run a netCDF file containing output is created whereever the et_output points. Below is a sample of the what the output netCDF header might look like.</p>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">et_output</span><a class="headerlink" href="#id7" title="Link to this code"></a></div>
+<div class="highlight-txt notranslate"><div class="highlight"><pre><span></span>netcdf ET0 {
+  dimensions:
+    area_id = 174 ;
+    time = 37621 ;
+  variables:
+    int area_id(area_id) ;
+    int64 time(time) ;
+            time:units = &quot;days since 1921-10-01 00:00:00&quot; ;
+            time:calendar = &quot;proleptic_gregorian&quot; ;
+    double ET0(area_id, time) ;
+            ET0:_FillValue = NaN ;
+            ET0:units = &quot;mm&quot; ;
+  }
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dcd.html" class="btn btn-neutral float-right" title="DCD (Delta Channel Depletion)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2024, California Department of Water Resources.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
