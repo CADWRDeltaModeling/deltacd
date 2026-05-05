@@ -208,7 +208,7 @@ def use_runoff_for_leach(
         if lwd_adj < 0.0:
             lwd_adj = 0.0
     else:
-        lwd_adj = 0.0
+        lwd_adj = lwd
     return leach_saved, lwa_adj, lwd_adj
 
 
