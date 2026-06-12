@@ -1,0 +1,14 @@
+# Paths are relative to the location of this config file.
+# Absolute paths are also accepted.
+
+# DeltaCD NetCDF output files
+area_path: outputs/dcd_areas_schism_nows_lch1_baseline_flooded.nc
+node_path: outputs/dcd_schism_nows_lch1_baseline_flooded.nc
+
+# Factor lookup tables
+diversion_factors_path: inputs/diversion_factors_delta.csv
+drainage_factors_path: inputs/drainage_factors_delta.csv
+
+# GeoJSON map layers
+subareas_geojson_path: ../maps/detaw_168_subareas.geojson
+nodes_geojson_path: ../maps/dsm2_nodes_8_2.geojson
