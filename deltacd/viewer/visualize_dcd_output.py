@@ -21,6 +21,7 @@ import yaml
 import holoviews as hv
 import numpy as np
 import pandas as pd
+import hvplot.pandas
 import panel as pn
 import xarray as xr
 
@@ -354,7 +355,7 @@ def area_make_plot(
     date_end: object,
     aggregation: str,
     rolling_window: int,
-) -> hv.Overlay | hv.Curve:
+) -> object:
     if not areas:
         return hv.Curve([]).opts(
             height=PLOT_HEIGHT, responsive=True, title="Select at least one subarea"
@@ -370,17 +371,13 @@ def area_make_plot(
         return hv.Curve([]).opts(
             height=PLOT_HEIGHT, responsive=True, title="No data in the selected date range"
         )
-    # Build one Curve per selected area and overlay them.
-    curves = [
-        hv.Curve((filtered.index, filtered[column]), kdims="time", vdims=variable, label=column)
-        for column in filtered.columns
-    ]
-    return hv.Overlay(curves).opts(
+    # Use hvplot for better default hover support and cleaner multi-line rendering.
+    return filtered.hvplot.line(
         height=PLOT_HEIGHT,
-        legend_position="right",
         responsive=True,
-        show_grid=True,
-        tools=["hover"],
+        grid=True,
+        toolbar="right",
+        tools=["hover", "pan", "wheel_zoom", "reset"],
         title=f"{variable.replace('_', ' ').title()} by subarea",
         xlabel="Time",
         ylabel=variable,
@@ -415,6 +412,85 @@ def area_make_stats_table(
     ).round(3)
     summary.index.name = area_dim
     return pn.pane.DataFrame(summary, sizing_mode="stretch_width", height=280)
+
+
+def _extract_area_csv(
+    ds: xr.Dataset,
+    time_index: pd.DatetimeIndex,
+    area_dim: str,
+    variable: str,
+    areas: list[str],
+    date_start: object,
+    date_end: object,
+    aggregation: str,
+    rolling_window: int,
+) -> str:
+    """Extract selected area/variable data to CSV and return a status message.
+    
+    The CSV file is named {variable}_{areas}.csv and saved to the current working directory.
+    """
+    if not areas:
+        return "No subareas selected."
+    
+    # Build the same filtered dataframe used in the plot
+    frame = area_to_dataframe(ds, variable, area_dim, areas, time_index)
+    start = pd.Timestamp(date_start) if date_start is not None else time_index.min()
+    end = pd.Timestamp(date_end) if date_end is not None else time_index.max()
+    filtered = aggregate_frame(frame.loc[start:end], aggregation)
+    if rolling_window > 1:
+        filtered = filtered.rolling(window=rolling_window, min_periods=1).mean()
+    
+    if filtered.empty:
+        return "No data to export for the current selection."
+    
+    # Generate filename
+    areas_str = "_".join(str(a) for a in areas)
+    filename = f"{variable}_{areas_str}.csv"
+    
+    try:
+        filtered.to_csv(filename, float_format='%.2f')
+        return f"✓ Exported to {filename}"
+    except Exception as e:
+        return f"✗ Error: {str(e)}"
+
+
+def _extract_node_csv(
+    ds: xr.Dataset,
+    time_index: pd.DatetimeIndex,
+    variable: str,
+    nodes: list[str],
+    date_start: object,
+    date_end: object,
+    aggregation: str,
+    rolling_window: int,
+) -> str:
+    """Extract selected node/variable data to CSV and return a status message.
+    
+    The CSV file is named {variable}_{nodes}.csv and saved to the current working directory.
+    """
+    if not nodes:
+        return "No nodes selected."
+    
+    # Build the same filtered dataframe used in the plot
+    frame = node_to_dataframe(ds, variable, nodes, time_index)
+    start = pd.Timestamp(date_start) if date_start is not None else time_index.min()
+    end = pd.Timestamp(date_end) if date_end is not None else time_index.max()
+    filtered = aggregate_frame(frame.loc[start:end], aggregation)
+    if rolling_window > 1:
+        filtered = filtered.rolling(window=rolling_window, min_periods=1).mean()
+    
+    if filtered.empty:
+        return "No data to export for the current selection."
+    
+    # Generate filename
+    nodes_str = "_".join(str(n) for n in nodes)
+    filename = f"{variable}_{nodes_str}.csv"
+    
+    try:
+        filtered.to_csv(filename)
+        return f"✓ Exported to {filename}"
+    except Exception as e:
+        return f"✗ Error: {str(e)}"
 
 
 def build_area_tab(path: Path) -> pn.Row:
@@ -501,11 +577,31 @@ def build_area_tab(path: Path) -> pn.Row:
     )
     stats = pn.bind(area_make_stats_table, ds, time_index, area_dim, variable, areas, date_start, date_end, aggregation)
 
+    # CSV export button and status message
+    export_status = pn.pane.Markdown("", sizing_mode="stretch_width")
+    
+    def on_export_click(event: object) -> None:
+        """Callback for the export CSV button."""
+        del event
+        message = _extract_area_csv(
+            ds, time_index, area_dim, variable.value, list(areas.value),
+            date_start.value, date_end.value, aggregation.value, rolling_window.value
+        )
+        export_status.object = message
+    
+    export_button = pn.widgets.Button(
+        name="Extract CSV",
+        button_type="success",
+        width=150,
+    )
+    export_button.on_click(on_export_click)
+
     controls = pn.Column(
         info_tabs, variable, areas, date_row, aggregation, rolling_window, width=CONTROLS_WIDTH
     )
     main = pn.Column(
         pn.panel(plot),
+        pn.Row(export_button, export_status, sizing_mode="stretch_width"),
         pn.pane.Markdown("### Summary statistics"),
         pn.panel(stats),
         sizing_mode="stretch_width",
@@ -570,7 +666,7 @@ def node_make_plot(
     date_end: object,
     aggregation: str,
     rolling_window: int,
-) -> hv.Overlay | hv.Curve:
+) -> object:
     if not nodes:
         return hv.Curve([]).opts(
             height=PLOT_HEIGHT, responsive=True, title="Select at least one node"
@@ -585,16 +681,13 @@ def node_make_plot(
         return hv.Curve([]).opts(
             height=PLOT_HEIGHT, responsive=True, title="No data in the selected date range"
         )
-    curves = [
-        hv.Curve((filtered.index, filtered[column]), kdims="time", vdims=variable, label=column)
-        for column in filtered.columns
-    ]
-    return hv.Overlay(curves).opts(
+    # Use hvplot for better default hover support and cleaner multi-line rendering.
+    return filtered.hvplot.line(
         height=PLOT_HEIGHT,
-        legend_position="right",
         responsive=True,
-        show_grid=True,
-        tools=["hover"],
+        grid=True,
+        toolbar="right",
+        tools=["hover", "pan", "wheel_zoom", "reset"],
         title=f"{variable.replace('_', ' ').title()} by node",
         xlabel="Time",
         ylabel=f"{variable} (cfs)",
@@ -801,11 +894,31 @@ def build_node_tab(path: Path) -> pn.Row:
     )
     stats = pn.bind(node_make_stats_table, ds, time_index, variable, nodes, date_start, date_end, aggregation)
 
+    # CSV export button and status message
+    export_status = pn.pane.Markdown("", sizing_mode="stretch_width")
+    
+    def on_export_click(event: object) -> None:
+        """Callback for the export CSV button."""
+        del event
+        message = _extract_node_csv(
+            ds, time_index, variable.value, list(nodes.value),
+            date_start.value, date_end.value, aggregation.value, rolling_window.value
+        )
+        export_status.object = message
+    
+    export_button = pn.widgets.Button(
+        name="Extract CSV",
+        button_type="success",
+        width=150,
+    )
+    export_button.on_click(on_export_click)
+
     controls = pn.Column(
         info_tabs, variable, selector_row, date_row, aggregation, rolling_window, width=CONTROLS_WIDTH
     )
     main = pn.Column(
         pn.panel(plot),
+        pn.Row(export_button, export_status, sizing_mode="stretch_width"),
         pn.pane.Markdown("### Summary statistics"),
         pn.panel(stats),
         sizing_mode="stretch_width",
