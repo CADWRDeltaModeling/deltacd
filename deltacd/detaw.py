@@ -251,6 +251,7 @@ def weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, Tmax, Tmin, ilands, idates, i
     # set Tmax to Tmin where Tmax < Tmin (why should this be?)
     # should we not just exchange the values of min and max ?
     bad_vals = numpy.where(Tmax < Tmin)
+    Tmax = Tmax.copy()
     Tmax[bad_vals] = Tmin[bad_vals]
     TDiffTemp = Tmax-Tmin
     Tm = 0.5*(Tmax+Tmin)
@@ -2664,8 +2665,8 @@ def read_temperature(start_date_str,end_date_str,fn):
     ts_year = temp_df[start_date_str:end_date_str]['Year'].T.to_numpy()
     ts_mon = temp_df[start_date_str:end_date_str]['Month'].T.to_numpy()
     ts_days = temp_df[start_date_str:end_date_str]['DOY'].T.to_numpy()
-    ts_LODI_tx = temp_df[start_date_str:end_date_str]['Tx(oC)'].T.to_numpy()
-    ts_LODI_tn = temp_df[start_date_str:end_date_str]['Tn(oC)'].T.to_numpy()
+    ts_LODI_tx = temp_df[start_date_str:end_date_str]['Tx(oC)'].T.to_numpy().copy()
+    ts_LODI_tn = temp_df[start_date_str:end_date_str]['Tn(oC)'].T.to_numpy().copy()
 
     return(ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn)
 
