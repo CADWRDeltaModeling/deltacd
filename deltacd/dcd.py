@@ -323,7 +323,7 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
     for ind, island in enumerate(area_ids):
         mask = df_ratios["area_id"] == island
         nodes_to_find = df_ratios[mask]["node"]
-        node_args = np.vectorize(lambda x: np.argwhere(nodes == x))(nodes_to_find)
+        node_args = [np.argwhere(nodes == x).squeeze() for x in nodes_to_find]
         rates[ind, node_args] = df_ratios[mask]["factor"]
     # Create a xarray.DataArray.
     da = xr.DataArray(
@@ -448,7 +448,7 @@ def add_split_area_data(df_data, df_split_table, use_zeros=False):
         df_data_updated.set_index("area_id").loc[areas_to_add].reset_index().copy()
     )
     if use_zeros:
-        df_data_to_add.loc[:, df_data.columns[1:]] = 0.0
+        df_data_to_add.loc[:, df_data.columns[2:]] = 0.0
     df_data_to_add["area_id"] = df_split_table["area_id"]
     df_data_updated = pd.concat([df_data_updated, df_data_to_add], ignore_index=True)
 
@@ -591,7 +591,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     )
     df_lwa = df_lwa.resample("1D").ffill()
     da_lwa = xr.DataArray(
-        data=df_lwa.values,
+        data=df_lwa.values.copy(),
         dims=["time", "subarea"],
         coords=dict(time=dates, subarea=areas),
     )
@@ -607,7 +607,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     )
     df_lwd = df_lwd.resample("1D").ffill()
     da_lwd = xr.DataArray(
-        data=df_lwd.values,
+        data=df_lwd.values.copy(),
         dims=["time", "subarea"],
         coords=dict(time=dates, subarea=areas),
     )
@@ -768,7 +768,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
 def convert_relpath_to_abspath(params: dict, dir_input_base: Path) -> dict:
     """Convert relative paths to absolute paths in a dict
-
+g
     The function looks for items in the dict that start with "path_", check
     if it is a relative path, and then convert it to an absolute path.
     Note that this function modifies the input dict.
