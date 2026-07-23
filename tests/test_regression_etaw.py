@@ -39,8 +39,11 @@ def example_et0(example_setup):
     dirpath = Path(__file__).parent
 
     filepath = dirpath / f"testinputs/outputs/et0_{name}.nc"
-
-    return name, xr.open_dataset(filepath, decode_times=False)
+    data = xr.open_dataset(filepath, decode_times=False)
+    try:
+        yield name, data
+    finally:
+        data.close()
 
 
 @pytest.fixture
@@ -49,7 +52,11 @@ def example_precip(example_setup):
     name = example_setup
     dirpath = Path(__file__).parent
     filepath = dirpath / f"testinputs/outputs/precip_{name}.nc"
-    return name, xr.open_dataset(filepath, decode_times=False)
+    data = xr.open_dataset(filepath, decode_times=False)
+    try:
+        yield name, data
+    finally:
+        data.close()
 
 
 @pytest.fixture
@@ -58,7 +65,11 @@ def example_etawoutput(example_setup):
     name = example_setup
     dirpath = Path(__file__).parent
     filepath = dirpath / f"testinputs/outputs/detawoutput_{name}.nc"
-    return name, xr.open_dataset(filepath, decode_times=False)
+    data = xr.open_dataset(filepath, decode_times=False)
+    try:
+        yield name, data
+    finally:
+        data.close()
 
 
 def test_regression_et0(example_et0, ndarrays_regression):  # noqa: F811

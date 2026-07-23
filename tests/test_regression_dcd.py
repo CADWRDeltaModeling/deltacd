@@ -41,7 +41,11 @@ def example_dcd_area_output(example_setup):
     name = example_setup
     dirpath = Path(__file__).parent
     filepath = dirpath / f"testinputs/outputs/dcd_areas_{name}.nc"
-    return name, xr.open_dataset(filepath, decode_times=False)
+    data = xr.open_dataset(filepath, decode_times=False)
+    try:
+        yield name, data
+    finally:
+        data.close()
 
 
 @pytest.fixture
@@ -50,7 +54,11 @@ def example_dcd_output(example_setup):
     name = example_setup
     dirpath = Path(__file__).parent
     filepath = dirpath / f"testinputs/outputs/dcd_{name}.nc"
-    return name, xr.open_dataset(filepath, decode_times=False)
+    data = xr.open_dataset(filepath, decode_times=False)
+    try:
+        yield name, data
+    finally:
+        data.close()
 
 
 def test_regression_dcd_area_output(
