@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>deltacd package &#8212; DeltaCD  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    
+    <script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">DeltaCD  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">deltacd package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="deltacd-package">
+<h1>deltacd package<a class="headerlink" href="#deltacd-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="deltacd.utils.html">deltacd.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="deltacd.utils.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deltacd.utils.html#deltacd-utils-deltacd2calsim3-module">deltacd.utils.deltacd2calsim3 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deltacd.utils.html#deltacd-utils-deltacd2dsm2-module">deltacd.utils.deltacd2dsm2 module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deltacd.utils.html#module-deltacd.utils.utils">deltacd.utils.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.read_old_irrigation_efficiencies"><code class="docutils literal notranslate"><span class="pre">read_old_irrigation_efficiencies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.read_old_leach_water_file"><code class="docutils literal notranslate"><span class="pre">read_old_leach_water_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.read_subarea_info_file"><code class="docutils literal notranslate"><span class="pre">read_subarea_info_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.split_distribution"><code class="docutils literal notranslate"><span class="pre">split_distribution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.split_groundwater"><code class="docutils literal notranslate"><span class="pre">split_groundwater()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.split_irrigation_efficiencies"><code class="docutils literal notranslate"><span class="pre">split_irrigation_efficiencies()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.split_landuse"><code class="docutils literal notranslate"><span class="pre">split_landuse()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="deltacd.utils.html#deltacd.utils.utils.split_leach_water"><code class="docutils literal notranslate"><span class="pre">split_leach_water()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="deltacd.utils.html#module-deltacd.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+</section>
+<section id="module-deltacd.dcd">
+<span id="deltacd-dcd-module"></span><h2>deltacd.dcd module<a class="headerlink" href="#module-deltacd.dcd" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.add_split_area_data">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">add_split_area_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_split_table</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.dcd.add_split_area_data" title="Link to this definition">¶</a></dt>
+<dd><p>Add data for split areas by copying data from the source areas</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_data: pandas.DataFrame</strong></dt><dd><p>data to split</p>
+</dd>
+<dt><strong>df_split_table: pandas.DataFrame</strong></dt><dd><p>split table</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pandas.DataFrame</dt><dd><p>augmented data with the split area information</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.adjust_leach_water">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">adjust_leach_water</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">da_lwa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">da_lwd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">da_ro</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.dcd.adjust_leach_water" title="Link to this definition">¶</a></dt>
+<dd><p>Adjust (Reduce) leach water with runoff</p>
+<p>When there is runoff from precipitation, applied leach water can be
+reduced by the amount of the runoff. Even more, the leftover of the
+runoff can be applied as leach water for following days, if available.
+This logic is adopted from the previous Fortran version of DCD
+with some modification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>da_lwa: xarray.DataArray</strong></dt><dd><p>DataArray of daily applied leach water of all areas</p>
+</dd>
+<dt><strong>da_lwd: xarray.DataArray</strong></dt><dd><p>DataArray of daily drained leach water of all areas</p>
+</dd>
+<dt><strong>da_ro: xarray.DataArray</strong></dt><dd><p>DataArray of daily runoff of all areas</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xarray.DataArray, xarray.DataArray</dt><dd><p>DataArray of adjusted applied and drained leach water</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.calculate_depletion">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">calculate_depletion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#deltacd.dcd.calculate_depletion" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate channel depletion per area</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_params: dict</strong></dt><dd><p>a dict of model parameters (from an input file)</p>
+</dd>
+<dt><strong>input_data: dict</strong></dt><dd><p>a dict of input data</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xarray.DataSet</dt><dd><p>a dataset containing daily time series per area, diversion,
+drainage, seepage, and runoff</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.calculate_drained_seepage">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">calculate_drained_seepage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_subareas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#deltacd.dcd.calculate_drained_seepage" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate drained seepage amount</p>
+<p>This function calculate drained seepage amount using subarea
+information. The result is drained seepage per area.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_subareas: pandas.DataFrame</strong></dt><dd><p>subarea information</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xarray.DataArray</dt><dd><p>drained seepage per area</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.calculate_groundwater_rates">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">calculate_groundwater_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df_gw_rates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dates</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.dcd.calculate_groundwater_rates" title="Link to this definition">¶</a></dt>
+<dd><p>Calculates daily groundwater rates based on yearly values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>df_gw_rates: dataframe</strong></dt><dd><p>yearly groundwater rates for each area</p>
+</dd>
+<dt><strong>dates:</strong></dt><dd><p>dates used in the model run</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xr.DataArray</dt><dd><p>daily groundwater rates for model dates and nareas</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.calculate_model_depletion">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">calculate_model_depletion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_dcd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.dcd.calculate_model_depletion" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.convert_relpath_to_abspath">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">convert_relpath_to_abspath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_input_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#deltacd.dcd.convert_relpath_to_abspath" title="Link to this definition">¶</a></dt>
+<dd><p>Convert relative paths to absolute paths in a dict</p>
+<p>The function looks for items in the dict that start with “<a href="#id1"><span class="problematic" id="id2">path_</span></a>”, check
+if it is a relative path, and then convert it to an absolute path.
+Note that this function modifies the input dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>params: dict</strong></dt><dd><p>a dictionary of parameters</p>
+</dd>
+<dt><strong>dir_input_base: Path</strong></dt><dd><p>a base directory for relative paths</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.create_argparser">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">create_argparser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ArgumentParser</span></span></span><a class="headerlink" href="#deltacd.dcd.create_argparser" title="Link to this definition">¶</a></dt>
+<dd><p>Create an argument parser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argparse.ArgumentParser</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.dcd">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">dcd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname_main_yaml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#deltacd.dcd.dcd" title="Link to this definition">¶</a></dt>
+<dd><p>Run DCD with an input yaml file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fname_main_yaml: str</strong></dt><dd><p>path to the main yaml input file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.island_to_nodes">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">island_to_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_dcd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.dcd.island_to_nodes" title="Link to this definition">¶</a></dt>
+<dd><p>Distribute DCD results to model nodes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>xarray.Dataset</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.main">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#deltacd.dcd.main" title="Link to this definition">¶</a></dt>
+<dd><p>DCD v2 main function</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.read_dcd_input_data">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">read_dcd_input_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#deltacd.dcd.read_dcd_input_data" title="Link to this definition">¶</a></dt>
+<dd><p>Read input data for DCD</p>
+<p>This functions read input data for DCD from files and split the information
+when necessary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>params: dict</strong></dt><dd><p>a dictionary of parameters</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict</dt><dd><p>a dictionary of input data</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.read_distribution_ratios">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">read_distribution_ratios</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df_split_table</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#deltacd.dcd.read_distribution_ratios" title="Link to this definition">¶</a></dt>
+<dd><p>Read an island-to-node distribution file and create a distribution
+matrix.</p>
+<p>This function read a text file containing list of island-to-node
+distribution values and create a xarray.DataArray with a dense
+matrix size of (# of islands, # of distributed nodes).
+The coordinates of the DataArray are one-based indices of the
+islands and nodes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>path_file</strong></dt><dd><p>the input file name</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xarray.DataArray</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.read_groundwater_rates">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">read_groundwater_rates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fpath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#deltacd.dcd.read_groundwater_rates" title="Link to this definition">¶</a></dt>
+<dd><p>Read groundwater rate from a text file~</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fpath: str</strong></dt><dd><p>file name to read</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pandas.DataFrame</dt><dd><p>groundwater rates</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.read_water_year_types">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">read_water_year_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="headerlink" href="#deltacd.dcd.read_water_year_types" title="Link to this definition">¶</a></dt>
+<dd><p>Read water year type from the original text format</p>
+<p>The file has two columns. The first column is one-letter water year
+type, and the second for years.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>path_file: str</strong></dt><dd><p>file name to read</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pandas.DataFrame</dt><dd><p>a DataFrame that has two columns, type and year, for water year
+types.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.set_dcd_node_global_attributes">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">set_dcd_node_global_attributes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds_dcd_nodes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="headerlink" href="#deltacd.dcd.set_dcd_node_global_attributes" title="Link to this definition">¶</a></dt>
+<dd><p>Set global attributes for the DCD node dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ds_dcd_nodes: xarray.Dataset</strong></dt><dd><p>dataset containing DCD node data</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.take_monthly_average">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">take_monthly_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">da</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataArray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataArray</span></span></span><a class="headerlink" href="#deltacd.dcd.take_monthly_average" title="Link to this definition">¶</a></dt>
+<dd><p>Take monthly average of daily data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>da: xarray.DataArray</strong></dt><dd><p>daily data</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xarray.DataArray</dt><dd><p>monthly average data</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.dcd.use_runoff_for_leach">
+<span class="sig-prename descclassname"><span class="pre">deltacd.dcd.</span></span><span class="sig-name descname"><span class="pre">use_runoff_for_leach</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">leach_saved_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lwa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lwd</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ro</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">month</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.dcd.use_runoff_for_leach" title="Link to this definition">¶</a></dt>
+<dd><p>Use runoff for leach water (daily)</p>
+<p>This function adjusts applied and drained leach water with runoff
+at each day at each area.</p>
+</dd></dl>
+
+</section>
+<section id="module-deltacd.detaw">
+<span id="deltacd-detaw-module"></span><h2>deltacd.detaw module<a class="headerlink" href="#module-deltacd.detaw" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_ET1">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_ET1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BeginDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ET1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_ET1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_ET2">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_ET2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EndDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ET2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ET1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CETc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">YTD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LIYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NumI1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_ET2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_cetc">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_cetc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BeginDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EndDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CETc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_cetc" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_etaw_daily">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_etaw_daily</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dpy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NII</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOYLIrrig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETAWDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOYGrainLIrrig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CETAWDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MonETAW</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_start_year</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_etaw_daily" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_etaw_month">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_etaw_month</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dpy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etMon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NII</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etdd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETAWMonDay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etDay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETAWDaily</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_etaw_month" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_etawavg">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_etawavg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ETAWMonDay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SumNegETAW</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CountNegETAW</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NumDay</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_etawavg" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_etc_daily">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_etc_daily</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CropType1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CCKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CC1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ii</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_etc_daily" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_etdd">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_etdd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dpy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etMon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NII</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DswDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MonthlySWC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETAWMonDay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">etDay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NumDay</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_etdd" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_ikc">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_ikc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">BeginDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EndDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KcB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BCslope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CDslope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DEslope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ii</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_ikc" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_ikc_daily">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_ikc_daily</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iyears</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yearType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EndDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeginDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AB1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AC1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idays</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeginDateYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CropType1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CCKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CC1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BIYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">YTD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LIYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_ikc_daily" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_kc_daily">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_kc_daily</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iyears</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yearType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EndDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeginDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AB1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AC1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CropType1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LowIkc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isIkc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KcByr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KcCyr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KcDyr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KcEyr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_kc_daily" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_kc_vals">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_kc_vals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iyears</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yearType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CCropType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Cf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CSDx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CRDxU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CRDxL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CawL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CawU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CADep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCCropType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCSDx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCRDxU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCRDxL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCawL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCawU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCADep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osIkc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IGETo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osFkc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isIkc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Beta1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_kc_vals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.calc_soil_evap">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">calc_soil_evap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Beta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ET0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pcp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PcpDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKc</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.calc_soil_evap" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate soil evaporation</p>
+<p>Side effects: modifies dpyAll, EToDaily, PcpDaily, OKc</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dpyAll</strong><span class="classifier">numpy.ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.convert_to_absolute_path">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">convert_to_absolute_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_input_base</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.convert_to_absolute_path" title="Link to this definition">¶</a></dt>
+<dd><p>Check if a file name is in an absolute path and convert it into one
+by adding the base directory of the main input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename: str</strong></dt><dd><p>the file name to be checked</p>
+</dd>
+<dt><strong>dir_input_base: str</strong></dt><dd><p>The base directory name to add</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>pathlib.Path</dt><dd><p>An absolute path</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.create_argparser">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">create_argparser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ArgumentParser</span></span></span><a class="headerlink" href="#deltacd.detaw.create_argparser" title="Link to this definition">¶</a></dt>
+<dd><p>Create an argument parser.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>argepase.ArgumentParser</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.detaw">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">detaw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname_main_yaml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#deltacd.detaw.detaw" title="Link to this definition">¶</a></dt>
+<dd><p>Run DETAW and DCD with a YAML file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fname_main_yaml: str</strong></dt><dd><p>the main input file name</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.fill_zeros_with_last">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">fill_zeros_with_last</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.fill_zeros_with_last" title="Link to this definition">¶</a></dt>
+<dd><p>fill in zeros with previous value.
+<a class="reference external" href="https://stackoverflow.com/questions/30488961/fill-zero-values-of-1d-numpy-array-with-last-non-zero-values">https://stackoverflow.com/questions/30488961/fill-zero-values-of-1d-numpy-array-with-last-non-zero-values</a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.historicalETAW">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">historicalETAW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pcp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ET0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ilands</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NII</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NumDaysPerMon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idayoutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imonthoutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iyearoutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itotaloutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dailyunit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forDSM2_daily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yearType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HAcre</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">icroptype</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crdf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncrdf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.historicalETAW" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.main">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#deltacd.detaw.main" title="Link to this definition">¶</a></dt>
+<dd><p>Run ETAW and post-process ETAW results for DCD</p>
+<p>This function accepts one command line argument for model parameters,
+e.g.</p>
+<p>$ python detaw.py detaw.yaml</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.main_calc_loop">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">main_calc_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">crop_i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yearType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ckc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCBeginDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCEndDate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAC</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NCAD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kkc3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EndDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeginDate1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AB1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AC1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PcpMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ERnMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpgMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EspgMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MonNetApp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MonDsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MonDswPos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpyAll</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NumDaysPerMon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">erd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Region</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWD</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PcpDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BIYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LIYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NA3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osSWDx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWD0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Dsw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NetApp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NII</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NI</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osCETc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HAcre</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osMCETc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isCETc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isMCETc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osCERn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osCSpg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osMCERn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">osMCSpg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isCERn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isPCP</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isETaw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isCSpg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isMCERn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isMCSpg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aw1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ADep1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Espg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">WSCESpg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">WSEspgMonthly</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ytemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOYtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IrrigYear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HAcre_temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HAcretemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKctemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKctemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CCKc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CCKctemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETotemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kctemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETctemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Pcptemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ertemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Spgtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ESpgtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Dsw0temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWDtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWDxtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">FC0temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PWPtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWC0temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">YTDtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NAtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOYLIrrig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOYGrainLIrrig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CPcptemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CErtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CESpgtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CETctemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CDswtemp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HAcreDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DOY</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OKcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IKcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CCKcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">EToDaily2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETcDaily2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PcpDaily2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ErDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SpgDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ESpgDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DswDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWDDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWDxDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">FCDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PWPDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SWCDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">YTDDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NADaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CPcpDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CErDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CESpgDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CETcDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CDswDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETAWMonDay</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETAWDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MonETAW</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idayoutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dailyunit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataday</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data2day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data6day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data7day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data8day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data9day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data10day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data11day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data12day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data13day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data14day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data15day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data16day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data17day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data18day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data26day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data27day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data28day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data29day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data30day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data31day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CETAWDaily</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data32day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">imonthoutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datamon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data2mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data3mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data4mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data5mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data6mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data7mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data8mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data9mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data12mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data13mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data14mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data15mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data16mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data17mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data18mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data21mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data10mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data19mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data11mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data20mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_start_year</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.main_calc_loop" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.read_and_clean_crop_info">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">read_and_clean_crop_info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.read_and_clean_crop_info" title="Link to this definition">¶</a></dt>
+<dd><p>reads critical.csv or non-critical.csv for crop information for critical and non-critical types
+return the cleaned up dataframe</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.read_et_correction_factors">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">read_et_correction_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.read_et_correction_factors" title="Link to this definition">¶</a></dt>
+<dd><p>Read et correction factors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fn: str</strong></dt><dd></dd>
+<dt><strong>Returns</strong></dt><dd></dd>
+<dt><strong>——-</strong></dt><dd><p>ts_per: array
+ETo_corrector: array
+Region: array</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.read_landuse">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">read_landuse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn_landuse</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iyears</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_years</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_areas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.read_landuse" title="Link to this definition">¶</a></dt>
+<dd><p>Read landuse acreages</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fn_landuse: str</strong></dt><dd></dd>
+<dt><strong>iyears: int</strong></dt><dd></dd>
+<dt><strong>water_years: array</strong></dt><dd></dd>
+<dt><strong>n_areas: int</strong></dt><dd><p>number of areas in the model</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>yearType: array</dt><dd></dd>
+<dt>Landuse Area: array</dt><dd></dd>
+<dt>icroptype: int</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.read_pcp">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">read_pcp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.read_pcp" title="Link to this definition">¶</a></dt>
+<dd><p>Read pcp input data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start_date_str: str</strong></dt><dd><p>end_date_str: str
+pcplocs: str
+fn: str</p>
+</dd>
+<dt><strong>Returns</strong></dt><dd></dd>
+<dt><strong>——-</strong></dt><dd><p>ts_pcp: timeseries of station precipitation</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.read_temperature">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">read_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_date_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.read_temperature" title="Link to this definition">¶</a></dt>
+<dd><p>Read temperature input data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>start_date_str: str</strong></dt><dd><p>end_date_str: str
+fn: str</p>
+</dd>
+<dt><strong>Returns</strong></dt><dd></dd>
+<dt><strong>——-</strong></dt><dd><p>ts_year: array of years
+ts_mon: array of mon
+ts_days: array of days
+ts_LODI_tx: array tmax
+ts_LODI_tn: array tmin</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.weatheroutput">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">weatheroutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ts_pcp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_per</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_mon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts_days</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Tmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ilands</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">isites</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ETo_corrector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.weatheroutput" title="Link to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>calculate the precipitation and reference evapotranspiration for each island</p>
+</div></blockquote>
+<dl class="simple">
+<dt>input: daily precipitation at seven sites</dt><dd><p>percentages of seven sites for 168 islands</p>
+</dd>
+<dt>output: Nothing,</dt><dd><p>Generate daily file and monthly weather file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.weatheroutput_to_netcdf">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">weatheroutput_to_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pcp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ET0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_precip_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_et_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.weatheroutput_to_netcdf" title="Link to this definition">¶</a></dt>
+<dd><p>write the precip and ET0 for all areas to netcdf4 format</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.write_dataframe">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">write_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dssfh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cunits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'INST-VAL'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.write_dataframe" title="Link to this definition">¶</a></dt>
+<dd><p>write data frame to DSS file handle</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.write_to_dss">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">write_to_dss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dssfh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startdatetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cunits</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.write_to_dss" title="Link to this definition">¶</a></dt>
+<dd><p>write to the pyhecdss.DSSFile for an array with starttime and assuming
+daily data with the pathname path, cunits and ctype</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.write_to_netcdf">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">write_to_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">detawoutput</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_start_year</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fn_detaw_output</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.write_to_netcdf" title="Link to this definition">¶</a></dt>
+<dd><p>Write DETAW output array into a NetCDF</p>
+<p>This function writes out DETAW outputs in a numpy array into a NetCDF
+file after converting the array into an xarray.Dataset. The converted
+dataset is returned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>detawoutput: numpy.ndarray</strong></dt><dd><p>Output array from <cite>historicalETAW</cite>. The dimensions of the array are
+(etvars, areas, crops, times).</p>
+</dd>
+<dt><strong>model_start_year: int</strong></dt><dd><p>start year in water year</p>
+</dd>
+<dt><strong>fn_detaw_output: str</strong></dt><dd><p>filename to write the output</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>xarray.Dataset</dt><dd><p>DETAW output converted into xarray.Dataset.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="deltacd.detaw.write_weather_dss">
+<span class="sig-prename descclassname"><span class="pre">deltacd.detaw.</span></span><span class="sig-name descname"><span class="pre">write_weather_dss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dftmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dftmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfptotal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dfet0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputfile</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#deltacd.detaw.write_weather_dss" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-deltacd">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-deltacd" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">deltacd package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-deltacd.dcd">deltacd.dcd module</a><ul>
+<li><a class="reference internal" href="#deltacd.dcd.add_split_area_data"><code class="docutils literal notranslate"><span class="pre">add_split_area_data()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.adjust_leach_water"><code class="docutils literal notranslate"><span class="pre">adjust_leach_water()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.calculate_depletion"><code class="docutils literal notranslate"><span class="pre">calculate_depletion()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.calculate_drained_seepage"><code class="docutils literal notranslate"><span class="pre">calculate_drained_seepage()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.calculate_groundwater_rates"><code class="docutils literal notranslate"><span class="pre">calculate_groundwater_rates()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.calculate_model_depletion"><code class="docutils literal notranslate"><span class="pre">calculate_model_depletion()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.convert_relpath_to_abspath"><code class="docutils literal notranslate"><span class="pre">convert_relpath_to_abspath()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.create_argparser"><code class="docutils literal notranslate"><span class="pre">create_argparser()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.dcd"><code class="docutils literal notranslate"><span class="pre">dcd()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.island_to_nodes"><code class="docutils literal notranslate"><span class="pre">island_to_nodes()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.read_dcd_input_data"><code class="docutils literal notranslate"><span class="pre">read_dcd_input_data()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.read_distribution_ratios"><code class="docutils literal notranslate"><span class="pre">read_distribution_ratios()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.read_groundwater_rates"><code class="docutils literal notranslate"><span class="pre">read_groundwater_rates()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.read_water_year_types"><code class="docutils literal notranslate"><span class="pre">read_water_year_types()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.set_dcd_node_global_attributes"><code class="docutils literal notranslate"><span class="pre">set_dcd_node_global_attributes()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.take_monthly_average"><code class="docutils literal notranslate"><span class="pre">take_monthly_average()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.dcd.use_runoff_for_leach"><code class="docutils literal notranslate"><span class="pre">use_runoff_for_leach()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-deltacd.detaw">deltacd.detaw module</a><ul>
+<li><a class="reference internal" href="#deltacd.detaw.calc_ET1"><code class="docutils literal notranslate"><span class="pre">calc_ET1()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_ET2"><code class="docutils literal notranslate"><span class="pre">calc_ET2()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_cetc"><code class="docutils literal notranslate"><span class="pre">calc_cetc()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_etaw_daily"><code class="docutils literal notranslate"><span class="pre">calc_etaw_daily()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_etaw_month"><code class="docutils literal notranslate"><span class="pre">calc_etaw_month()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_etawavg"><code class="docutils literal notranslate"><span class="pre">calc_etawavg()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_etc_daily"><code class="docutils literal notranslate"><span class="pre">calc_etc_daily()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_etdd"><code class="docutils literal notranslate"><span class="pre">calc_etdd()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_ikc"><code class="docutils literal notranslate"><span class="pre">calc_ikc()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_ikc_daily"><code class="docutils literal notranslate"><span class="pre">calc_ikc_daily()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_kc_daily"><code class="docutils literal notranslate"><span class="pre">calc_kc_daily()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_kc_vals"><code class="docutils literal notranslate"><span class="pre">calc_kc_vals()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.calc_soil_evap"><code class="docutils literal notranslate"><span class="pre">calc_soil_evap()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.convert_to_absolute_path"><code class="docutils literal notranslate"><span class="pre">convert_to_absolute_path()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.create_argparser"><code class="docutils literal notranslate"><span class="pre">create_argparser()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.detaw"><code class="docutils literal notranslate"><span class="pre">detaw()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.fill_zeros_with_last"><code class="docutils literal notranslate"><span class="pre">fill_zeros_with_last()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.historicalETAW"><code class="docutils literal notranslate"><span class="pre">historicalETAW()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.main_calc_loop"><code class="docutils literal notranslate"><span class="pre">main_calc_loop()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.read_and_clean_crop_info"><code class="docutils literal notranslate"><span class="pre">read_and_clean_crop_info()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.read_et_correction_factors"><code class="docutils literal notranslate"><span class="pre">read_et_correction_factors()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.read_landuse"><code class="docutils literal notranslate"><span class="pre">read_landuse()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.read_pcp"><code class="docutils literal notranslate"><span class="pre">read_pcp()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.read_temperature"><code class="docutils literal notranslate"><span class="pre">read_temperature()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.weatheroutput"><code class="docutils literal notranslate"><span class="pre">weatheroutput()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.weatheroutput_to_netcdf"><code class="docutils literal notranslate"><span class="pre">weatheroutput_to_netcdf()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.write_dataframe"><code class="docutils literal notranslate"><span class="pre">write_dataframe()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.write_to_dss"><code class="docutils literal notranslate"><span class="pre">write_to_dss()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.write_to_netcdf"><code class="docutils literal notranslate"><span class="pre">write_to_netcdf()</span></code></a></li>
+<li><a class="reference internal" href="#deltacd.detaw.write_weather_dss"><code class="docutils literal notranslate"><span class="pre">write_weather_dss()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-deltacd">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/deltacd.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">DeltaCD  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">deltacd package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2023-2024, California Department of Water Resources.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    </div>
+  </body>
+</html>
