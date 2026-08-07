@@ -33,14 +33,12 @@ import argparse
 import logging
 import pandas as pd
 import xarray as xr
-from numpy import add, pi, array, zeros
+from numpy import pi, zeros
 
 import os
-import string
 import math
 import numpy
-from os import listdir
-from math import cos, sin, tan, atan, sqrt, pi, pow
+from math import pow
 
 import timeit
 import numba
@@ -49,7 +47,6 @@ import yaml
 
 DEBUG_TIMING = True
 DEBUG_OUTPUT = False
-NO_OUTPUT = True
 
 # Set up a logger
 # FIXME The log level can be managed by the user input.
@@ -174,66 +171,7 @@ def weatheroutput_to_netcdf(pcp, ET0, model_start_year, fn_precip_output, fn_et_
     det0.to_netcdf(fn_et_output)
 
 
-def write_to_dss(dssfh, arr, path, startdatetime, cunits, ctype):
-    '''
-    write to the pyhecdss.DSSFile for an array with starttime and assuming
-    daily data with the pathname path, cunits and ctype
-    '''
-    if NO_OUTPUT:
-        return
-    fstr = '1D'
-    epart = path.split('/')[5]
-    if epart == '1DAY':
-        fstr = '1D'
-    elif epart == '1MONTH':
-        fstr = '1M'
-    else:
-        raise RuntimeError('Not recognized frequency in path: %s' % path)
-    # df=pd.DataFrame(arr,index=pd.date_range(startdatetime,periods=len(arr),freq=fstr))
-    #write_dataframe(dssfh, df, path, cunits, ctype)
-    sp = pd.to_datetime(startdatetime)
-    darr = numpy.array(arr, dtype='d')
-    pyhecdss.pyheclib.hec_zsrtsxd(dssfh.ifltab, path,
-                                  sp.strftime("%d%b%Y").upper(), sp.round(
-                                      freq='T').strftime("%H%M"),
-                                  darr, cunits[:8], ctype[:8])
-
-
-def write_dataframe(dssfh, df, path, cunits, ctype='INST-VAL'):
-    ''' write data frame to DSS file handle '''
-    dssfh.write_rts(path, df, cunits, ctype)
-
-
-def write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile):
-    ctype = "INST-VAL"  # "PER-AVER"
-    pyhecdss.set_message_level(0)
-    pyhecdss.set_program_name('DETAW')
-    dssfh = pyhecdss.DSSFile(outputfile, create_new=True)
-    path = "/detaw/LODI_Tmax/Temp//1DAY/detaw/"
-    write_dataframe(dssfh, dftmax, path, 'oC', ctype)
-    path = "/detaw/LODI_Tmin/Temp//1DAY/detaw/"
-    write_dataframe(dssfh, dftmin, path, 'oC', ctype)
-    path = "/detaw/LODI_Tmax/Temp//1MONTH/detaw/"
-    write_dataframe(dssfh, dftmax.resample('M').mean(), path, 'oC', ctype)
-    path = "/detaw/LODI_Tmin/Temp//1MONTH/detaw/"
-    write_dataframe(dssfh, dftmin.resample('M').mean(), path, 'oC', ctype)
-    for j in range(0, ilands):
-        precip_area = dfptotal.iloc[:, j].to_frame()
-        et0_area = dfet0.iloc[:, j].to_frame()
-        path = "/detaw/island_"+str(j+1)+"/precipitation//1DAY/detaw/"
-        write_dataframe(dssfh, precip_area, path, 'mm', ctype)
-        path = "/detaw/island_"+str(j+1)+"/ET0//1DAY/detaw/"
-        write_dataframe(dssfh, et0_area, path, 'mm', ctype)
-        path = "/detaw/island_"+str(j+1)+"/precipitation//1MONTH/detaw/"
-        write_dataframe(dssfh, precip_area.resample(
-            'M').mean(), path, 'mm', ctype)
-        path = "/detaw/island_"+str(j+1)+"/ET0//1MONTH/detaw/"
-        write_dataframe(dssfh, et0_area.resample(
-            'M').mean(), path, "mm", ctype)
-    dssfh.close()
-
-
-def weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, Tmax, Tmin, ilands, idates, isites, ETo_corrector, filepath, start1):
+def weatheroutput(ts_pcp, ts_per, ts_days, Tmax, Tmin, idates, ETo_corrector):
     """
         calculate the precipitation and reference evapotranspiration for each island
 
@@ -242,8 +180,6 @@ def weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, Tmax, Tmin, ilands, idates, i
     output: Nothing,
             Generate daily file and monthly weather file.
     """
-    monthname = ["JAN", "FEB", "MAR", "APR", "MAY",
-                 "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     # precipitation is the product of precip stations times the distribution percentages
     ts_ptotal = numpy.dot(numpy.transpose(ts_pcp), ts_per)
     # limit to > 0 and < 9990 ?
@@ -274,26 +210,11 @@ def weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, Tmax, Tmin, ilands, idates, i
     ET0 = (0.0023*Ra*numpy.sqrt(TDiffTemp)*(Tm+17.8))/Lam
     numpy.clip(ET0, 0, None, out=ET0)
     ET0Daily = ETo_corrector*ET0.reshape(idates, 1)
-    # start data & time
-    # The start time for monthly interval must be the first day of each month.
-    startdate = str(start1[2])+monthname[start1[1]-1]+str(start1[0])
-    starttime = str(start1[3])+"00"
-    # create data frames with time index
-    dtindex = pd.date_range(startdate+'T'+starttime,
-                            periods=len(Tmax), freq='D')
-    dftmax = pd.DataFrame(Tmax, index=dtindex)
-    dftmin = pd.DataFrame(Tmin, index=dtindex)
-    dfptotal = pd.DataFrame(ts_ptotal, index=dtindex)
-    dfet0 = pd.DataFrame(ET0Daily, index=dtindex)
-    # --debug output only output to dss
-    if DEBUG_OUTPUT:
-        outputfile = os.path.join(filepath, 'Output', 'weather.dss')
-        write_weather_dss(dftmax, dftmin, dfptotal, dfet0, outputfile)
     return(ts_ptotal, ET0Daily)
 
 
 @numba.jit(nopython=True, cache=True)
-def calc_soil_evap(k, Beta1, idates, ts_year, ts_days, start1, dpyAll, ET0, pcp, PcpDaily, EToDaily, OKc):
+def calc_soil_evap(subarea_i, Beta1, idates, ts_year, ts_days, start1, dpyAll, ET0, pcp, PcpDaily, EToDaily, OKc):
     """Calculate soil evaporation
 
     Side effects: modifies dpyAll, EToDaily, PcpDaily, OKc
@@ -314,15 +235,15 @@ def calc_soil_evap(k, Beta1, idates, ts_year, ts_days, start1, dpyAll, ET0, pcp,
         iy = ts_year[day_i] - start1[0] + 1
         id = ts_days[day_i]
 
-        if (ET0[k, day_i]*100-int(ET0[k, day_i]*100)) > 0.5:
-            EToDaily[iy, id] = int(ET0[k, day_i]*100+1)/100.
+        if (ET0[subarea_i, day_i]*100-int(ET0[subarea_i, day_i]*100)) > 0.5:
+            EToDaily[iy, id] = int(ET0[subarea_i, day_i]*100+1)/100.
         else:
-            EToDaily[iy, id] = int(ET0[k, day_i]*100)/100.
+            EToDaily[iy, id] = int(ET0[subarea_i, day_i]*100)/100.
 
-        if (pcp[k, day_i]*100-int(pcp[k, day_i]*100)) > 0.5:
-            PcpDaily[iy, id] = int(pcp[k, day_i]*100+1)/100.
+        if (pcp[subarea_i, day_i]*100-int(pcp[subarea_i, day_i]*100)) > 0.5:
+            PcpDaily[iy, id] = int(pcp[subarea_i, day_i]*100+1)/100.
         else:
-            PcpDaily[iy, id] = int(pcp[k, day_i]*100)/100.
+            PcpDaily[iy, id] = int(pcp[subarea_i, day_i]*100)/100.
 
         dpy = 365
         if ts_year[day_i] % 4 == 0:
@@ -353,8 +274,8 @@ def calc_soil_evap(k, Beta1, idates, ts_year, ts_days, start1, dpyAll, ET0, pcp,
 
 
 @numba.jit(nopython=True, cache=True)
-def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate,
-                   NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1,
+def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, NCBeginDate, NCEndDate,
+                   EndDate1, BeginDate1,
                    EToMonthly, ETcMonthly, PcpMonthly, ERnMonthly, SpgMonthly, EspgMonthly, MonNetApp, MonDsw, MonDswPos,
                    dpyAll, NumDaysPerMon, erd, Region, k, SWD, OKc, IKc, Kc, EToDaily, PcpDaily, ETcDaily,
                    NA1, BIYear, NA2, LIYear, NA3, osSWDx, SWD0, Dsw, NetApp, NII, NI, osCETc, HAcre,
@@ -366,11 +287,8 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                    ESpgDaily, DswDaily, SWDDaily, SWDxDaily, FCDaily, PWPDaily, SWCDaily, YTDDaily, NADaily, CPcpDaily, CErDaily, CESpgDaily, CETcDaily, CDswDaily,
                    ETAWMonDay, ETAWDaily, MonETAW, idayoutput, dailyunit, dataday, date_index, data2day, data6day, data7day, data8day,
                    data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day, data17day, data18day, data26day,
-                   data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput, datamon, data2mon, data3mon,
-                   data4mon, data5mon, data6mon, data7mon, data8mon, data9mon, data12mon, data13mon, data14mon, data15mon, data16mon, data17mon,
-                   data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year):
+                   data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day,model_start_year):
 
-    nmonth = 0  # pointer for datamon* arrays
     for year_i in range(1, n_years+1):
         year = 1
         if crop_i == 6 or crop_i == 14:
@@ -381,30 +299,11 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
         if yearTypeCal.upper() == "C" or yearTypeCal.upper() == "D":
             BeginDate1 = CBeginDate[crop_i]
             EndDate1 = CEndDate[crop_i]
-            kkc1 = Ckc1[crop_i]
-            kkc2 = Ckc2[crop_i]
-            kkc3 = Ckc3[crop_i]
-            AB1 = CAB[crop_i]
-            AC1 = CAC[crop_i]
-            AD1 = CAD[crop_i]
-            # end of critical years
         else:
             BeginDate1 = NCBeginDate[crop_i]
             EndDate1 = NCEndDate[crop_i]
-            kkc1 = NCkc1[crop_i]
-            kkc2 = NCkc2[crop_i]
-            kkc3 = NCkc3[crop_i]
-            AB1 = NCAB[crop_i]
-            AC1 = NCAC[crop_i]
-            AD1 = NCAD[crop_i]
-            # end of noncritical years
         if crop_i == 7:
             RiceIrrigEndDate = EndDate1-20
-        # Initial Kc values for dates B,C,D,E
-        KcB = kkc1
-        KcC = kkc2
-        KcD = kkc2
-        KcE = kkc3
 
         # ..........................................................
         # .. Calculate day of year corresponding to A,B,C, and E ...
@@ -413,20 +312,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
         # ..........................................................
         if EndDate1 <= BeginDate1:
             EndDate1 = 365+EndDate1
-        lenDate = EndDate1-BeginDate1
-        B = int(0.01*AB1*lenDate+BeginDate1)
-        C = int(0.01*AC1*lenDate+BeginDate1)
-        D = int(0.01*AD1*lenDate+BeginDate1)
 
-        BB = B
-        if B > 365:
-            BB = B-365
-        CC = C
-        if C > 365:
-            CC = C-365
-        DD = D
-        if D > 365:
-            DD = D-365
         EE = EndDate1
         if EndDate1 > 365:
             EE = EndDate1-365
@@ -442,7 +328,6 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
             MonDsw[Mon] = 0
             MonDswPos[Mon] = 0
         dpy = dpyAll[year_i]
-        FinalIrrig = 0.0
         Mon = 0
         for ii in range(1, dpy+1):
             # initialize cumulative variable for the first day
@@ -450,7 +335,6 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                 break
             if (year_i == 1 and ii == 274) or (year_i == 1 and ii == 1):
                 SWD = 0
-                PSWD = 0
                 NetApp = 0
                 CPcp = 0
                 CERn = 0
@@ -468,11 +352,7 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                     Spg = 0.025/NumDaysPerMon[Mon+1]*erd  # 0.025 0.15
             if Region[k] == 1:
                 Spg = 0.0
-            PSWD = SWD
-            OKc1 = OKc[year_i, ii]
             IKc1 = IKc[year_i, ii]
-            Kc11 = Kc[year_i, ii]
-            ETo = EToDaily[year_i, ii]
             PCP = PcpDaily[year_i, ii]
             # This will reduce the value for Spg when the seepage is greater than the Dsw
 
@@ -626,11 +506,6 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                 isMCERn[Mon] = isMCERn[Mon]+ERn
                 isMCSpg[Mon] = isMCSpg[Mon]+Spg
                 # end of Pcp
-
-            # the following 3 lines: no use now written in original code
-            # if IKc1 != 0 and flag == "s":  ##off season, the following 3 lines are modififed
-            # SWD0=SWD
-            ##flag = " "
 
             MaxSWD = erd*aw1*ADep1/100
             FC = MaxSWD*4
@@ -790,10 +665,6 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                         # do the calculation on the sept 30 of each year  and print
                         yy = yDaily[iq]
 
-                        # dpy = 365
-                        # if yy % 4 == 0:
-                        #     dpy = 366
-
                         if (dpy == 365 and iq == 365) or (dpy == 366 and iq == 366):
                             MonthlySWC = SumDelSWC/12.0
                             # convert etwawdaily to mon day
@@ -808,8 +679,6 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                             CountNegETAW = 0
                             calc_etawavg(ETAWMonDay, SumNegETAW,
                                          CountNegETAW, NumDaysPerMon)
-                            # convert etawdmon day to etaw daily
-                            # ETAWDaily[1:dpy+1]=ETAWMonDay[(10:10+12)%12,(273+leap_year(yearCal):)]
                             etMon = 10
                             etDay = 1
                             calc_etaw_month(
@@ -825,8 +694,6 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                                 if dailyunit == 1:
                                     dataday[date_index:date_index +
                                             dpy] = ETcDaily2[1:dpy+1]*temp_vector
-                                    dataday[date_index:date_index +
-                                            dpy] = (ETcDaily2[1:dpy+1]*temp_vector)
                                     data2day[date_index:date_index +
                                              dpy] = (PcpDaily2[1:dpy+1]*temp_vector)
                                     data6day[date_index:date_index +
@@ -937,70 +804,8 @@ def main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, 
                                     temp_scalar = HAcre[k, year_i, crop_i]*0.0081071
                                 else:
                                     temp_scalar = HAcre[k, year_i-1, crop_i]*0.0081071
-                            if imonthoutput == 1:
-                                nmonth = nmonth+1
-                                datamon[nmonth] = (ETcMonthly[Mon])
-                                data2mon[nmonth] = (EToMonthly[Mon])
-                                data3mon[nmonth] = (MonNetApp[Mon])
-                                data4mon[nmonth] = (PcpMonthly[Mon])
-                                data5mon[nmonth] = (ERnMonthly[Mon])
-                                data6mon[nmonth] = (SpgMonthly[Mon])
-                                data7mon[nmonth] = (EspgMonthly[Mon])
-                                data8mon[nmonth] = (MonDsw[Mon])
-                                data9mon[nmonth] = (MonDswPos[Mon])
-                                ##data10mon[nmonth] = (MonETAW[y,Mon])
-                                ##data11mon[nmonth] = (MonETAWPos)
-                                data12mon[nmonth] = (
-                                    MonNetApp[Mon]*temp_scalar)
-                                data13mon[nmonth] = (
-                                    PcpMonthly[Mon]*temp_scalar)
-                                data14mon[nmonth] = (
-                                    ERnMonthly[Mon]*temp_scalar)
-                                if crop_i != 15:
-                                    data15mon[nmonth] = (
-                                        EspgMonthly[Mon]*temp_scalar)
-                                else:
-                                    data15mon[nmonth] = (WSEspgMonthly[year_i, Mon])
-                                data16mon[nmonth] = (
-                                    ETcMonthly[Mon]*temp_scalar)
-                                data17mon[nmonth] = (MonDsw[Mon]*temp_scalar)
-                                data18mon[nmonth] = (
-                                    MonDswPos[Mon]*temp_scalar)
-                                ##data19mon[nmonth] = (MonETAW[y,Mon]*temp_scalar)
-                                ##data20mon[nmonth] = (MonETAWPos*temp_scalar)
-                                data21mon[nmonth] = (
-                                    EToMonthly[Mon]*temp_scalar)
-
-                            if year_i > 1:
-                                if Mon == 0:
-                                    for imtemp in range(10, 13):
-                                        data10mon[nmonth] = (
-                                            MonETAW[year_i-1, imtemp])
-                                        data19mon[nmonth] = (
-                                            MonETAW[year_i-1, imtemp]*temp_scalar)
-                                        # 5/1/09 revised
-                                        MonETAWPos = MonETAW[year_i-1, imtemp]
-                                        if MonETAWPos < 0:
-                                            MonETAWPos = 0
-                                        if imonthoutput == 1:
-                                            data11mon[nmonth] = (MonETAWPos)
-                                            data20mon[nmonth] = (
-                                                MonETAWPos*temp_scalar)
-                                if Mon < 9:
-                                    # 5/1/09 revised
-                                    MonETAWPos = MonETAW[year_i, Mon+1]
-                                    if MonETAWPos < 0:
-                                        MonETAWPos = 0
-                                    if imonthoutput == 1:
-                                        if crop_i == 15 and k == 0 and MonETAW[year_i, Mon+1] > 0.0:
-                                            print(year_i, Mon+1, " MonETAW=",
-                                                  MonETAW[year_i, Mon+1])
-                                        data10mon[nmonth] = (MonETAW[year_i, Mon+1])
-                                        data19mon[nmonth] = (
-                                            MonETAW[year_i, Mon+1]*temp_scalar)
-                                        data11mon[nmonth] = (MonETAWPos)
-                                        data20mon[nmonth] = (
-                                            MonETAWPos*temp_scalar)
+                            # Legacy DSS/monthly table output arrays are retired.
+                            # Keep loop/state behavior intact for regression stability.
 
 
 @numba.jit(nopython=True, cache=True)
@@ -1130,13 +935,6 @@ def calc_kc_vals(iyears, yearType, CCropType, j, CBeginDate, CEndDate, Cf, Ckc1,
             AC1 = NCAC[j]
             AD1 = NCAD[j]
 
-        if j == 7:
-            RiceIrrigEndDate = EndDate1-20
-        # Initial Kc values for dates B,C,D,E
-        KcB = kkc1
-        KcC = kkc2
-        KcD = kkc2
-        KcE = kkc3
         # ..........................................................
         # .. Calculate day of year corresponding to A,B,C, and E ...
         # .. Note that B, C, D, and E can be bigger than 365   ....
@@ -1147,19 +945,6 @@ def calc_kc_vals(iyears, yearType, CCropType, j, CBeginDate, CEndDate, Cf, Ckc1,
         B = int(0.01*AB1*lenDate+BeginDate1)
         C = int(0.01*AC1*lenDate+BeginDate1)
         D = int(0.01*AD1*lenDate+BeginDate1)
-
-        BB = B
-        if B > 365:
-            BB = B-365
-        CC = C
-        if C > 365:
-            CC = C-365
-        DD = D
-        if D > 365:
-            DD = D-365
-        EE = EndDate1
-        if EndDate1 > 365:
-            EE = EndDate1-365
 
         # end of jan 29-2007
         osIkc[y] = 0
@@ -1268,19 +1053,6 @@ def calc_kc_daily(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, C
         C = int(0.01*AC1*lenDate+BeginDate1)
         D = int(0.01*AD1*lenDate+BeginDate1)
 
-        BB = B
-        if B > 365:
-            BB = B-365
-        CC = C
-        if C > 365:
-            CC = C-365
-        DD = D
-        if D > 365:
-            DD = D-365
-        EE = EndDate1
-        if EndDate1 > 365:
-            EE = EndDate1-365
-
         if CropType1 > 1:
             if CropType1 > 2:
                 if CropType1 <= 3:
@@ -1369,18 +1141,6 @@ def calc_ikc_daily(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
         C = int(0.01*AC1*lenDate+BeginDate1)
         D = int(0.01*AD1*lenDate+BeginDate1)
 
-        BB = B
-        if B > 365:
-            BB = B-365
-        CC = C
-        if C > 365:
-            CC = C-365
-        DD = D
-        if D > 365:
-            DD = D-365
-        EE = EndDate1
-        if EndDate1 > 365:
-            EE = EndDate1-365
         # end of jan 29-2007
         IKc[y, 0:idays+1] = 0
         dpy = dpyAll[y]
@@ -1448,12 +1208,10 @@ def calc_ikc_daily(iyears, j, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, 
 
 @numba.jit(nopython=True, cache=True)
 def calc_ET1(BeginDate1, BI, dpyAll, y, ET1, ETcDaily, jj):
-    #? eliminate loop ?#
     for ii in range(BeginDate1, BI+1):
         jj = ii
         if ii > dpyAll[y-1]:
             jj = ii-dpyAll[y-1]
-        # ET1=ET1+EToDaily[y,j]*Kc[y,j]
         ET1 = ET1+ETcDaily[y, jj]
     return ET1, jj
 
@@ -1685,34 +1443,10 @@ def calc_etaw_daily(dpy, Mon, yy, DOY, NII, NI, j, DOYLIrrig, yDaily, ETAWDaily,
 
 
 def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
-                   ts_days, start1, filepath, NI, NII, NumDaysPerMon, n_years, idayoutput, imonthoutput,
-                   iyearoutput, itotaloutput, dailyunit, forDSM2_daily, model_start_year,yearType,HAcre,icroptype,crdf,ncrdf):
-    InpHSACrop = "  "
-    SACropDaily = "  "
-    HSACropDailyMean = "  "
-    HSACropMonMean = "  "
-    Date = "  "
-    cpartt = "  "
-    monthname = ["JAN", "FEB", "MAR", "APR", "MAY",
-                 "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-    # icroptype is now read in from read_landuse can delete this commented block
-    # #? why not read these from input file ?#
-    # CropName = ["Urban", "Irrig pasture", "Alfalfa", "All Field", "Sugar beets",
-    #             "Irrig Grain", "Rice", "Truck Crops", "Tomato", "Orchard",
-    #             "Vineyard", "Riparian Vegetation", "Native Vegetation",
-    #             "Non-irrig Grain", "Water Surface"]
-    # icroptype = len(CropName)
+                   ts_days, start1, NI, NII, NumDaysPerMon, n_years, idayoutput,
+                   dailyunit, model_start_year,yearType,HAcre,icroptype,crdf,ncrdf):
     idays = 366
     imonths = 12
-    # pyhecdss.set_message_level(0)
-    # pyhecdss.set_program_name('DETAW')
-    ctype = "INST-VAL"  # "PER-AVER"
-    iplan = int(0)
-    # FIXME start2 is different from start1. Tried to make it the same as start1,
-    # but outputs were not the same. My guess is due to numpy indexing issues.
-    start2 = [model_start_year,10,1,23,0]
-    startdate = str(start2[2])+monthname[start2[1]-1]+str(start2[0])
-    starttime = str(start2[3])+"00"
     dpyAll = zeros((n_years+2), int)
     Beta1 = 2.6
     IKc = zeros((n_years+2, idays+1), float)
@@ -1721,27 +1455,10 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     OKc = zeros((n_years+2, idays+1), float)
     EToDaily = zeros((n_years+2, idays+1), float)
     PcpDaily = zeros((n_years+2, idays+1), float)
-    _OKc = zeros((n_years+2, idays+1), float)
-    _EToDaily = zeros((n_years+2, idays+1), float)
-    _PcpDaily = zeros((n_years+2, idays+1), float)
 
     ETcDaily = zeros((n_years+2, idays+1), float)
-    Date1Daily = "  "*(n_years+2)*(idays+1)
     WSCESpg = zeros((n_years+2, idays+1), float)
 
-    # HAcre = zeros((ilands+1, iyears+2, icroptype+1), float)
-    Kc1 = zeros((icroptype+1), float)
-    Kc2 = zeros((icroptype+1), float)
-    Kc3 = zeros((icroptype+1), float)
-    AB = zeros((icroptype+1), float)
-    AC = zeros((icroptype+1), float)
-    AD = zeros((icroptype+1), float)
-    SDx = zeros((icroptype+1), float)
-    RDxU = zeros((icroptype+1), float)
-    RDxL = zeros((icroptype+1), float)
-    awL = zeros((icroptype+1), float)
-    awU = zeros((icroptype+1), float)
-    ADep = zeros((icroptype+1), float)
     # crop info for critical years
     CBeginDate = zeros((icroptype+1), int)
     CEndDate = zeros((icroptype+1), int)
@@ -1820,19 +1537,6 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     MonDsw = zeros((imonths+1), float)
     MonDswPos = zeros((imonths+1), float)
     MonNetApp = zeros((imonths+1), float)
-    # yearType = numpy.empty(iyears+2, dtype='<U3')  # "  "*(iyears+1)
-
-    # for HSA****.csv (not for OLDHSA****.csv)
-    SACropDaily = "  "
-    HSACropMonMean = "  "
-    OldHSACropMonMean = "  "
-    InpOldHSACropMonMean = "  "
-    fpOldHSACrpMonMean = "  "
-    # 4/20/09 yearTypeDaily = [] ##"  "*(idays+1)
-    DateDaily = "  "*(idays+1)
-    ##yearType = "  "
-    MonDay = "  "
-    flagETAW = "  "
 
     yDaily = zeros((idays+1), int)
     DOY = zeros((idays+1), int)
@@ -1863,7 +1567,7 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     ETAWDaily = zeros((idays+1), float)
     DETAWOUTPUT = zeros((6, ilands+1, icroptype+1, idates-1), float)
 
- # for irrigation and hydrology year convertion (((((
+    # for irrigation and hydrology year convertion (((((
     ytemp = zeros((idays+1), int)
     DOYtemp = zeros((idays+1), int)
     ETotemp = zeros((idays+1), float)
@@ -1904,51 +1608,14 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     DOYGrainLIrrig = zeros((n_years+2), float)
     DOYLIrrig[0] = 0
     DOYGrainLIrrig[0] = 0
-    # for HSA****.csv  (not OLDHSA***.csv)
-    # Add more variables for DETAW python program to efficient work
-    ##cropareas = zeros((ilands,icroptype,iyears),float)
-    # end:Add more variables for DETAW python program to efficient work
-    PEs = 0.0
-    PETo = 0.0
-    DCT = 0
-    ##j = 0
-    CETo = 0.0
-    METo = 0.0
-    CEx = 0.0
-    CEs = 0.0
-    Es = 0.0
-    EKc = 0.0
     Beta1 = 2.6
     LowIkc = 0.0
-    LowFkc = 0.0
 
     IKc1 = 0.0
-    OKc1 = 0.0
-    Kc11 = 0.0
-    ##IKcs = 0.0
     CC1 = 0.35
-    ET1 = 0.0
-    ET2 = 0.0
-    CETc = 0.0
-    NumI = 0
-    NumI1 = 0
-    NI2 = 0
-    BI = 0
-    LI = 0
     Dsw = 0.0
-    Dswp = 0.0
-    C = 0
-    D = 0
-    B = 0
     EndDate1 = 0
-    BB = 0
-    CC = 0
-    DD = 0
-    EE = 0
     HAcre_temp = 0.0
-    Date1 = "  "
-    yearTypeCal = "  "
-    ##yearType[0] = "AN"
     NetApp = 0.0
     CCKc[:idays+1] = 0
     osIkc[:n_years+1] = 0
@@ -1960,12 +1627,10 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     KcDyr[:n_years+1] = 0
     KcEyr[:n_years+1] = 0
     dpyAll[:n_years+1] = 0
-    # yrs[:iyears+1]=0
     NA1[:n_years+1] = 0
     NA2[:n_years+1] = 0
     NA3[:n_years+1] = 0
     EToDaily[:n_years+1, :idays+1] = 0
-    # Date1Daily[:iyears+1,:idays+1]=0
     PcpDaily[:n_years+1, :idays+1] = 0
     OKc[:n_years+1, :idays+1] = 0
     IKc[:n_years+1, :idays+1] = 0
@@ -1976,21 +1641,6 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     # Determine ETo Rain base bare soil evaporation
     ##
     # ++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # step1: read percentage file: percentage, ET0_corrector, and region
-
-    # step2: read \weatheroutput\ files, data:DayOfYear, TMax, TMin, PCP, ETo
-    # The weather data come from the main program
-
-    # step3: read crop information for critical years
-
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(
-    #         filepath, 'Input', 'planning_study', 'critical.csv')
-    # else:
-    #     source = os.path.join(
-    #         filepath, 'Input', 'historical_study', 'critical.csv')
-    ts_type = "rts"
-    # crdf = read_and_clean_crop_info(source)
     CCropType[1:icroptype+1] = crdf.iloc[2, 1:].values
     CBeginDate[1:icroptype+1] = crdf.iloc[5, 1:].values
     CEndDate[1:icroptype+1] = crdf.iloc[6, 1:].values
@@ -2008,14 +1658,6 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     CawU[1:icroptype+1] = crdf.iloc[18, 1:].values
     CADep[1:icroptype+1] = crdf.iloc[19, 1:].values
 
-    # step4: read crop information for non-critical years
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(
-    #         filepath, 'Input', 'planning_study', 'noncritical.csv')
-    # else:
-    #     source = os.path.join(
-    #         filepath, 'Input', 'historical_study', 'noncritical.csv')
-    # ncrdf = read_and_clean_crop_info(source)
     NCCropType[1:icroptype+1] = ncrdf.iloc[2, 1:].values
     NCBeginDate[1:icroptype+1] = ncrdf.iloc[5, 1:].values
     NCEndDate[1:icroptype+1] = ncrdf.iloc[6, 1:].values
@@ -2033,48 +1675,6 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
     NCawU[1:icroptype+1] = ncrdf.iloc[18, 1:].values
     NCADep[1:icroptype+1] = ncrdf.iloc[19, 1:].values
 
-    # step5: read land use from .\Landuse folder !!!!!!!Not checked 3/13/2009
-    # get year type of each year
-
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(
-    #         filepath, 'Input', 'planning_study', 'Landuse', 'SA0001.csv')
-    # else:
-    #     source = os.path.join(
-    #         filepath, 'Input', 'historical_study', 'Landuse', 'SA0001.csv')
-    # f0 = open(source)
-    # iline0 = 1
-    # ncount = 0
-    # #? XXX why pad the first year with AN type?
-    # yearType[ncount] = "AN"
-    # for line in f0:
-    #     if line:
-    #         if line[0] == "1" or line[0] == "2":
-    #             ncount = ncount+1
-    #             yearType[ncount] = line.split(",")[1].strip()
-    # ncount = ncount+1
-    # #? XXX why pad the last year with AN type?
-    # yearType[ncount] = "AN"  # for last year
-    # # get Hectares of each crop type, year and island
-    # if streamlinemodel == "CALSIM3":
-    #     hist_path = os.path.join(
-    #         filepath, 'Input', 'planning_study', 'Landuse')  # ---08/02/2010
-    # else:
-    #     hist_path = os.path.join(
-    #         filepath, 'Input', 'historical_study', 'Landuse')
-    # files = listdir(hist_path)
-    # ts_type = "rts"
-    # for file in files:
-    #     if ".csv" in file:
-    #         sheetname = file.replace(".csv", "")
-    #         ilandno = int(sheetname.split("A0")[1])  # Landuse ---08/02/2010
-    #         source = os.path.join(hist_path, file)
-    #         df = pd.read_csv(source)
-    #         if ilandno > ilands:
-    #             break
-    #         HAcre[ilandno-1, 1:iyears, 1:icroptype+1] = df.iloc[1:iyears,
-    #                                                             2:icroptype+2].astype('float').values
-    # End of data input
     # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ##
     # Calculating ETAW for each crop in SA
@@ -2084,16 +1684,9 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
         print("island =", land_i+1)
         calc_soil_evap(land_i, Beta1, idates, ts_year, ts_days,
                        start1, dpyAll, ET0, pcp, PcpDaily, EToDaily, OKc)
-        #import pytest
-        #PcpDaily == pytest.approx(_PcpDaily,rel=1e-2)
-        #EToDaily == pytest.approx(_EToDaily,rel=1e-2)
-        #OKc == pytest.approx(_OKc,rel=1e-2)
         WSCESpg[:, :] = 0
         WSEspgMonthly[:, :] = 0
         for crop_i in range(1, icroptype+1):
-            # for HSA*** (not for OLDHSA***)   +++++++++++++++++++++
-            # initalize Monthly ETaw
-            #print("island =",k+1, " croptype =",j)
             MonETAW[:, :] = 0
             # initialize cumulative ETAW
             CETAWDaily = 0
@@ -2101,12 +1694,8 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
             DOYLIrrig[:] = 0
             DOYGrainLIrrig[:] = 0
             # for HSA*** (not for OLDHSA***)  +++++++++++++++++++++
-            datadays = zeros((32, idates-1), float)
             dataday = zeros(idates-1, float)
             data2day = zeros(idates-1, float)
-            data3day = zeros(idates-1, float)
-            data4day = zeros(idates-1, float)
-            data5day = zeros(idates-1, float)
             data6day = zeros(idates-1, float)
             data7day = zeros(idates-1, float)
             data8day = zeros(idates-1, float)
@@ -2120,13 +1709,6 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
             data16day = zeros(idates-1, float)
             data17day = zeros(idates-1, float)
             data18day = zeros(idates-1, float)
-            data19day = zeros(idates-1, float)
-            data20day = zeros(idates-1, float)
-            data21day = zeros(idates-1, float)
-            data22day = zeros(idates-1, float)
-            data23day = zeros(idates-1, float)
-            data24day = zeros(idates-1, float)
-            data25day = zeros(idates-1, float)
             data26day = zeros(idates-1, float)
             data27day = zeros(idates-1, float)
             data28day = zeros(idates-1, float)
@@ -2134,58 +1716,12 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
             data30day = zeros(idates-1, float)
             data31day = zeros(idates-1, float)
             data32day = zeros(idates-1, float)
-            data1day_14crops = zeros(idates-1, float)
-            data10day_14crops = zeros(idates-1, float)
-            data11day_14crops = zeros(idates-1, float)
-            data12day_14crops = zeros(idates-1, float)
-            data13day_14crops = zeros(idates-1, float)
-            data1day_water = zeros(idates-1, float)
-            data10day_water = zeros(idates-1, float)
-            data11day_water = zeros(idates-1, float)
-            data12day_water = zeros(idates-1, float)
-            data13day_water = zeros(idates-1, float)
 
-            nmonths = 12*(n_years-1)
-            datamon = zeros(nmonths, float)
-            data2mon = zeros(nmonths, float)
-            data3mon = zeros(nmonths, float)
-            data4mon = zeros(nmonths, float)
-            data5mon = zeros(nmonths, float)
-            data6mon = zeros(nmonths, float)
-            data7mon = zeros(nmonths, float)
-            data8mon = zeros(nmonths, float)
-            data9mon = zeros(nmonths, float)
-            data10mon = zeros(nmonths, float)
-            data11mon = zeros(nmonths, float)
-            data12mon = zeros(nmonths, float)
-            data13mon = zeros(nmonths, float)
-            data14mon = zeros(nmonths, float)
-            data15mon = zeros(nmonths, float)
-            data16mon = zeros(nmonths, float)
-            data17mon = zeros(nmonths, float)
-            data18mon = zeros(nmonths, float)
-            data19mon = zeros(nmonths, float)
-            data20mon = zeros(nmonths, float)
-            data21mon = zeros(nmonths, float)
-
-            datayr = zeros(n_years-1, float)
-            data2yr = zeros(n_years-1, float)
-            data3yr = zeros(n_years-1, float)
-            data4yr = zeros(n_years-1, float)
-            data5yr = zeros(n_years-1, float)
-            data6yr = zeros(n_years-1, float)
-            data7yr = zeros(n_years-1, float)
-            data8yr = zeros(n_years-1, float)
             kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, CropType1, y, f1, YTD, osSWDx, erd, aw1, ADep1 = calc_kc_vals(n_years, yearType, CCropType, crop_i, CBeginDate, CEndDate, Cf, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, CSDx, CRDxU, CRDxL, CawL, CawU, CADep, Region, land_i, NCCropType, NCBeginDate, NCEndDate, NCf, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, NCSDx, NCRDxU, NCRDxL, NCawL, NCawU, NCADep, osIkc, OKc, EToDaily, IGETo, osFkc, isIkc, Beta1)
             # end of for  y<iyears  ********************************
             # calculates values of osIkc, isIkc, osFkc and IGETo
             # Identify initial growth Kc(KcB) and final Kc(KcE)
             LowIkc = min(2, numpy.amin(osIkc[1:n_years+1]))
-            LowFkc = min(2, numpy.amin(osFkc[1:n_years+1]))
-            # ......... Print Kc value selection process
-            # ......   Note that Kc's are not printed in final version
-            # ........  Print rows were changed to remarks. however, the
-            # loop is retained to assign Kc's to subscripts.
             # ...........................................................
 
             # Loop through years to calculate daily Kc values
@@ -2203,15 +1739,9 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
 
             # This loop determines daily IKc for each year and subscripts
             # the results by year and day(ends after 5020)
-            #import pdb; pdb.set_trace()
             calc_ikc_daily(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD, kkc1, kkc2, kkc3,
                            EndDate1, BeginDate1, AB1, AC1, AD1, IKc, y, idays, dpyAll, BeginDateYear, IKc1, OKc, CropType1, CCKc, CC1, Kc, EToDaily, ETcDaily, f1, BIYear, NA1, YTD, LIYear, NA2, NA3)
-            ##ii = EndDate1 + 1
-            # to get out of loop i<=E
-            # end of for i<=E
-            # end of y<YCI
 
-            #? eliminate loop ?#
             isCERn[1:n_years+1] = 0
             isPCP[1:n_years+1] = 0
             isETaw[1:n_years+1] = 0
@@ -2220,7 +1750,7 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
             osCSpg[1:n_years+1] = 0
             isCETc[1:n_years+1] = 0
             osCETc[1:n_years+1] = 0
-            #? eliminate loop ?#
+
             Mon = slice(0, 12)
             isMCERn[Mon] = 0
             osMCERn[Mon] = 0
@@ -2239,7 +1769,6 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
             MonNetApp[Mon] = 0
 
             # Loop to calculate Kc's,Etc, &SWD for sceduling
-            PSW = 0.0
             SWD = 0.0
             SWD0 = osSWDx
             Espg = 0
@@ -2248,8 +1777,8 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
             IrrigYear = 0
             #? The most costly loop below ~ 2.8s?#
             date_index = 0
-            main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, Ckc1, Ckc2, Ckc3, CAB, CAC, CAD, NCBeginDate, NCEndDate, NCkc1, NCkc2, NCkc3, NCAB, NCAC, NCAD,
-                           kkc1, kkc2, kkc3, EndDate1, BeginDate1, AB1, AC1, AD1, EToMonthly, ETcMonthly, PcpMonthly, ERnMonthly, SpgMonthly, EspgMonthly, MonNetApp, MonDsw, MonDswPos,
+            main_calc_loop(n_years, crop_i, yearType, CBeginDate, CEndDate, NCBeginDate, NCEndDate,
+                           EndDate1, BeginDate1, EToMonthly, ETcMonthly, PcpMonthly, ERnMonthly, SpgMonthly, EspgMonthly, MonNetApp, MonDsw, MonDswPos,
                            dpyAll, NumDaysPerMon, erd, Region, land_i, SWD, OKc, IKc, Kc, EToDaily, PcpDaily, ETcDaily, NA1, BIYear, NA2, LIYear, NA3, osSWDx, SWD0, Dsw, NetApp, NII, NI, osCETc,
                            HAcre, osMCETc, isCETc, isMCETc, osCERn, osCSpg, osMCERn, osMCSpg, isCERn, isPCP, isETaw, isCSpg, isMCERn, isMCSpg, aw1, ADep1, Espg, WSCESpg, WSEspgMonthly,
                            ytemp, DOYtemp, IrrigYear, HAcre_temp, HAcretemp, OKctemp, IKctemp, CCKc, CCKctemp, ETotemp, Kctemp, ETctemp, Pcptemp, Ertemp, Spgtemp, ESpgtemp, Dsw0temp,
@@ -2257,335 +1786,15 @@ def historicalETAW(Region, pcp, ET0, ilands, idates, ts_year,
                            yDaily, DOY, OKcDaily, IKcDaily, CCKcDaily, EToDaily2, KcDaily, ETcDaily2, PcpDaily2, ErDaily, SpgDaily, ESpgDaily, DswDaily, SWDDaily, SWDxDaily, FCDaily,
                            PWPDaily, SWCDaily, YTDDaily, NADaily, CPcpDaily, CErDaily, CESpgDaily, CETcDaily, CDswDaily, ETAWMonDay, ETAWDaily, MonETAW, idayoutput, dailyunit,
                            dataday, date_index, data2day, data6day, data7day, data8day, data9day, data10day, data11day, data12day, data13day, data14day, data15day, data16day,
-                           data17day, data18day, data26day, data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day, imonthoutput,
-                           datamon, data2mon, data3mon, data4mon, data5mon, data6mon, data7mon, data8mon, data9mon, data12mon, data13mon, data14mon, data15mon,
-                           data16mon, data17mon, data18mon, data21mon, data10mon, data19mon, data11mon, data20mon,model_start_year)
-            SACETC = 0
-            SACERN = 0
-            SACSpg = 0
-            SISCETC = 0
-            SISCERN = 0
-            SISCSpg = 0
-            SOSCETC = 0
-            SOSCERN = 0
-            SOSCSpg = 0
-            for y in range(1, n_years+1):
-                SISCETC = SISCETC+isCETc[y]
-                SISCERN = SISCERN+isCERn[y]
-                SISCSpg = SISCSpg+isCSpg[y]
-                SOSCETC = SOSCETC+osCETc[y]
-                SOSCERN = SOSCERN+osCERn[y]
-                SOSCSpg = SOSCSpg+osCSpg[y]
-
-                # **save: y+1921,yearType[y],HAcre[k,y,j]*2.471,isPCP[y],isCETc[y],isCERn[y],isCSpg[y],
-                # **isETaw[y],osCETc[y],osCERn[y],osCSpg[y]
-                if iyearoutput == 1:
-                    datayr[y-1] = (isCETc[y])
-                    data2yr[y-1] = (isPCP[y])
-                    data3yr[y-1] = (isCERn[y])
-                    data4yr[y-1] = (isCSpg[y])
-                    data5yr[y-1] = (isETaw[y])
-                    data6yr[y-1] = (osCETc[y])
-                    data7yr[y-1] = (osCERn[y])
-                    data8yr[y-1] = (osCSpg[y])
-            # calculate &print mean over years for CETc,CERn, ETAW
-            MACETC = SACETC/n_years
-            MACERN = SACERN/n_years
-            MACSpg = SACSpg/n_years
-            MISCETC = SISCETC/n_years
-            MISCERN = SISCERN/n_years
-            MISCSpg = SISCSpg/n_years
-            MOSCETC = SOSCETC/n_years
-            MOSCERN = SOSCERN/n_years
-            MOSCSpg = SOSCSpg/n_years
+                           data17day, data18day, data26day, data27day, data28day, data29day, data30day, data31day, CETAWDaily, data32day,model_start_year)
 
             ###-------------OUTPUT CODE BELOW HERE----------------###
-            #start = start1+days(2)
-            start = str(start1[2]+1)+monthname[start1[1]-1] + \
-                str(start1[0])+" "+"2300"
-            dt = "1DAY"  # days(1)
-            unit = ""
-            if idayoutput == 1:
-                DETAWOUTPUT[0, land_i, crop_i-1, :] = dataday[:]
-                DETAWOUTPUT[1, land_i, crop_i-1, :] = data10day[:]
-                DETAWOUTPUT[2, land_i, crop_i-1, :] = data2day[:]
-                DETAWOUTPUT[3, land_i, crop_i-1, :] = data12day[:]
-                DETAWOUTPUT[4, land_i, crop_i-1, :] = data11day[:]
-                DETAWOUTPUT[5, land_i, crop_i-1, :] = data13day[:]
-                if forDSM2_daily == 1:
-                    ddatalist = dataday, data10day, data2day, data12day, data11day, data13day
-                    dcpartlist = "ETc", "ESpg", "PCP", "ETAW", "Dsw", "ER"
-                    dunitlist = "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft"
-                else:
-                    ddatalist = dataday, data2day, data6day, data7day, data8day, data9day,  \
-                        data10day, data11day, data12day, data13day,    \
-                        data14day, data15day, data16day, data17day, data18day,  \
-                        data26day, data27day, data28day, data29day, data30day, data31day, data32day
-                    dcpartlist = "ETc", "PCP", "ETo", "Kc", "SWC", "Spg",   \
-                        "ESpg", "Dsw", "ETAW", "ER",    \
-                        "SWDxDaily", "FCDaily", "PWPDaily", "SWDDaily", "YTDDaily", \
-                        "NA", "CPcp", "CEr", "CEspg", "CETc", "CDsw", "CETaw"
-                    if dailyunit == 1:
-                        dunitlist = "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft",   \
-                            "A-ft", "A-ft", "A-ft", "A-ft",    \
-                            "A-ft", "A-ft", "A-ft", "A-ft", "A-ft",    \
-                            "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft"
-                    else:
-                        dunitlist = "mm", "mm", "mm", "mm", "mm", "mm",   \
-                            "mm", "mm", "mm", "mm",    \
-                            "mm", "mm", "mm", "mm", "mm",    \
-                            "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft", "A-ft"
-                if itotaloutput == 1:
-                    if crop_i == 1 and land_i == 0:
-                        data1day_14crops = dataday
-                        data10day_14crops = data10day
-                        data11day_14crops = data11day
-                        data12day_14crops = data12day
-                        data13day_14crops = data13day
-                    elif crop_i < 15:
-                        data1day_14crops = data1day_14crops + dataday
-                        data10day_14crops = data10day_14crops + data10day
-                        data11day_14crops = data11day_14crops + data11day
-                        data12day_14crops = data12day_14crops + data12day
-                        data13day_14crops = data13day_14crops + data13day
-                    if crop_i == 15:
-                        if land_i == 0:
-                            data1day_water = dataday
-                            data10day_water = data10day
-                            data11day_water = data11day
-                            data12day_water = data12day
-                            data13day_water = data13day
-                        else:
-                            data1day_water = data1day_water + dataday
-                            data10day_water = data10day_water + data10day
-                            data11day_water = data11day_water + data11day
-                            data12day_water = data12day_water + data12day
-                            data13day_water = data13day_water + data13day
-            ##start = start1
-            dt2 = "1MONTH"  # months(1)
-            if imonthoutput == 1:
-                #props = {"unit":"mm"}
-                mdatalist = datamon, data2mon, data3mon, data4mon, data5mon, data6mon, \
-                    data7mon, data8mon, data9mon, data10mon, data11mon, \
-                    data12mon, data13mon, data14mon, data15mon, data16mon,  \
-                    data17mon, data18mon, data19mon, data20mon, data21mon
-                mcpartlist = "ETc", "ETo", "NetApp", "Pcp", "ERn", "Spg",  \
-                             "Espg", "Dsw", "Dsw+ve", "ETAW", "ETAW+ve",  \
-                             "NA_A_ft", "Pcp_A_ft", "Er_A_ft", "Espg_A_ft", "ETc_A_ft",  \
-                             "Dsw_A_ft", "Dsw+ve_A_ft", "ETaw_A_ft", "ETaw+ve_A_ft", "ETo_A_ft"
-                munitlist = "mm", "mm", "mm", "mm", "mm", "mm",  \
-                    "mm", "mm", "mm", "mm", "mm",  \
-                    "A-ft", "A-ft", "A-ft", "A-ft", "A-ft",  \
-                    "A-ft", "A-ft", "A-ft", "A-ft", "A-ft"
-
-                if itotaloutput != 1:
-                    if crop_i == 2:
-                        data12mon_veg = data12mon
-                        data13mon_veg = data13mon
-                        data14mon_veg = data14mon
-                        data15mon_veg = data15mon
-                        data16mon_veg = data16mon
-                        data17mon_veg = data17mon
-                        data18mon_veg = data18mon
-                        data19mon_veg = data19mon
-                        data20mon_veg = data20mon
-                        data21mon_veg = data21mon
-                    if crop_i > 2 and crop_i < 12:
-                        data12mon_veg = add(data12mon_veg, data12mon)
-                        data13mon_veg = add(data13mon_veg, data13mon)
-                        data14mon_veg = add(data14mon_veg, data14mon)
-                        data15mon_veg = add(data15mon_veg, data15mon)
-                        data16mon_veg = add(data16mon_veg, data16mon)
-                        data17mon_veg = add(data17mon_veg, data17mon)
-                        data18mon_veg = add(data18mon_veg, data18mon)
-                        data19mon_veg = add(data19mon_veg, data19mon)
-                        data20mon_veg = add(data20mon_veg, data20mon)
-                        data21mon_veg = add(data21mon_veg, data21mon)
-                if itotaloutput == 1:
-                    if crop_i == 1 and land_i == 0:
-                        data14mon_total = data14mon
-                        data15mon_total = data15mon
-                        data16mon_total = data16mon
-                        data20mon_total = data20mon
-                    elif crop_i < 15:
-                        data14mon_total = add(data14mon_total, data14mon)
-                        data15mon_total = add(data15mon_total, data15mon)
-                        data16mon_total = add(data16mon_total, data16mon)
-                        data20mon_total = add(data20mon_total, data20mon)
-                    if crop_i == 15:
-                        if land_i == 0:
-                            data14mon_water = data14mon
-                            data15mon_water = data15mon
-                            data16mon_water = data16mon
-                            data20mon_water = data20mon
-                        else:
-                            data14mon_water = add(data14mon_water, data14mon)
-                            data15mon_water = add(data15mon_water, data15mon)
-                            data16mon_water = add(data16mon_water, data16mon)
-                            data20mon_water = add(data20mon_water, data20mon)
-            ##start = start1
-            dt3 = "1YEAR"  # years(1)
-            if iyearoutput == 1:
-                ydatalist = datayr, data2yr, data3yr, data4yr, data5yr, data6yr, data7yr, data8yr
-                ycpartlist = "CETc", "CPcp", "CEr", "CSpg", "CETaw", "OCETc", "OCEr", "OCSpg"
-
-            Apart = "DWRBDO-DETAW"
-            if (land_i+1) < 10:
-                Bpart = "HSA_000" + str((land_i+1))
-                Bveg = "HSA_000" + str((land_i+1)) + "_veg"
-            elif (land_i+1) < 100:
-                Bpart = "HSA_00" + str((land_i+1))
-                Bveg = "HSA_00" + str((land_i+1)) + "_veg"
-            else:
-                Bpart = "HSA_0" + str((land_i+1))
-                Bveg = "HSA_0" + str((land_i+1)) + "_veg"
-
-            Cpart = cpartt
-            Epart = "1DAY"
-            Fpart = "Crop_"+str(crop_i)
-
-            ktemp = int(land_i/10)
-
-            if idayoutput == 1 and not NO_OUTPUT:
-                destination = os.path.join(
-                    filepath, 'Output', 'DETAW_day_'+str(ktemp)+'.dss')
-                dssfh = pyhecdss.DSSFile(destination, create_new=True)
-                for ilist in range(0, len(ddatalist)):
-                    path = "/"+Apart+"/"+Bpart+"/" + \
-                        dcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
-                    listlen = len(ddatalist[ilist])
-                    write_to_dss(
-                        dssfh, ddatalist[ilist], path, startdate + " "+starttime, dunitlist[ilist], ctype)
-                if itotaloutput == 1:
-                    if crop_i == 15 and land_i == (ilands-1):
-                        print("daily output")
-                        path = "/"+Apart+"/"+Bpart+"/ETc//"+Epart+"/"+Fpart+"/"
-                        listlen = len(data1day_14crops)
-                        if dailyunit == 1:
-                            dunits = "A-FT"
-                        else:
-                            dunits = "mm"
-                        write_to_dss(dssfh, data1day_14crops, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/ESpg//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data10day_14crops, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/Dsw//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data11day_14crops, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/ETaw//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data12day_14crops, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/Er//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data13day_14crops, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/ETc//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data1day_water, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/ESpg//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data1day_water, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/Dsw//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data11day_water, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/ETaw//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data13day_14crops, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                        path = "/"+Apart+"/"+Bpart+"/Er//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data13day_water, path,
-                                     startdate + " "+starttime, dunits, ctype)
-                dssfh.close()
-
-            Epart = "1MONTH"
-            if imonthoutput == 1 and not NO_OUTPUT:
-                destination = os.path.join(
-                    filepath, 'Output', 'DETAW_month.dss')
-                dssfh = pyhecdss.DSSFile(destination, create_new=True)
-
-                for ilist in range(0, 21):
-                    path = "/"+Apart+"/"+Bpart+"/" + \
-                        mcpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
-                    listlen = len(mdatalist[ilist])
-                    templist = list(mdatalist[ilist])
-                    tempunit = munitlist[ilist]
-                    write_to_dss(dssfh, templist, path, startdate +
-                                 " "+starttime, tempunit, ctype)
-
-                if itotaloutput == 1:
-                    if crop_i == 15 and land_i == (ilands-1):
-                        print("monthly output")
-                        listlen = len(data14mon_total)
-                        path = "/"+Apart+"/total_no_w/Er//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data14mon_total, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/total_no_w/Espg//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data15mon_total, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/total_no_w/ETc//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data16mon_total, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/total_no_w/ETaw+ve//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data20mon_total, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/water/Er//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data14mon_water, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/water/Espg//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data15mon_water, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/water/ETc//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data16mon_water, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/water/ETaw+ve//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data20mon_water, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                else:
-                    if crop_i == 11:
-                        listlen = len(data12mon_veg)
-                        path = "/"+Apart+"/veg/NA//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data12mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/Pcp//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data13mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/Er//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data14mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/Espg//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data15mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/ETc//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data16mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/Dsw//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data17mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/Dsw+ve//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data18mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/ETaw//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data19mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/ETaw+ve//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data20mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                        path = "/"+Apart+"/veg/ETo//"+Epart+"/"+Fpart+"/"
-                        write_to_dss(dssfh, data21mon_veg, path,
-                                     startdate + " "+starttime, "A-ft", ctype)
-                dssfh.close()
-
-            Epart = "1YEAR"
-            if iyearoutput == 1:
-                destination = os.path.join(
-                    filepath, 'Output', 'DETAW_year.dss')
-                dssfh = pyhecdss.DSSFile(destination, create_new=True)
-                for ilist in range(0, len(ydatalist)):
-                    path = "/"+Apart+"/"+Bpart+"/" + \
-                        ycpartlist[ilist]+"//"+Epart+"/"+Fpart+"/"
-                    listlen = len(ydatalist[ilist])
-                    write_to_dss(
-                        dssfh, ydatalist[ilist], path, startdate + " "+starttime, yunitlist[ilist], ctype)
-                dssfh.close()
+            DETAWOUTPUT[0, land_i, crop_i-1, :] = dataday[:]
+            DETAWOUTPUT[1, land_i, crop_i-1, :] = data10day[:]
+            DETAWOUTPUT[2, land_i, crop_i-1, :] = data2day[:]
+            DETAWOUTPUT[3, land_i, crop_i-1, :] = data12day[:]
+            DETAWOUTPUT[4, land_i, crop_i-1, :] = data11day[:]
+            DETAWOUTPUT[5, land_i, crop_i-1, :] = data13day[:]
     return(DETAWOUTPUT)
 
 
@@ -2615,14 +1824,6 @@ def read_pcp(start_date_str, end_date_str, fn):
         -------
             ts_pcp: timeseries of station precipitation
     """
-    # FIXME Avoid to use a current directory for jobs
-    # filepath = os.getcwd()
-
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    # else:
-    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
-
     pcp_df = pd.read_csv(fn,index_col=False)
     # add date column to dataframe
     pcp_df['file_dates'] = pd.to_datetime(pcp_df[['year', 'month', 'day']])
@@ -2652,23 +1853,14 @@ def read_temperature(start_date_str,end_date_str,fn):
             ts_LODI_tx: array tmax
             ts_LODI_tn: array tmin
     """
-    # FIXME Avoid to use a current directory for jobs
-    # filepath = os.getcwd()
-
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    # else:
-    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
-
     temp_df = pd.read_csv(fn,parse_dates=[0],index_col=0,header=0)
 
     ts_year = temp_df[start_date_str:end_date_str]['Year'].T.to_numpy()
-    ts_mon = temp_df[start_date_str:end_date_str]['Month'].T.to_numpy()
     ts_days = temp_df[start_date_str:end_date_str]['DOY'].T.to_numpy()
     ts_LODI_tx = temp_df[start_date_str:end_date_str]['Tx(oC)'].T.to_numpy().copy()
     ts_LODI_tn = temp_df[start_date_str:end_date_str]['Tn(oC)'].T.to_numpy().copy()
 
-    return(ts_year,ts_mon,ts_days,ts_LODI_tx,ts_LODI_tn)
+    return(ts_year,ts_days,ts_LODI_tx,ts_LODI_tn)
 
 
 def read_landuse(fn_landuse, iyears, water_years, n_areas):
@@ -2688,9 +1880,6 @@ def read_landuse(fn_landuse, iyears, water_years, n_areas):
             Landuse Area: array
             icroptype: int
     """
-    # # FIXME Avoid to use a current directory for jobs
-    # filepath = os.getcwd()
-
     lu_comb_df = pd.read_csv(fn_landuse,  header=[0])
     mask = lu_comb_df['DATE'].isin(water_years)
     # clipped based on water years
@@ -2730,14 +1919,6 @@ def read_et_correction_factors(fn):
             ETo_corrector: array
             Region: array
     """
-    # FIXME Avoid to use a current directory for jobs
-    # filepath = os.getcwd()
-
-    # if streamlinemodel == "CALSIM3":
-    #     source = os.path.join(filepath, 'Input', 'planning_study', fn)
-    # else:
-    #     source = os.path.join(filepath, 'Input', 'historical_study', fn)
-
     # read data from the csv file
     data = pd.read_csv(fn, index_col=False)
     skip_cols = ['area_id', 'SubArea', 'extension', 'ETo Correction Factor', 'REGION', 'REGION.1']
@@ -2786,11 +1967,7 @@ def detaw(fname_main_yaml: str) -> None:
     #       parameters. They can be passed as a dict directly.
     detaw_params = model_params["detaw"]
     idayoutput = detaw_params["daily_output"]
-    imonthoutput = detaw_params["monthly_output"]
-    iyearoutput = detaw_params["yearly_output"]
-    itotaloutput = detaw_params["delta_output"]
     dailyunit = detaw_params["daily_output_unit"]
-    forDSM2_daily = detaw_params["for_dsm2_only"]
     start_water_year = detaw_params["start_water_year"]
     end_water_year = detaw_params['end_water_year']
     fn_input_pcp = convert_to_absolute_path(detaw_params['input_pcp'], dir_input_base)
@@ -2802,9 +1979,6 @@ def detaw(fname_main_yaml: str) -> None:
     fn_et_output = convert_to_absolute_path(detaw_params['et_output'], dir_input_base)
     fn_critical = convert_to_absolute_path(detaw_params['critical'], dir_input_base)
     fn_noncritical = convert_to_absolute_path(detaw_params['noncritical'], dir_input_base)
-
-    # FIXME Avoid to use a current directory for jobs
-    filepath = os.getcwd()
 
     model_start_year = int(start_water_year)-1
     # FIXME the start water year date of start_water_year-09-30 is a carry forward from the old code
@@ -2823,7 +1997,6 @@ def detaw(fname_main_yaml: str) -> None:
     endyear = end_water_year_dt.year
     # get length in days for the model run
     idates = len(pd.date_range(start_water_year_dt, end_water_year_dt, freq='D'))
-    # print("endyear =",endyear)
     print("idates =", idates)
 
     start1 = numpy.array([start_water_year_dt.year, start_water_year_dt.month, start_water_year_dt.day, 23, 0], dtype='i4')
@@ -2853,7 +2026,6 @@ def detaw(fname_main_yaml: str) -> None:
     ETo_corrector = zeros((ilands), float)
     Region = zeros((ilands), int)
     ts_year = zeros((idates), int)
-    ts_mon = zeros((idates), int)
     ts_days = zeros((idates), int)
     ts_LODI_tn = zeros((idates), float)
     ts_LODI_tx = zeros((idates), float)
@@ -2862,7 +2034,7 @@ def detaw(fname_main_yaml: str) -> None:
 
     [ts_per, ETo_corrector, Region] = read_et_correction_factors(fn_et_correction)
 
-    [ts_year, ts_mon, ts_days, ts_LODI_tx, ts_LODI_tn] = read_temperature( start_date_str, end_date_str, fn_input_temperature)
+    [ts_year, ts_days, ts_LODI_tx, ts_LODI_tn] = read_temperature(start_date_str, end_date_str, fn_input_temperature)
 
     [yearType, HAcre, icroptype] = read_landuse(fn_landuse, iyears, water_years, ilands)
 
@@ -2872,8 +2044,8 @@ def detaw(fname_main_yaml: str) -> None:
 
     if DEBUG_TIMING:
         st = timeit.default_timer()
-    (pcp, ET0) = weatheroutput(ts_pcp, ts_per, ts_mon, ts_days, ts_LODI_tx,
-                               ts_LODI_tn, ilands, idates, isites, ETo_corrector, filepath, start1)
+    (pcp, ET0) = weatheroutput(ts_pcp, ts_per, ts_days, ts_LODI_tx,
+                               ts_LODI_tn, idates, ETo_corrector)
     weatheroutput_to_netcdf(pcp, ET0, model_start_year, fn_precip_output, fn_et_output)
     if DEBUG_TIMING:
         print('weather output took', timeit.default_timer()-st, ' seconds')
@@ -2883,8 +2055,8 @@ def detaw(fname_main_yaml: str) -> None:
         st = timeit.default_timer()
     # output dimensioned by (var, island,landuse,time)
     (DETAWOUTPUT) = historicalETAW(Region, pcp, ET0,
-                                   ilands, idates, ts_year, ts_days, start1, filepath, NI, NII, NumDay, iyears,
-                                   idayoutput, imonthoutput, iyearoutput, itotaloutput, dailyunit, forDSM2_daily, model_start_year,
+                                   ilands, idates, ts_year, ts_days, start1, NI, NII, NumDay, iyears,
+                                   idayoutput, dailyunit, model_start_year,
                                    yearType,HAcre,icroptype,crdf,ncrdf)
 
     if DEBUG_TIMING:
