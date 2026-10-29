@@ -1,0 +1,37 @@
+deltacd package
+===============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   deltacd.utils
+
+Submodules
+----------
+
+deltacd.dcd module
+------------------
+
+.. automodule:: deltacd.dcd
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+deltacd.detaw module
+--------------------
+
+.. automodule:: deltacd.detaw
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: deltacd
+   :members:
+   :show-inheritance:
+   :undoc-members:
