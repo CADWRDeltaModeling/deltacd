@@ -72,8 +72,11 @@ def deltacd2dsm2(ncfn, dssfn, inpfn=None):
             if (ts == 0).all():  # ignoring the node that has zero flow values.
                 print("node %s has zero flow: %s" % (n, v))
                 # continue
-            if ts.index.freq is None:
-                ts.index.freq = ts.index.inferred_freq
+            if not isinstance(ts.index, pd.PeriodIndex):
+                freq = ts.index.freq or ts.index.inferred_freq
+                if freq is None:
+                    freq = pyhecdss.DSSFile.get_freq_from_epart(E)
+                ts.index = ts.index.to_period(freq)
             dcd.write_rts(outpath, ts, units, ptype)
             print(outpath + "written!")
 
