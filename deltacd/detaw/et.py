@@ -1,6 +1,7 @@
 """Crop coefficient ($K_c$), bare-soil evaporation ($OK_c$), and OpenET ($ET_c$) providers.
 
 Implements:
+
 1. Two-stage bare-soil evaporation model (`compute_bare_soil_okc`) from Ventura
    et al. (2006) & Stroosnijder (1987) as described in **Snyder et al. (2006),
    Appendix C, pp. 72–76**.
@@ -552,6 +553,7 @@ class ExternalETProvider:
     externally observed or remotely sensed ET (such as **OpenET** Ensemble,
     SSEBop, eeMETRIC, SIMS, PT-JPL, or DisALEXI) from a NetCDF file, CSV file,
     or in-memory ``xarray.Dataset``:
+
     - Supports ``(time, subarea, crop)`` crop-specific ET or ``(time, subarea)``
       subarea-composite ET (broadcast across crops).
     - Supports daily ET (``temporal_resolution="daily"``) or monthly ET
@@ -559,7 +561,7 @@ class ExternalETProvider:
       uniformly (``disaggregation="uniform"``) or scaled by daily $ET_0$
       pattern (``disaggregation="et0_scaled"``).
     - Supports ``mm/d``, ``mm/month`` (for monthly totals), or ``in/d`` units.
-    - Also computes seasonal ``ikc`` mask from ``ds_crop_params`` soDETAW's
+    - Also computes seasonal ``ikc`` mask from ``ds_crop_params`` so DETAW's
       root-zone water balance knows in-season vs. off-season irrigation windows
       (or accepts direct ``et_aw`` when ``external_variable == "et_aw"``).
     """

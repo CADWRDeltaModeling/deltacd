@@ -2,6 +2,7 @@
 
 Implements the daily water balance recurrence and management allowable
 depletion ($SWD_x$) scheduling described in **Snyder et al. (2006), pp. 27-38**:
+
 - Effective root depth ``erd = min(root_depth, max_soil_depth)``
 - Plant available water ``PAW = erd * aw`` and yield threshold depletion
   ``YTD = PAW * (allowable_depletion_pct / 100)``

@@ -95,7 +95,7 @@ Below are sample input file formats.
 
   CSV file containing station precipitation in mm.
 
-..  code-block:: csv
+..  code-block:: text
     :caption: input_pcp
 
       year,month,day,DOY,Brentwood,Davis,Galt,Lodi,RioVista,Stockton,Tracy
@@ -110,7 +110,7 @@ Below are sample input file formats.
 
   CSV file containing station temperature in deg C.
 
-..  code-block:: csv
+..  code-block:: text
     :caption: input_temperature
 
       Date,Year,Month,DOY,Pcp(mm),Tx(oC),Tn(oC)
@@ -125,7 +125,7 @@ Below are sample input file formats.
 
   CSV file containing landuse for each area_id for different years.
 
-..  code-block:: csv
+..  code-block:: text
     :caption: landuse
 
       DATE,TYPE,UR,PA,AL,FI,SB,GR,RI,TR,TO,OR,VI,RV,NV,DGR,WS,area_id
@@ -144,7 +144,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the detaw_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: txt
+..  code-block:: text
     :caption: detaw_output
 
     detawoutput_dsm2 {
@@ -190,7 +190,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the precip_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: txt
+..  code-block:: text
     :caption: precip_output
 
     netcdf precip_dsm2 {
@@ -211,7 +211,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the et_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: txt
+..  code-block:: text
     :caption: et_output
 
     netcdf ET0 {

@@ -3,6 +3,7 @@
 Implements the meteorological forcing and reference evapotranspiration equations
 described in **Snyder et al. (2006), Appendix B (pp. 68-71)** and spatial
 estimation rules (pp. 11-17):
+
 - ``extraterrestrial_radiation`` (Duffie & Beckman, 1980; Eq. 1-4)
 - ``hargreaves_samani`` (Hargreaves & Samani, 1982, 1985; Eq. 23)
 - ``asce_penman_monteith`` (ASCE-EWRI, 2005 short-canopy daily PM; Eq. 5-22, 24-26)

@@ -8,16 +8,19 @@ import xarray as xr
 
 
 def split_landuse(path_landuse, path_landuse_split_ratios):
-    """ Split the land use information using the split ratios
+    """Split the land use information using the split ratios.
 
-        Parameters
-        ----------
-        path_landuse: str
-        path_landuse_split_ratios: str
+    Parameters
+    ----------
+    path_landuse : str
+        Path to the land-use data.
+    path_landuse_split_ratios : str
+        Path to the land-use split ratios.
 
-        Return
-        ------
-        pandas.DataFrame
+    Returns
+    -------
+    pandas.DataFrame
+        Split land-use data.
     """
     df_landuse = pd.read_csv(path_landuse)
     df_split_ratios = pd.read_csv(path_landuse_split_ratios)
@@ -48,16 +51,19 @@ def split_landuse(path_landuse, path_landuse_split_ratios):
 
 def split_irrigation_efficiencies(path_irrigation_efficiencies,
                                   path_landuse_split_ratios):
-    """ Split irrigation efficiencies using the splitting information
+    """Split irrigation efficiencies using the splitting information.
 
-        Parameters
-        ----------
-        path_landuse: str
-        path_landuse_split_ratios: str
+    Parameters
+    ----------
+    path_irrigation_efficiencies : str
+        Path to the irrigation-efficiency data.
+    path_landuse_split_ratios : str
+        Path to the land-use split ratios.
 
-        Return
-        ------
-        pandas.DataFrame
+    Returns
+    -------
+    pandas.DataFrame
+        Split irrigation efficiencies.
     """
     df_eta = pd.read_csv(path_irrigation_efficiencies)
     df_split_ratios = pd.read_csv(path_landuse_split_ratios)
@@ -71,16 +77,19 @@ def split_irrigation_efficiencies(path_irrigation_efficiencies,
 
 
 def split_leach_water(path_leachwater, path_landuse_split_ratios):
-    """ Split leach water information
+    """Split leach water information.
 
-        Parameters
-        ----------
-        path_leachwater: str
-        path_landuse_split_ratios: str
+    Parameters
+    ----------
+    path_leachwater : str
+        Path to the leach-water data.
+    path_landuse_split_ratios : str
+        Path to the land-use split ratios.
 
-        Return
-        ------
-        pandas.DataFrame
+    Returns
+    -------
+    pandas.DataFrame
+        Split leach-water data.
     """
     df_leach = pd.read_csv(path_leachwater)
     df_split_ratios = pd.read_csv(path_landuse_split_ratios)
@@ -94,16 +103,19 @@ def split_leach_water(path_leachwater, path_landuse_split_ratios):
 
 
 def split_groundwater(path_groundwater, path_landuse_split_ratios):
-    """ Split groundwater information
+    """Split groundwater information.
 
-    P   arameters
-        ----------
-        path_groundwater: str
-        path_landuse_split_ratios: str
+    Parameters
+    ----------
+    path_groundwater : str
+        Path to the groundwater data.
+    path_landuse_split_ratios : str
+        Path to the land-use split ratios.
 
-        Return
-        ------
-        pandas.DataFrame
+    Returns
+    -------
+    pandas.DataFrame
+        Split groundwater data.
     """
     df_gw = pd.read_csv(path_groundwater)
     df_split_ratios = pd.read_csv(path_landuse_split_ratios)
@@ -113,16 +125,19 @@ def split_groundwater(path_groundwater, path_landuse_split_ratios):
 
 
 def split_distribution(path_distribution, path_landuse_split_ratios):
-    """ Split node distribution info
+    """Split node distribution info.
 
-        Parameters
-        ----------
-        path_distribution: str
-        path_landuse_split_ratios: str
+    Parameters
+    ----------
+    path_distribution : str
+        Path to the node-distribution data.
+    path_landuse_split_ratios : str
+        Path to the land-use split ratios.
 
-        Return
-        ------
-        pandas.DataFrame
+    Returns
+    -------
+    pandas.DataFrame
+        Placeholder for split node-distribution data.
     """
     df_gw = pd.read_csv(path_distribution)
     df_split_ratios = pd.read_csv(path_landuse_split_ratios)
@@ -140,18 +155,17 @@ def read_old_leach_water_file(path_leachwater):
 
 
 def read_old_irrigation_efficiencies(path_irrigation_efficiencies) -> pd.DataFrame:
-    """ Read irrigation efficiencies in the old DETAW-DCD format file and
-        return a DataFrame
+    """Read irrigation efficiencies in the old DETAW-DCD format.
 
-        Parameters
-        ----------
-        path_irrigation_efficiencies: str
-            file path of an irrigation efficiencies in the old DETAW-DCD style.
+    Parameters
+    ----------
+    path_irrigation_efficiencies : str
+        File path to irrigation efficiencies in the old DETAW-DCD style.
 
-        Return
-        ------
-        pandas.DataFrame
-            irrigation efficiencies per area (island)
+    Returns
+    -------
+    pandas.DataFrame
+        Irrigation efficiencies per area (island).
     """
     df_eta = pd.read_csv(path_irrigation_efficiencies,
                          header=None).reset_index().rename(

@@ -3,6 +3,7 @@
 In DETAW v2.0 / DeltaCD, downstream ``dcd.py`` consumes a smoothed daily
 ``et_aw`` rather than spiky discrete field-scale irrigation events (``net_app``).
 For each water year (Oct 1 - Sep 30), subarea, and crop:
+
 1. Compute the annual change in root-zone soil water content ``SumDelSWC`` and
    distribute ``MonthlySWC = SumDelSWC / 12`` across each month's days:
    ``et_aw_raw[d] = d_sw[d] - MonthlySWC / days_in_month[d]``.

@@ -15,6 +15,7 @@ Welcome to DeltaCD documentation.
    detaw
    dcd
    postprocessing
+   modules
    changelog_link
 
 ==================

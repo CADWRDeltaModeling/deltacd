@@ -21,6 +21,14 @@ deltacd.dcd module
    :undoc-members:
    :show-inheritance:
 
+deltacd.detaw\_legacy module
+----------------------------
+
+.. automodule:: deltacd.detaw_legacy
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

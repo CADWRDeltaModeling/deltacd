@@ -728,22 +728,21 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
 
 def convert_relpath_to_abspath(params: dict, dir_input_base: Path) -> dict:
-    """Convert relative paths to absolute paths in a dict
-    g
-        The function looks for items in the dict that start with "path_", check
-        if it is a relative path, and then convert it to an absolute path.
-        Note that this function modifies the input dict.
+    """Convert relative paths to absolute paths in a dictionary.
 
-        Parameters
-        ----------
-        params: dict
-            a dictionary of parameters
-        dir_input_base: Path
-            a base directory for relative paths
+    Items whose keys start with ``path_`` are updated in place. Absolute paths
+    are preserved, while relative paths are resolved against ``dir_input_base``.
 
-        Returns
-        -------
-        None
+    Parameters
+    ----------
+    params : dict
+        Dictionary of parameters.
+    dir_input_base : pathlib.Path
+        Base directory for relative paths.
+
+    Returns
+    -------
+    None
     """
     for key, value in params.items():
         if key.startswith("path_"):
