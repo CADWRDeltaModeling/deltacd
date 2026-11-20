@@ -7,17 +7,20 @@
 #
 # See the LICENSE file for the license of this software.
 
-from pathlib import Path
-import os
 import argparse
-import logging
-import yaml
 import json
+import logging
+import os
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import xarray as xr
+import yaml
+
 from deltacd import __version__
-from deltacd.detaw import convert_to_absolute_path
+from deltacd.detaw.params import normalize_token, resolve_crop_behavior
+from deltacd.utils.paths import convert_to_absolute_path
 
 # Set up a logger
 logging.basicConfig(level=logging.INFO)
@@ -40,9 +43,7 @@ def read_water_year_types(path_file: str) -> pd.DataFrame:
         a DataFrame that has two columns, type and year, for water year
         types.
     """
-    df = pd.read_csv(
-        path_file, header=None, delim_whitespace=True, names=["type", "year"]
-    )
+    df = pd.read_csv(path_file, header=None, delim_whitespace=True, names=["type", "year"])
     return df
 
 
@@ -72,26 +73,14 @@ def calculate_drained_seepage(df_subareas: pd.DataFrame) -> xr.DataArray:
         data=np.zeros((n_areas)), dims=["subarea"], coords=dict(subarea=areas)
     )
 
-    areas_selected = df_subareas.query("uplow == 'low' & docregion == 'Lower'")[
-        "area_id"
-    ]
-    da_drnseep.loc[areas_selected.values] = (
-        0.013 * df_subareas.loc[areas_selected.index, "acreage"]
-    )
+    areas_selected = df_subareas.query("uplow == 'low' & docregion == 'Lower'")["area_id"]
+    da_drnseep.loc[areas_selected.values] = 0.013 * df_subareas.loc[areas_selected.index, "acreage"]
 
-    areas_selected = df_subareas.query("uplow == 'low' & docregion == 'Midrange'")[
-        "area_id"
-    ]
-    da_drnseep.loc[areas_selected.values] = (
-        0.074 * df_subareas.loc[areas_selected.index, "acreage"]
-    )
+    areas_selected = df_subareas.query("uplow == 'low' & docregion == 'Midrange'")["area_id"]
+    da_drnseep.loc[areas_selected.values] = 0.074 * df_subareas.loc[areas_selected.index, "acreage"]
 
-    areas_selected = df_subareas.query("uplow == 'low' & docregion == 'High'")[
-        "area_id"
-    ]
-    da_drnseep.loc[areas_selected.values] = (
-        0.095 * df_subareas.loc[areas_selected.index, "acreage"]
-    )
+    areas_selected = df_subareas.query("uplow == 'low' & docregion == 'High'")["area_id"]
+    da_drnseep.loc[areas_selected.values] = 0.095 * df_subareas.loc[areas_selected.index, "acreage"]
     # FIXME Performing check so we only use for delta and not Suisun.
     # This can be removed when lowland_no_seegage is not hardwired.
     if n_areas > 15:
@@ -160,19 +149,19 @@ def adjust_leach_water(da_lwa, da_lwd, da_ro):
     n_areas = len(areas)
     for year in years:
         leach_saved = np.zeros((n_areas,))
-        lwa = da_lwa.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
-        lwd = da_lwd.loc[f"{year - 1}-10-01":f"{year}-09-30", :].values
+        lwa = da_lwa.loc[f"{year - 1}-10-01" : f"{year}-09-30", :].values
+        lwd = da_lwd.loc[f"{year - 1}-10-01" : f"{year}-09-30", :].values
         ro = da_ro.sel(time=slice(f"{year - 1}-10-01", f"{year}-09-30")).values
         lwa_adj = np.full_like(lwa, np.nan)
         lwd_adj = np.full_like(lwd, np.nan)
         for r_i in range(lwa.shape[0]):
             month = dates[r_i].month
             n_days = dates[r_i].days_in_month
-            leach_saved, lwa_adj[r_i, :], lwd_adj[r_i, :] = np.vectorize(
-                use_runoff_for_leach
-            )(leach_saved, lwa[r_i, :], lwd[r_i, :], ro[r_i, :], month, n_days)
-        da_lwa_adj.loc[f"{year - 1}-10-01":f"{year}-09-30", :] = lwa_adj
-        da_lwd_adj.loc[f"{year - 1}-10-01":f"{year}-09-30", :] = lwd_adj
+            leach_saved, lwa_adj[r_i, :], lwd_adj[r_i, :] = np.vectorize(use_runoff_for_leach)(
+                leach_saved, lwa[r_i, :], lwd[r_i, :], ro[r_i, :], month, n_days
+            )
+        da_lwa_adj.loc[f"{year - 1}-10-01" : f"{year}-09-30", :] = lwa_adj
+        da_lwd_adj.loc[f"{year - 1}-10-01" : f"{year}-09-30", :] = lwd_adj
 
     return da_lwa_adj, da_lwd_adj
 
@@ -246,9 +235,7 @@ def calculate_model_depletion(ds_dcd, model_params, input_data):
     return ds_dcd_nodes
 
 
-def set_dcd_node_global_attributes(
-    ds_dcd_nodes: xr.Dataset, model_params: dict
-) -> xr.Dataset:
+def set_dcd_node_global_attributes(ds_dcd_nodes: xr.Dataset, model_params: dict) -> xr.Dataset:
     """Set global attributes for the DCD node dataset
 
     Parameters
@@ -256,9 +243,7 @@ def set_dcd_node_global_attributes(
     ds_dcd_nodes: xarray.Dataset
         dataset containing DCD node data
     """
-    title = (
-        "Outputs at model nodes from Delta Channel Depletion (DCD) module of DeltaCD"
-    )
+    title = "Outputs at model nodes from Delta Channel Depletion (DCD) module of DeltaCD"
     leach_factor = model_params.get("leach_scale")
     water_surface_evaporation = model_params.get("is_adding_waterbody_evaporation")
     created_at = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -297,9 +282,7 @@ def read_distribution_ratios(path_file, df_split_table) -> xr.DataArray:
     # read_csv automatically.
     df_ratios = pd.read_csv(path_file, dtype={"area_id": str, "node": str})
     if df_split_table is not None:
-        df_split_table_to_one = df_split_table.query(
-            "subregion_id not in @df_ratios.node"
-        )
+        df_split_table_to_one = df_split_table.query("subregion_id not in @df_ratios.node")
         if not df_split_table_to_one.empty:
             df_ratios_w_one = pd.DataFrame(
                 {
@@ -359,9 +342,7 @@ def island_to_nodes(ds_dcd, input_data):
 
     # Seepage
     da_spg_nodes = ds_dcd.seepage.dot(ds_dist_rates.divrate)
-    da_spg_nodes = da_spg_nodes.assign_attrs(
-        units="cfs", description="seepage flow at model nodes"
-    )
+    da_spg_nodes = da_spg_nodes.assign_attrs(units="cfs", description="seepage flow at model nodes")
 
     # Drainage
     da_drn_nodes = ds_dcd.drainage.dot(ds_dist_rates.drnrate) + ds_dcd.runoff.dot(
@@ -372,9 +353,7 @@ def island_to_nodes(ds_dcd, input_data):
     )
 
     # Depletion over open water
-    da_depletion_openwater_nodes = ds_dcd.depletion_from_waterbody.dot(
-        ds_dist_rates.divrate
-    )
+    da_depletion_openwater_nodes = ds_dcd.depletion_from_waterbody.dot(ds_dist_rates.divrate)
     da_depletion_openwater_nodes = da_depletion_openwater_nodes.assign_attrs(
         units="cfs", description="depletion over open water at model nodes"
     )
@@ -397,9 +376,7 @@ def create_argparser() -> argparse.ArgumentParser:
     argparse.ArgumentParser
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "input_yaml", type=str, help="An input YAML file to provide parameters"
-    )
+    parser.add_argument("input_yaml", type=str, help="An input YAML file to provide parameters")
     return parser
 
 
@@ -444,9 +421,7 @@ def add_split_area_data(df_data, df_split_table, use_zeros=False):
     # Need to convert area_id from int to str.
     # Select rows that have area_id_from in the base area_ids
     areas_to_add = df_split_table["area_id_from"].to_numpy()
-    df_data_to_add = (
-        df_data_updated.set_index("area_id").loc[areas_to_add].reset_index().copy()
-    )
+    df_data_to_add = df_data_updated.set_index("area_id").loc[areas_to_add].reset_index().copy()
     if use_zeros:
         df_data_to_add.loc[:, df_data.columns[2:]] = 0.0
     df_data_to_add["area_id"] = df_split_table["area_id"]
@@ -499,52 +474,37 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
     # Preprocess DETAW outputs
     logging.info("Preprocessing DETAW output...")
 
-    # Split the DETAW outputs
+    # Split the DETAW outputs using coordinate-aligned crop names (order-independent)
     df_split_table = input_data.get("split_table")
-    # FIXME Crop names hardwired.
-    crops = [
-        "Urban",
-        "Irrig pasture",
-        "Alfalfa",
-        "All field",
-        "Sugar beets",
-        "Irrig grain",
-        "Rice",
-        "Truck crops",
-        "Tomato",
-        "Orchard",
-        "Vineyard",
-        "Riparian vegetation",
-        "Native vegetation",
-        "Non-irrig grain",
-        "Water surface",
-        "Duck pond",
-    ]
-    # df_split_table_first = df_split_table.query("area_id_from in @df_subareas.area_id")
-    # df_split_table_second = df_split_table.query("area_id_from in @df_split_table.area_id_to")
 
     ds_detaw_original = ds_detaw.copy(deep=True)
+    # Build case-insensitive lookup from canonical crop label -> actual coordinate label in ds_detaw
+    detaw_crop_map = {normalize_token(c): str(c) for c in ds_detaw_original.coords["crop"].values}
     if df_split_table is not None:
         df_landuse_split_ratios = input_data.get("landuse_split_ratios")
         col_ratios = df_landuse_split_ratios.columns[
             ~df_landuse_split_ratios.columns.isin(["area_id_from", "area_id_to"])
         ]
-        n_crops = len(col_ratios)
-        # Note that the code assumes the ordering of the crops in different datasets
-        # This assumption is not safe.
+        ratio_crop_labels = []
+        for col in col_ratios:
+            norm_col = normalize_token(col)
+            if norm_col in detaw_crop_map:
+                ratio_crop_labels.append(detaw_crop_map[norm_col])
+            else:
+                cb = resolve_crop_behavior(str(col))
+                ratio_crop_labels.append(detaw_crop_map.get(normalize_token(cb.label), cb.label))
+
         list_merged = []
         for varname, da in ds_detaw.data_vars.items():
             list_da = []
             for _, row in df_landuse_split_ratios.iterrows():
                 area_id_from = row["area_id_from"]
                 da_ratios = xr.DataArray(
-                    data=row[col_ratios].astype(float),
+                    data=row[col_ratios].astype(float).to_numpy(),
                     dims=["crop"],
-                    coords=dict(crop=crops[:n_crops]),
+                    coords=dict(crop=ratio_crop_labels),
                 )
-                da_split = (
-                    ds_detaw_original[varname].sel(subarea=area_id_from) * da_ratios
-                )
+                da_split = ds_detaw_original[varname].sel(subarea=area_id_from) * da_ratios
                 list_da.append(da_split)
             da_new = xr.concat(list_da, dim="subarea").assign_coords(
                 subarea=df_split_table["area_id"].to_numpy()
@@ -556,8 +516,18 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         ds_detaw_split = ds_detaw_original
 
     # Aggregating by areas
-    # Need to omit the water surface components
-    da_aw = ds_detaw_split.et_aw.drop_sel(crop="Water surface").clip(0.0).sum("crop")
+    # Identify open-water crop coordinate label case-insensitively (if present)
+    water_crop_label = detaw_crop_map.get(normalize_token("Water surface"))
+    if water_crop_label is not None:
+        da_aw = ds_detaw_split.et_aw.drop_sel(crop=water_crop_label).clip(0.0).sum("crop")
+        da_depletion_waterbody = (
+            ds_detaw_split.et_c.sel(crop=water_crop_label)
+            - ds_detaw_split.precip.sel(crop=water_crop_label)
+        ).clip(0.0)
+    else:
+        da_aw = ds_detaw_split.et_aw.clip(0.0).sum("crop")
+        da_depletion_waterbody = xr.zeros_like(da_aw)
+
     da_seepage = ds_detaw_split.s_e.clip(0.0).sum("crop")
     da_runoff = (
         (ds_detaw_split.precip - ds_detaw_split.e_r)
@@ -566,17 +536,10 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         .rolling(time=5, min_periods=1)
         .mean()
     )
-    cropname = "Water surface"
-    da_depletion_waterbody = (
-        ds_detaw_split.et_c.sel(crop=cropname)
-        - ds_detaw_split.precip.sel(crop=cropname)
-    ).clip(0.0)
 
     # Create an array of days in each month for later use
     days_in_month = dates.days_in_month
-    da_days_in_month = xr.DataArray(
-        data=days_in_month, dims=["time"], coords=dict(time=dates)
-    )
+    da_days_in_month = xr.DataArray(data=days_in_month, dims=["time"], coords=dict(time=dates))
 
     # Pre-processing the leach water data
     # FIXME Factor these out
@@ -752,9 +715,7 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
         for _, row in df_split_table.iterrows():
             area_id_from = row["area_id_from"]
             area_id = row["area_id"]
-            ds_dcd_subtracted.loc[dict(subarea=area_id_from)] -= ds_dcd.sel(
-                subarea=area_id
-            )
+            ds_dcd_subtracted.loc[dict(subarea=area_id_from)] -= ds_dcd.sel(subarea=area_id)
 
     created_at = pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -768,21 +729,21 @@ def calculate_depletion(model_params: dict, input_data: dict) -> xr.Dataset:
 
 def convert_relpath_to_abspath(params: dict, dir_input_base: Path) -> dict:
     """Convert relative paths to absolute paths in a dict
-g
-    The function looks for items in the dict that start with "path_", check
-    if it is a relative path, and then convert it to an absolute path.
-    Note that this function modifies the input dict.
+    g
+        The function looks for items in the dict that start with "path_", check
+        if it is a relative path, and then convert it to an absolute path.
+        Note that this function modifies the input dict.
 
-    Parameters
-    ----------
-    params: dict
-        a dictionary of parameters
-    dir_input_base: Path
-        a base directory for relative paths
+        Parameters
+        ----------
+        params: dict
+            a dictionary of parameters
+        dir_input_base: Path
+            a base directory for relative paths
 
-    Returns
-    -------
-    None
+        Returns
+        -------
+        None
     """
     for key, value in params.items():
         if key.startswith("path_"):
@@ -838,16 +799,12 @@ def read_dcd_input_data(params: dict) -> dict:
         df_subareas_split.drop(columns=["area_id_to"], inplace=True)
         df_subareas_split.rename(columns={"area_id_from": "area_id"}, inplace=True)
         # Select only the areas that are in the original subarea file
-        df_subareas_split = df_subareas_split.query(
-            "area_id in @df_subareas.area_id"
-        ).copy()
-        df_subareas_split["area_id"] = df_split_table.query(
-            "area_id_from in @df_subareas.area_id"
-        )["area_id"]
+        df_subareas_split = df_subareas_split.query("area_id in @df_subareas.area_id").copy()
+        df_subareas_split["area_id"] = df_split_table.query("area_id_from in @df_subareas.area_id")[
+            "area_id"
+        ]
 
-        df_subareas_updated = pd.concat(
-            [df_subareas_updated, df_subareas_split], ignore_index=True
-        )
+        df_subareas_updated = pd.concat([df_subareas_updated, df_subareas_split], ignore_index=True)
         input_data["subarea_info"] = df_subareas_updated
     else:
         input_data["subarea_info"] = df_subareas
@@ -860,9 +817,7 @@ def read_dcd_input_data(params: dict) -> dict:
         col_crops = df_landuse_split_ratios.columns[
             ~df_landuse_split_ratios.columns.isin(["area_id_from", "area_id_to"])
         ]
-        df_landuse_split_ratios = df_landuse_split_ratios.astype(
-            {c: float for c in col_crops}
-        )
+        df_landuse_split_ratios = df_landuse_split_ratios.astype({c: float for c in col_crops})
         df_landuse_split_ratios = df_landuse_split_ratios.query(
             "area_id_from in @df_subareas.area_id"
         ).copy()
@@ -886,9 +841,7 @@ def read_dcd_input_data(params: dict) -> dict:
     if df_split_table is not None:
         df_split_table_to = df_split_table.query("area_id_from in @df_subareas.area_id")
         df_gw_rates_split = df_gw_rates.loc[:, df_split_table_to["area_id_from"]]
-        df_gw_rates_split = df_gw_rates_split.set_axis(
-            df_split_table_to["area_id"], axis=1
-        )
+        df_gw_rates_split = df_gw_rates_split.set_axis(df_split_table_to["area_id"], axis=1)
         df_gw_rates = pd.concat([df_gw_rates, df_gw_rates_split], axis=1)
     input_data["gw_rates"] = df_gw_rates
 

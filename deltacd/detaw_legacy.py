@@ -25,6 +25,8 @@
 import sys
 from pathlib import Path
 
+from deltacd.utils.paths import convert_to_absolute_path
+
 if not sys.warnoptions:
     import warnings
     warnings.simplefilter("ignore")
@@ -1926,28 +1928,6 @@ def read_et_correction_factors(fn):
     ETo_corrector = data.loc[:, 'ETo Correction Factor'].T.to_numpy()
     Region = data.loc[:, 'REGION'].T.to_numpy()
     return (ts_per, ETo_corrector, Region)
-
-
-def convert_to_absolute_path(filename, dir_input_base):
-    """Check if a file name is in an absolute path and convert it into one
-    by adding the base directory of the main input
-
-    Parameters
-    ----------
-    filename: str
-        the file name to be checked
-    dir_input_base: str
-        The base directory name to add
-
-    Returns
-    -------
-    pathlib.Path
-        An absolute path
-    """
-    path = Path(filename)
-    if not path.is_absolute():
-        path = dir_input_base / Path(path)
-    return str(path)
 
 
 def detaw(fname_main_yaml: str) -> None:
