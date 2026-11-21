@@ -38,6 +38,11 @@ dynamic = ["version"]
 dss = [
     "pyhecdss",
 ]
+dev = [
+    "pytest",
+    "pytest-regressions",
+    "ruff",
+]
 
 [project.urls]
 Homepage = "https://github.com/cadwrdeltamodeling/deltacd"
@@ -59,3 +64,12 @@ local_scheme = "node-and-date"
 where = ["."]
 include = ["deltacd*"]
 exclude = ["tests*", "docs*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = ["deltacd/detaw_legacy.py", "docs", "dev"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]

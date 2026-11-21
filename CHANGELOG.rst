@@ -2,6 +2,27 @@
 Changelog
 =========
 
+v0.10.0 - Unreleased
+====================
+Modular rewrite of ``deltacd.detaw`` using ``xarray``, ``pandas``, and compact ``@numba.njit`` kernels.
+
+Added
+-----
+* Modular ``deltacd.detaw`` subpackage (``config``, ``params``, ``io``, ``meteorology``, ``et``, ``water_balance``, ``etaw``, ``model``).
+* Pluggable :math:`ET_0` equations (Hargreaves–Samani and ASCE Standardized Penman–Monteith) and precomputed/gridded ``DatasetMeteorologyProvider``.
+* ``ExternalETProvider`` supporting external / **OpenET** daily or monthly :math:`ET_c` and :math:`ET_{aw}` NetCDF and CSV datasets.
+* Declarative ``CropBehavior`` system supporting custom land-use categories without hardcoded crop indices.
+* Educational Jupyter notebooks (``notebooks/01_detaw_theory_and_walkthrough.ipynb`` and ``notebooks/02_detaw_modular_et_and_openet.ipynb``) and AI developer guides (``AGENTS.md``, ``INSTRUCTIONS.md``, ``PLANS.md``, ``SKILLS.md``).
+
+Fixed
+-----
+* Fixed positional ``iloc[:, 1]`` bug in ``read_landuse`` that read ``DATE`` instead of ``TYPE`` in Delta land-use CSVs, restoring critical/dry water-year crop parameters.
+* Fixed leap-year February 29 day-count, ``IKc`` curve length, and ``calc_cetc`` index-wrapping bugs.
+* Fixed 1st-of-month ``Mon`` off-by-one bug in daily channel seepage calculations.
+* Fixed +1 day timestamp shift in ``et_output`` and ``precip_output`` NetCDF files caused by the prior-September-30 spin-up row.
+* Fixed unassigned ``numpy.clip`` no-op on station-weighted precipitation and removed C++ float-truncation drift.
+* Eliminated fixed column-order, row-order, and crop-order assumptions across all DETAW readers and DCD crop selection.
+
 v0.9.0 - 2024-XX-XX
 ===================
 This release is a rather major release that breaks input file compatibility.

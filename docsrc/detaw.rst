@@ -2,56 +2,90 @@
 DETAW (Delta Evapotranspiration of Applied Water) Overview
 ===============================================================
 
-Delta Evapotranspiration of Applied Water (DETAW) is designed to simulate the daily evapotranspiration(ET) and root zone water balance in subareas of the Sacramento-San Joaquin River Delta. The current version of DETAW in DeltaCD, is roughly the same as DETAW v2.1 from the previous DETAW-DCD. Hence, though the formats of many input files change slightly, `DETAW v2.1 user manual <https://github.com/CADWRDeltaModeling/DETAW-DCD/blob/master/DETAW/Documents/DETAW%20v2.1_user's%20manual.pdf>`_ is a good reference to use. The algorithms and the theories behind of DETAW are described in `DETAW v1.0 report <https://og-production-open-data-cnra-892364687672.s3.amazonaws.com/resources/6539f894-325d-4092-b34a-3139fd35c5b1/08detaw.pdf?Content-Type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJJIENTAPKHZMIPXQ%2F20240206%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240206T180739Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=38bcbf3f4cf3de7b97e5b9c8ee0e1b5fb9443a4d911e4d7a041802191e977678>`_ and annual report chapters, `Implementing DETAW in Modeling Hydrodynamics and Water Quality in the Sacramento-San Joaquin Delta <https://og-production-open-data-cnra-892364687672.s3.amazonaws.com/resources/61bf1927-14a9-44ae-96ef-00fc8af9b725/method_2017_chapter3.pdf?Content-Type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJJIENTAPKHZMIPXQ%2F20240206%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240206T180930Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=d2139c9152f4b8b7817ff7185513d142631deaa3efe7e3b21b52d6eb4e26f00e>`_ and `Estimates for Consumptive Water Demands in the Delta using DETAW <https://og-production-open-data-cnra-892364687672.s3.amazonaws.com/resources/91c46590-7383-41fd-8446-db60dae5e874/2006ch7.pdf?Content-Type=application%2Fpdf&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJJIENTAPKHZMIPXQ%2F20240206%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240206T180924Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=3bb64bc65a2b348dd2b442b60c6f03730154ae7b36f258e9dc2bc84cc3f1f39a>`_.
+Delta Evapotranspiration of Applied Water (DETAW) simulates daily reference evapotranspiration (:math:`ET_0`), crop evapotranspiration (:math:`ET_c`), root-zone soil water balance, and evapotranspiration of applied water (:math:`ET_{aw}`) across subareas (islands) of the Sacramento–San Joaquin River Delta and Suisun Marsh.
 
-Main input file
+Theoretical foundations are documented in **Snyder et al. (2006)**, *DETAW: Delta Evapotranspiration of Applied Water, Version 1.0 Final Report* (`DETAW v1.0 report <https://data.cnra.ca.gov/dataset/detaw>`_), the `DETAW v2.1 user manual <https://github.com/CADWRDeltaModeling/DETAW-DCD/blob/master/DETAW/Documents/DETAW%20v2.1_user's%20manual.pdf>`_, and DWR Bay-Delta Office Annual Report chapters.
+
+Modular Architecture (`deltacd.detaw`)
+======================================
+
+In DeltaCD, ``deltacd.detaw`` is organized into modular ``xarray`` and ``pandas`` components with Numba-accelerated sequential daily kernels:
+
+* ``deltacd.detaw.config``: Typed YAML configuration (backward-compatible with legacy ``detaw:`` configs plus extensible ``meteorology:``, ``et:``, ``options:``, and ``column_map:`` sections).
+* ``deltacd.detaw.params``: Declarative ``CropBehavior`` metadata and station/crop alias registries (supporting Delta 15-crop, Suisun 16-crop with Duck Pond, and custom land-use categories without hardcoded indices).
+* ``deltacd.detaw.io``: Order-independent CSV/NetCDF readers and CF-styled NetCDF writers (columns, rows, stations, subareas, and crops are matched by normalized header/label names rather than fixed positions).
+* ``deltacd.detaw.meteorology``: Pluggable ``MeteorologyProvider`` implementations and vectorized :math:`ET_0` equations:
+
+  - **Hargreaves–Samani** (``hargreaves_samani``, default; Snyder et al., 2006, Appendix B, Eq. 23)
+  - **ASCE Standardized Penman–Monteith** (``asce_penman_monteith``; Snyder et al., 2006, Appendix B, Eq. 5–26)
+  - **Precomputed / Gridded Datasets** (``DatasetMeteorologyProvider`` for NetCDF or CSV ``et0`` and ``precip``)
+
+* ``deltacd.detaw.et``: Pluggable ``ETcProvider`` implementations:
+
+  - ``KcETcProvider`` (default): Two-stage bare-soil evaporation :math:`OK_c` (Ventura et al., 2006) combined with critical/non-critical seasonal :math:`IK_c` curves (:math:`ET_c = K_c \times ET_0`).
+  - ``ExternalETProvider`` (**OpenET integration**): Ingests daily or monthly external :math:`ET_c` or :math:`ET_{aw}` from NetCDF or CSV (with uniform or :math:`ET_0`-scaled monthly disaggregation).
+
+* ``deltacd.detaw.water_balance`` & ``deltacd.detaw.etaw``: Daily root-zone soil moisture depletion (:math:`SWD`), effective seepage (:math:`S_e`), effective rainfall (:math:`E_r`), net irrigation applications (:math:`NA`), and smoothed water-year :math:`ET_{aw}` for downstream DCD routing.
+* ``notebooks/``: Educational Jupyter notebooks walking through DETAW theory (``01_detaw_theory_and_walkthrough.ipynb``) and modular :math:`ET_0` / OpenET extensions (``02_detaw_modular_et_and_openet.ipynb``).
+
+Main Input File
 ===============
 
-The main input file of DETAW follows YAML format. YAML is a human-readable data language format, common for configuration files (`Wikipedia YAML page <https://en.wikipedia.org/wiki/YAML>`_). The following is an example of the DETAW main input file. Currently, the parameters in the main input file keep the names from the previous DETAW-DCD. Note that some of the options are not well maintained, and they are subject to change.
+The main input file of DETAW uses YAML format. All relative paths inside the YAML file are resolved relative to the directory containing the YAML file:
 
 ..  code-block:: yaml
     :caption: detaw_dsm2.yaml
 
     detaw:
-      # Model inputs
       start_water_year: 1922
       end_water_year: 2024
       input_pcp: 'inputs/mm_pcp.csv'
       input_temperature: 'inputs/LODI_PT.csv'
-      landuse : 'inputs/landuse_dsm2.csv'
-      et_correction: 'inputs/Percentage.csv'
-      critical: 'inputs/critical.csv'
-      noncritical: 'inputs/noncritical.csv'
+      landuse: 'inputs/landuse_dsm2.csv'
+      et_correction: 'inputs/et_correction_dsm2.csv'
+      critical: 'inputs/crop_info_critical.csv'
+      noncritical: 'inputs/crop_info_noncritical.csv'
+
+      # Optional modular meteorology configuration
+      meteorology:
+        provider: 'station'              # 'station' (default) or 'dataset'
+        eto_method: 'hargreaves_samani'  # 'hargreaves_samani', 'asce_penman_monteith', or 'direct'
+        latitude_deg: 38.5
+        temp_qc_mode: 'clamp'            # 'clamp' (legacy) or 'swap'
+
+      # Optional modular ET / OpenET configuration
+      et:
+        provider: 'kc_eto'               # 'kc_eto' (default) or 'openet'
+        # path: 'inputs/openet_etc.nc'
+        # variable: 'et_c'
+        # units: 'mm/d'                  # 'mm/d', 'mm/month', 'in/d', 'in/month'
+        # temporal_resolution: 'daily'   # 'daily' or 'monthly'
+        # disaggregation: 'et0_scaled'   # 'et0_scaled' or 'uniform'
+
+      # Optional physics switches
+      options:
+        offseason_swd_cap: false
+        include_net_app_output: false
+
       # Model output control
-      detaw_output: 'output/detawoutput_dsm2.nc'
-      precip_output: 'output/precip_dsm2.nc'
-      et_output: 'output/ET0.nc'
+      detaw_output: 'outputs/detawoutput_dsm2.nc'
+      precip_output: 'outputs/precip_dsm2.nc'
+      et_output: 'outputs/ET0.nc'
       daily_output: 1
-      monthly_output: 1
-      yearly_output: 0
-      delta_output: 0
       daily_output_unit: 1
-      for_dsm2_only: 1
 
-The main input file starts with a `detaw` key. The `detaw` key contains the following item-value pairs. The item and values they represent are described below. File paths in the input file are based on the current working directory where a user runs the model:
+Core Configuration Keys
+-----------------------
 
-* `start_water_year`: The model start year in water year. The water year starts from October 1st and ends on September 30th of the following year.
-* `end_water_year`: The model end year in water year.
-* `input_pcp`: The precipitation CSV file.
-* `input_temperature`: The temperature CSV file.
-* `landuse`: The land use CSV file.
-* `et_correction`: The ET correction CSV file.
-* `critical`: The crop coefficient CSV file for critical (dry, below average) water years.
-* `noncritical`: The crop coefficient CSV file for non-critical water years.
-* `detaw_output`: The DETAW netCDF output filename.
-* `precip_output``: The precipitation netCDF output filename.
-* `et_output`: The ET netCDF output filename.
-* `daily_output`: The flag to output daily data. If 1, the model outputs daily data. If 0, the model does not output daily data.
-* `monthly_output`: The flag to output monthly data. If 1, the model outputs monthly data. If 0, the model does not output monthly data.
-* `yearly_output`: The flag to output yearly data. If 1, the model outputs yearly data. If 0, the model does not output yearly data.
-* `delta_output`: The flag to output delta data. If 1, the model outputs total of the values. If 0, the model does not output it.
-* `daily_output_unit`: The unit of daily output. If 1, the unit is in ft. If 0, the unit is in mm. Not actively maintained.
-* `for_dsm2_only`: The flag to output data for DSM2. If 1, the model outputs data only relevant to DSM2. If 0, the outputs are written as they are.
+* ``start_water_year`` / ``end_water_year``: Simulation period in California water years (Oct 1 of ``start_water_year - 1`` through Sep 30 of ``end_water_year``).
+* ``input_pcp``: Daily station precipitation CSV (mm/d). Station columns may appear in any order and are matched to ``et_correction`` weights by normalized station name/alias.
+* ``input_temperature``: Daily station weather CSV (``Tx(oC)``, ``Tn(oC)`` for Hargreaves–Samani, plus ``solar_rad``, ``wind_speed``, and ``dewpoint`` or ``rh_max``/``rh_min`` when using ``asce_penman_monteith``). If ``(start_water_year - 1)-09-30`` is present, it is used automatically as a 1-day bare-soil evaporation spin-up; if data begin on ``10-01``, DETAW runs cleanly without requiring a spin-up row.
+* ``landuse``: Annual land-use CSV in hectares containing ``area_id`` (or ``SubArea``), ``DATE`` (water year), ``TYPE`` (water-year type: ``C``/``D`` critical vs. ``W``/``AN``/``BN`` non-critical), and crop columns in any order.
+* ``et_correction``: Subarea ETo spatial correction factors, ``REGION`` (``0``/``Lowlands`` vs. ``1``/``Uplands``), and precipitation station weights.
+* ``critical`` / ``noncritical``: Crop and soil parameter CSVs (supports both legacy transposed ``crop_info_*.csv`` and tidy row-per-crop CSV tables).
+* ``crop_behavior`` *(optional)*: Custom crop hydrological behavior CSV for introducing new land-use categories.
+* ``detaw_output``: Output NetCDF path containing ``(time, subarea, crop)`` daily variables ``et_c``, ``s_e``, ``precip``, ``et_aw``, ``d_sw``, ``e_r`` (and ``net_app`` when ``include_net_app_output: true``) in ``acre-foot day-1`` (``daily_output_unit: 1``) or ``mm day-1`` (``daily_output_unit: 0``).
+* ``precip_output`` / ``et_output`` *(optional)*: Output NetCDF paths for daily subarea precipitation and :math:`ET_0` (mm/d) over the simulation period.
 
 Input files
 -----------
@@ -61,7 +95,7 @@ Below are sample input file formats.
 
   CSV file containing station precipitation in mm.
 
-..  code-block:: csv
+..  code-block:: text
     :caption: input_pcp
 
       year,month,day,DOY,Brentwood,Davis,Galt,Lodi,RioVista,Stockton,Tracy
@@ -76,7 +110,7 @@ Below are sample input file formats.
 
   CSV file containing station temperature in deg C.
 
-..  code-block:: csv
+..  code-block:: text
     :caption: input_temperature
 
       Date,Year,Month,DOY,Pcp(mm),Tx(oC),Tn(oC)
@@ -91,7 +125,7 @@ Below are sample input file formats.
 
   CSV file containing landuse for each area_id for different years.
 
-..  code-block:: csv
+..  code-block:: text
     :caption: landuse
 
       DATE,TYPE,UR,PA,AL,FI,SB,GR,RI,TR,TO,OR,VI,RV,NV,DGR,WS,area_id
@@ -110,7 +144,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the detaw_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: txt
+..  code-block:: text
     :caption: detaw_output
 
     detawoutput_dsm2 {
@@ -156,7 +190,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the precip_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: txt
+..  code-block:: text
     :caption: precip_output
 
     netcdf precip_dsm2 {
@@ -177,7 +211,7 @@ Output files
 
   After successful detaw model run a netCDF file containing output is created whereever the et_output points. Below is a sample of the what the output netCDF header might look like.
 
-..  code-block:: txt
+..  code-block:: text
     :caption: et_output
 
     netcdf ET0 {
